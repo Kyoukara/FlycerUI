@@ -1457,7 +1457,7 @@ function FlycerLib:CreateWindow(windowCfg)
     ShowNotification({
         title = loadingTitle,
         body = loadingSubtitle,
-        duration = 3,
+        duration = 20,
     })
 
     -- ScreenGui
