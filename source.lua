@@ -44,12 +44,8 @@ do
         return ok and val ~= nil
     end
 
-    if envHas("gethui") then
-        EXECUTOR_APIS.gethui = true
-    end
-    if envHas("get_hidden_ui") then
-        EXECUTOR_APIS.get_hidden_ui = true
-    end
+    if envHas("gethui") then EXECUTOR_APIS.gethui = true end
+    if envHas("get_hidden_ui") then EXECUTOR_APIS.get_hidden_ui = true end
 
     pcall(function()
         if syn and type(syn.protect_gui) == "function" then
@@ -57,18 +53,10 @@ do
         end
     end)
 
-    if envHas("protect_gui") then
-        EXECUTOR_APIS.protect_gui = true
-    end
-    if envHas("protectgui") then
-        EXECUTOR_APIS.protectgui = true
-    end
-    if envHas("setclipboard") then
-        EXECUTOR_APIS.setclipboard = true
-    end
-    if envHas("toclipboard") then
-        EXECUTOR_APIS.toclipboard = true
-    end
+    if envHas("protect_gui") then EXECUTOR_APIS.protect_gui = true end
+    if envHas("protectgui") then EXECUTOR_APIS.protectgui = true end
+    if envHas("setclipboard") then EXECUTOR_APIS.setclipboard = true end
+    if envHas("toclipboard") then EXECUTOR_APIS.toclipboard = true end
 end
 
 -- PLATFORM DETECTION
@@ -100,7 +88,6 @@ local FLAG_NAME = "_FlycerGUI_Loaded"
 local FLYCER_TAG_ATTR = "FlycerOwnedGui"
 
 local DRAG_SMOOTHNESS = 14
-local EXTRA_FRAME_GAP = 6
 local RESIZE_PANEL_WIDTH = 270
 local RESIZE_PANEL_HEIGHT = 165
 local RESIZE_FIELD_WIDTH = 108
@@ -126,7 +113,6 @@ local CONTENT_TOP = TAB_RAIL_Y + TAB_HEIGHT + 13
 
 local EXTRA_BAR_H = 24
 local EXTRA_BAR_MARGIN = 4
-
 local MIN_CONTENT_H = 20
 
 -- THEME & TWEEN
@@ -156,14 +142,40 @@ local RX = {
 local TWEEN_FAST = TweenInfo.new(0.15, Enum.EasingStyle.Quint)
 local TWEEN_NORMAL = TweenInfo.new(0.25, Enum.EasingStyle.Quint)
 
+-- TRANSPARENCY PROPERTY DEFINITIONS
+
+local TRANSPARENCY_PROPS = {
+    Frame = { "BackgroundTransparency" },
+    ScrollingFrame = { "BackgroundTransparency", "ScrollBarImageTransparency" },
+    TextLabel = { "BackgroundTransparency", "TextTransparency" },
+    TextButton = { "BackgroundTransparency", "TextTransparency" },
+    TextBox = { "BackgroundTransparency", "TextTransparency" },
+    ImageLabel = { "BackgroundTransparency", "ImageTransparency" },
+    ImageButton = { "BackgroundTransparency", "ImageTransparency" },
+    UIStroke = { "Transparency" },
+}
+
+local EXCLUDED_CLASSES = {
+    BillboardGui = true,
+    UIListLayout = true,
+    UIGridLayout = true,
+    UIPageLayout = true,
+    UITableLayout = true,
+    UIPadding = true,
+    UICorner = true,
+    UIGradient = true,
+    UIScale = true,
+    UIAspectRatioConstraint = true,
+    UISizeConstraint = true,
+    UITextSizeConstraint = true,
+}
+
 -- AUTO-CENTER & VIEWPORT HELPERS
 
 local Camera = workspace.CurrentCamera
 
 local function getViewportSafe()
-    if not Camera then
-        Camera = workspace.CurrentCamera
-    end
+    if not Camera then Camera = workspace.CurrentCamera end
     local vp = Camera.ViewportSize
     if vp.X < 10 or vp.Y < 10 then
         return Vector2.new(1280, 720)
@@ -189,7 +201,6 @@ end
 local function calcLayout(w, h)
     local SHADOW_OFFSET_Y = -1
     local TAB_SHADOW_OFFSET_Y = 3
-
     local contentH = math.max(h - CONTENT_TOP - EXTRA_BAR_H - EXTRA_BAR_MARGIN - 14, MIN_CONTENT_H)
 
     return {
@@ -218,9 +229,7 @@ local CHARSET_LEN = #CHARSET
 do
     local seed = os.clock() * 1e9 + tick() * 1e6
     math.randomseed(seed)
-    for _ = 1, 3 do
-        math.random()
-    end
+    for _ = 1, 3 do math.random() end
 end
 
 local function randomName(len)
@@ -256,17 +265,11 @@ local function getParent()
     end
     if EXECUTOR_APIS.gethui then
         local ok, r = pcall(gethui)
-        if ok and r then
-            _cachedParent = r
-            return r
-        end
+        if ok and r then _cachedParent = r return r end
     end
     if EXECUTOR_APIS.get_hidden_ui then
         local ok, r = pcall(get_hidden_ui)
-        if ok and r then
-            _cachedParent = r
-            return r
-        end
+        if ok and r then _cachedParent = r return r end
     end
     _cachedParent = CoreGui
     return CoreGui
@@ -276,39 +279,27 @@ local function SecureGui(gui)
     gui.Name = "F4_" .. randomName(12)
     gui:SetAttribute(FLYCER_TAG_ATTR, true)
     if EXECUTOR_APIS.syn_protect_gui then
-        pcall(function()
-            syn.protect_gui(gui)
-        end)
+        pcall(function() syn.protect_gui(gui) end)
     end
     if EXECUTOR_APIS.protect_gui then
-        pcall(function()
-            protect_gui(gui)
-        end)
+        pcall(function() protect_gui(gui) end)
     end
     if EXECUTOR_APIS.protectgui then
-        pcall(function()
-            protectgui(gui)
-        end)
+        pcall(function() protectgui(gui) end)
     end
     gui.Parent = getParent()
 end
 
 local function getAllContainers()
     local list = { CoreGui }
-    if PlayerGui then
-        table.insert(list, PlayerGui)
-    end
+    if PlayerGui then table.insert(list, PlayerGui) end
     if EXECUTOR_APIS.gethui then
         local ok, r = pcall(gethui)
-        if ok and r and not table.find(list, r) then
-            table.insert(list, r)
-        end
+        if ok and r and not table.find(list, r) then table.insert(list, r) end
     end
     if EXECUTOR_APIS.get_hidden_ui then
         local ok, r = pcall(get_hidden_ui)
-        if ok and r and not table.find(list, r) then
-            table.insert(list, r)
-        end
+        if ok and r and not table.find(list, r) then table.insert(list, r) end
     end
     return list
 end
@@ -348,13 +339,9 @@ local _strokeLoopRunning = false
 local _strokeConnection = nil
 
 local function registerStrokeTarget(gradObj)
-    if not gradObj then
-        return
-    end
+    if not gradObj then return end
     _strokeTargets[gradObj] = true
-    if _strokeLoopRunning then
-        return
-    end
+    if _strokeLoopRunning then return end
     _strokeLoopRunning = true
     local rot = 0
     _strokeConnection = RunService.Heartbeat:Connect(function(dt)
@@ -377,9 +364,7 @@ local function registerStrokeTarget(gradObj)
 end
 
 local function unregisterStrokeTarget(gradObj)
-    if gradObj then
-        _strokeTargets[gradObj] = nil
-    end
+    if gradObj then _strokeTargets[gradObj] = nil end
 end
 
 -- SEPARATOR UTILITY
@@ -463,20 +448,14 @@ local function makeDraggable(dragHandle, dragTarget, smoothness)
     local useLerp = smoothVal > 3
 
     local function startLerpLoop()
-        if lerpConnection then
-            return
-        end
+        if lerpConnection then return end
         lerpConnection = RunService.Heartbeat:Connect(function()
-            if not (dragging and targetPosition) then
-                return
-            end
+            if not (dragging and targetPosition) then return end
             local cp = dragTarget.Position
             local newX = math.round(cp.X.Offset + (targetPosition.X - cp.X.Offset) * lerpAlpha)
             local newY = math.round(cp.Y.Offset + (targetPosition.Y - cp.Y.Offset) * lerpAlpha)
-
             if math.abs(targetPosition.X - newX) < 0.5 and math.abs(targetPosition.Y - newY) < 0.5 then
-                dragTarget.Position =
-                    UDim2.new(cp.X.Scale, math.round(targetPosition.X), cp.Y.Scale, math.round(targetPosition.Y))
+                dragTarget.Position = UDim2.new(cp.X.Scale, math.round(targetPosition.X), cp.Y.Scale, math.round(targetPosition.Y))
             else
                 dragTarget.Position = UDim2.new(cp.X.Scale, newX, cp.Y.Scale, newY)
             end
@@ -491,9 +470,7 @@ local function makeDraggable(dragHandle, dragTarget, smoothness)
     end
 
     local function update(input)
-        if not (dragging and dragStart and startPos) then
-            return
-        end
+        if not (dragging and dragStart and startPos) then return end
         local delta = input.Position - dragStart
         local rawX = startPos.X.Offset + delta.X
         local rawY = startPos.Y.Offset + delta.Y
@@ -508,15 +485,9 @@ local function makeDraggable(dragHandle, dragTarget, smoothness)
 
     dragHandle.InputBegan:Connect(function(input)
         local it = input.UserInputType
-        if it ~= Enum.UserInputType.MouseButton1 and it ~= Enum.UserInputType.Touch then
-            return
-        end
-        if isUILocked then
-            return
-        end
-        if dragging then
-            return
-        end
+        if it ~= Enum.UserInputType.MouseButton1 and it ~= Enum.UserInputType.Touch then return end
+        if isUILocked then return end
+        if dragging then return end
 
         if inputChangedConn then
             inputChangedConn:Disconnect()
@@ -527,23 +498,15 @@ local function makeDraggable(dragHandle, dragTarget, smoothness)
         dragStart = input.Position
         startPos = dragTarget.Position
         targetPosition = Vector2.new(startPos.X.Offset, startPos.Y.Offset)
-        if it == Enum.UserInputType.Touch then
-            activeTouch = input
-        end
-        if useLerp then
-            startLerpLoop()
-        end
+        if it == Enum.UserInputType.Touch then activeTouch = input end
+        if useLerp then startLerpLoop() end
 
         input.Changed:Connect(function()
-            if input.UserInputState ~= Enum.UserInputState.End then
-                return
-            end
+            if input.UserInputState ~= Enum.UserInputState.End then return end
             dragging = false
             dragStart = nil
             startPos = nil
-            if input == activeTouch then
-                activeTouch = nil
-            end
+            if input == activeTouch then activeTouch = nil end
             if useLerp then
                 task.delay(0.15, function()
                     if not dragging then
@@ -559,9 +522,7 @@ local function makeDraggable(dragHandle, dragTarget, smoothness)
         end)
 
         inputChangedConn = UserInputService.InputChanged:Connect(function(inp)
-            if not dragging then
-                return
-            end
+            if not dragging then return end
             local t = inp.UserInputType
             if t == Enum.UserInputType.MouseMovement then
                 update(inp)
@@ -588,32 +549,20 @@ local _notifRunning = false
 local _notifActive = false
 
 local function getNotifSafeParent()
-    if PlayerGui and PlayerGui.Parent then
-        return PlayerGui
-    end
+    if PlayerGui and PlayerGui.Parent then return PlayerGui end
     return CoreGui
 end
 
 local function getNotifScreen()
-    if _notifScreen and _notifScreen.Parent then
-        return _notifScreen
-    end
+    if _notifScreen and _notifScreen.Parent then return _notifScreen end
     local sg = Instance.new("ScreenGui")
     sg.ResetOnSpawn = false
     sg.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
     sg.DisplayOrder = 9999999999
     sg.IgnoreGuiInset = true
     sg:SetAttribute(FLYCER_TAG_ATTR, true)
-    if EXECUTOR_APIS.syn_protect_gui then
-        pcall(function()
-            syn.protect_gui(sg)
-        end)
-    end
-    if EXECUTOR_APIS.protect_gui then
-        pcall(function()
-            protect_gui(sg)
-        end)
-    end
+    if EXECUTOR_APIS.syn_protect_gui then pcall(function() syn.protect_gui(sg) end) end
+    if EXECUTOR_APIS.protect_gui then pcall(function() protect_gui(sg) end) end
     sg.Parent = getNotifSafeParent()
     _notifScreen = sg
     return sg
@@ -810,9 +759,7 @@ local function normalizeNotifCfg(cfg)
 end
 
 local function processNotifQueue()
-    if _notifRunning then
-        return
-    end
+    if _notifRunning then return end
     _notifRunning = true
 
     task.spawn(function()
@@ -846,9 +793,7 @@ local function processNotifQueue()
                         )
                         tw:Play()
                         tw.Completed:Wait()
-                        if shimmerActive then
-                            task.wait(1.7)
-                        end
+                        if shimmerActive then task.wait(1.7) end
                     end
                 end)
 
@@ -867,9 +812,7 @@ local function processNotifQueue()
                 slideOut:Play()
                 slideOut.Completed:Wait()
 
-                if notifFrame and notifFrame.Parent then
-                    notifFrame:Destroy()
-                end
+                if notifFrame and notifFrame.Parent then notifFrame:Destroy() end
 
                 if _notifScreen and _notifScreen.Parent then
                     if #_notifScreen:GetChildren() == 0 then
@@ -881,16 +824,12 @@ local function processNotifQueue()
 
             _notifActive = false
 
-            if not ok then
-                warn("Flycer Notification error:", err)
-            end
+            if not ok then warn("Flycer Notification error:", err) end
 
             if typeof(onComplete) == "function" then
                 task.spawn(onComplete)
             end
-            if #_notifQueue > 0 then
-                task.wait(0.2)
-            end
+            if #_notifQueue > 0 then task.wait(0.2) end
         end
         _notifRunning = false
     end)
@@ -899,13 +838,8 @@ end
 local MAX_NOTIF_QUEUE = 3
 
 local function ShowNotification(cfg)
-    if _notifActive then
-        return
-    end
-    if #_notifQueue >= MAX_NOTIF_QUEUE then
-        return
-    end
-
+    if _notifActive then return end
+    if #_notifQueue >= MAX_NOTIF_QUEUE then return end
     cfg = normalizeNotifCfg(cfg or {})
     table.insert(_notifQueue, cfg)
     processNotifQueue()
@@ -973,14 +907,10 @@ local function makeInputField(parentFrame, anchorX, labelTxt, defaultVal)
 
     local filtering = false
     textBox:GetPropertyChangedSignal("Text"):Connect(function()
-        if filtering then
-            return
-        end
+        if filtering then return end
         filtering = true
         local filtered = textBox.Text:gsub("[^%d]", "")
-        if filtered ~= textBox.Text then
-            textBox.Text = filtered
-        end
+        if filtered ~= textBox.Text then textBox.Text = filtered end
         filtering = false
     end)
 
@@ -993,10 +923,7 @@ local function makeInputField(parentFrame, anchorX, labelTxt, defaultVal)
     end)
 
     textBox.FocusLost:Connect(function()
-        TweenService:Create(inStroke, TWEEN_FAST, {
-            Color = Color3.fromRGB(55, 58, 85),
-            Transparency = 0.3,
-        }):Play()
+        TweenService:Create(inStroke, TWEEN_FAST, { Color = Color3.fromRGB(55, 58, 85), Transparency = 0.3 }):Play()
         TweenService:Create(inputBG, TWEEN_FAST, { BackgroundTransparency = 0.08 }):Play()
         if isMobile and parentFrame and parentFrame.Parent then
             TweenService:Create(parentFrame, TWEEN_FAST, { Position = RESIZE_PANEL_CENTER_POS }):Play()
@@ -1030,9 +957,7 @@ local function openResizeGUI(refs)
     local MainGuiRef = refs.MainGui
 
     local existing = findExistingResizeGUI()
-    if existing then
-        existing:Destroy()
-    end
+    if existing then existing:Destroy() end
 
     local ResizeSG = Instance.new("ScreenGui")
     ResizeSG.ResetOnSpawn = false
@@ -1042,24 +967,17 @@ local function openResizeGUI(refs)
     SecureGui(ResizeSG)
     ResizeSG:SetAttribute("FlycerResizeTag", true)
 
-    -- Cleanup resize when main GUI is destroyed
     if MainGuiRef and MainGuiRef.Parent then
         MainGuiRef.Destroying:Connect(function()
-            if ResizeSG and ResizeSG.Parent then
-                ResizeSG:Destroy()
-            end
+            if ResizeSG and ResizeSG.Parent then ResizeSG:Destroy() end
         end)
     end
 
     local isClosing = false
 
     local function setMainUIVisible(visible)
-        if MF and MF.Parent then
-            MF.Visible = visible
-        end
-        if TF and TF.Parent then
-            TF.Visible = visible
-        end
+        if MF and MF.Parent then MF.Visible = visible end
+        if TF and TF.Parent then TF.Visible = visible end
     end
 
     local marginL = (RESIZE_PANEL_WIDTH - (RESIZE_FIELD_WIDTH * 2 + RESIZE_FIELD_GAP)) / 2
@@ -1180,8 +1098,7 @@ local function openResizeGUI(refs)
     end
 
     local _, widthInput = makeInputField(resizePanel, marginL, "WIDTH", currentGUIWidth)
-    local _, heightInput =
-        makeInputField(resizePanel, marginL + RESIZE_FIELD_WIDTH + RESIZE_FIELD_GAP, "HEIGHT", currentGUIHeight)
+    local _, heightInput = makeInputField(resizePanel, marginL + RESIZE_FIELD_WIDTH + RESIZE_FIELD_GAP, "HEIGHT", currentGUIHeight)
 
     local changeBtn = Instance.new("TextButton")
     changeBtn.Size = UDim2.new(1, -28, 0, 34)
@@ -1241,9 +1158,7 @@ local function openResizeGUI(refs)
     local originalTrans = {}
 
     local function cachePanelObj(obj)
-        if not obj or not obj.Parent then
-            return
-        end
+        if not obj or not obj.Parent then return end
         local t = {}
         if obj:IsA("Frame") or obj:IsA("ScrollingFrame") then
             t.BackgroundTransparency = obj.BackgroundTransparency
@@ -1259,23 +1174,17 @@ local function openResizeGUI(refs)
         if obj:IsA("UIStroke") then
             t.Transparency = obj.Transparency
         end
-        if next(t) then
-            originalTrans[obj] = t
-        end
+        if next(t) then originalTrans[obj] = t end
     end
 
     cachePanelObj(resizePanel)
     cachePanelObj(overlay)
-    for _, d in ipairs(resizePanel:GetDescendants()) do
-        cachePanelObj(d)
-    end
+    for _, d in ipairs(resizePanel:GetDescendants()) do cachePanelObj(d) end
 
     local function hideAllInstant()
         for obj, props in pairs(originalTrans) do
             if obj and obj.Parent then
-                for propName in pairs(props) do
-                    obj[propName] = 1
-                end
+                for propName in pairs(props) do obj[propName] = 1 end
             end
         end
     end
@@ -1303,10 +1212,7 @@ local function openResizeGUI(refs)
                     activeTweens = activeTweens + 1
                     local conn
                     conn = tw.Completed:Connect(function()
-                        if conn then
-                            conn:Disconnect()
-                            conn = nil
-                        end
+                        if conn then conn:Disconnect() conn = nil end
                         activeTweens = activeTweens - 1
                         fireCallback()
                     end)
@@ -1315,47 +1221,33 @@ local function openResizeGUI(refs)
             end
         end
 
-        if activeTweens == 0 then
-            fireCallback()
-        end
+        if activeTweens == 0 then fireCallback() end
     end
 
     local function closeResizeGui(callback)
-        if isClosing then
-            return
-        end
+        if isClosing then return end
         isClosing = true
         unregisterStrokeTarget(panelStrokeGrad)
         fadePanelTo(1, 0.30, function()
             setMainUIVisible(true)
-            if ResizeSG and ResizeSG.Parent then
-                ResizeSG:Destroy()
-            end
-            if callback then
-                task.spawn(callback)
-            end
+            if ResizeSG and ResizeSG.Parent then ResizeSG:Destroy() end
+            if callback then task.spawn(callback) end
         end)
     end
 
     local closeBtnDebounce = false
     local function onCloseBtn()
-        if closeBtnDebounce or isClosing then
-            return
-        end
+        if closeBtnDebounce or isClosing then return end
         closeBtnDebounce = true
         closeResizeGui()
-        task.delay(1, function()
-            closeBtnDebounce = false
-        end)
+        task.delay(1, function() closeBtnDebounce = false end)
     end
 
     closeBtn.Activated:Connect(onCloseBtn)
 
     local applyDebounce = false
     local function applyResize()
-        if applyDebounce or isClosing then
-            return
-        end
+        if applyDebounce or isClosing then return end
         applyDebounce = true
 
         local wVal = math.clamp(tonumber(widthInput.Text) or currentGUIWidth, 150, 800)
@@ -1378,39 +1270,25 @@ local function openResizeGUI(refs)
                 local newLayout = calcLayout(wVal, hVal)
 
                 if MF and MF.Parent then
-                    TweenService:Create(MF, tweenInfo, {
-                        Size = newLayout.mainSize,
-                        Position = newLayout.mainPos,
-                    }):Play()
+                    TweenService:Create(MF, tweenInfo, { Size = newLayout.mainSize, Position = newLayout.mainPos }):Play()
                 end
                 if CW and CW.Parent then
                     TweenService:Create(CW, tweenInfo, { Size = newLayout.contentSize }):Play()
                 end
                 if SF and SF.Parent then
-                    TweenService:Create(SF, tweenInfo, {
-                        Size = newLayout.shadowSize,
-                        Position = newLayout.shadowPos,
-                    }):Play()
+                    TweenService:Create(SF, tweenInfo, { Size = newLayout.shadowSize, Position = newLayout.shadowPos }):Play()
                 end
                 if TabSF and TabSF.Parent then
-                    TweenService:Create(TabSF, tweenInfo, {
-                        Size = newLayout.tabShadowSize,
-                        Position = newLayout.tabShadowPos,
-                    }):Play()
+                    TweenService:Create(TabSF, tweenInfo, { Size = newLayout.tabShadowSize, Position = newLayout.tabShadowPos }):Play()
                 end
                 if TabRC and TabRC.Parent then
-                    TweenService:Create(TabRC, tweenInfo, {
-                        Position = newLayout.tabRailClipPos,
-                    }):Play()
+                    TweenService:Create(TabRC, tweenInfo, { Position = newLayout.tabRailClipPos }):Play()
                 end
                 if TF and TF.Parent then
                     TweenService:Create(TF, tweenInfo, { Position = newLayout.togglePos }):Play()
                 end
                 if EF and EF.Parent then
-                    TweenService:Create(EF, tweenInfo, {
-                        Position = newLayout.extraFramePos,
-                        Size = newLayout.extraFrameSize,
-                    }):Play()
+                    TweenService:Create(EF, tweenInfo, { Position = newLayout.extraFramePos, Size = newLayout.extraFrameSize }):Play()
                 end
 
                 ShowNotification({
@@ -1421,9 +1299,7 @@ local function openResizeGUI(refs)
             end)
         end)
 
-        task.delay(2.5, function()
-            applyDebounce = false
-        end)
+        task.delay(2.5, function() applyDebounce = false end)
     end
 
     changeBtn.Activated:Connect(applyResize)
@@ -1449,18 +1325,99 @@ function FlycerLib:CreateWindow(windowCfg)
     local GUI_TITLE = windowCfg.Name or windowCfg.Title or "FlycerUI - Hub"
     local loadingTitle = windowCfg.LoadingTitle or GUI_TITLE
     local loadingSubtitle = windowCfg.LoadingSubtitle or "Loading..."
+    local loadingDuration = windowCfg.LoadingDuration or windowCfg.Duration or 3
     local discordConfig = windowCfg.Discord or {}
     local discordEnabled = discordConfig.Enabled ~= false
     local discordLink = discordConfig.Link or DISCORD_LINK
 
-    -- Show loading notification
-    ShowNotification({
-        title = loadingTitle,
-        body = loadingSubtitle,
-        duration = 6,
-    })
+    -- STATE
 
-    -- ScreenGui
+    local uiRevealed = false
+
+    -- REVEAL ANIMATION SYSTEM
+
+    local REVEAL_DURATION = 0.5
+    local REVEAL_TWEEN_INFO = TweenInfo.new(REVEAL_DURATION, Enum.EasingStyle.Quint, Enum.EasingDirection.Out)
+    local revealTargets = {}
+
+    local function cacheRevealTarget(obj)
+        if not obj or not obj.Parent then return end
+        local className = obj.ClassName
+        if EXCLUDED_CLASSES[className] then return end
+        local propList = TRANSPARENCY_PROPS[className]
+        if not propList then return end
+        local cached = {}
+        for _, propName in ipairs(propList) do
+            local val = obj[propName]
+            if val ~= nil and val < 1 then
+                cached[propName] = val
+                obj[propName] = 1
+            end
+        end
+        if next(cached) then
+            revealTargets[obj] = cached
+        end
+    end
+
+    local function cacheAllRevealTargets(root)
+        cacheRevealTarget(root)
+        for _, child in ipairs(root:GetDescendants()) do
+            cacheRevealTarget(child)
+        end
+    end
+
+    local function revealUI(callback)
+        if uiRevealed then
+            if callback then task.spawn(callback) end
+            return
+        end
+        uiRevealed = true
+
+        local tweenList = {}
+        local activeTweens = 0
+
+        for obj, props in pairs(revealTargets) do
+            if obj and obj.Parent then
+                local tw = TweenService:Create(obj, REVEAL_TWEEN_INFO, props)
+                table.insert(tweenList, tw)
+                activeTweens = activeTweens + 1
+            end
+        end
+
+        if #tweenList == 0 then
+            if callback then task.spawn(callback) end
+            return
+        end
+
+        local callbackFired = false
+        local function onComplete()
+            if callbackFired then return end
+            activeTweens = activeTweens - 1
+            if activeTweens <= 0 then
+                callbackFired = true
+                for obj, props in pairs(revealTargets) do
+                    if obj and obj.Parent then
+                        for propName, targetVal in pairs(props) do
+                            obj[propName] = targetVal
+                        end
+                    end
+                end
+                if callback then task.spawn(callback) end
+            end
+        end
+
+        for _, tw in ipairs(tweenList) do
+            local conn
+            conn = tw.Completed:Connect(function()
+                if conn then conn:Disconnect() conn = nil end
+                onComplete()
+            end)
+            tw:Play()
+        end
+    end
+
+    -- BUILD GUI
+
     local MainGui = Instance.new("ScreenGui")
     MainGui.ResetOnSpawn = false
     MainGui.IgnoreGuiInset = true
@@ -1473,7 +1430,6 @@ function FlycerLib:CreateWindow(windowCfg)
     g[GUI_REF_NAME] = MainGui
     g[FLAG_NAME] = true
 
-    -- MainFrame
     local initLayout = calcLayout(currentGUIWidth, currentGUIHeight)
 
     local MainFrame = Instance.new("Frame")
@@ -1482,7 +1438,7 @@ function FlycerLib:CreateWindow(windowCfg)
     MainFrame.AutomaticSize = Enum.AutomaticSize.None
     MainFrame.Position = initLayout.mainPos
     MainFrame.BackgroundColor3 = RX.Accent1
-    MainFrame.BackgroundTransparency = RX.MainAlpha
+    MainFrame.BackgroundTransparency = 1
     MainFrame.BorderSizePixel = 0
     MainFrame.ZIndex = 2
     MainFrame.Active = true
@@ -1548,10 +1504,10 @@ function FlycerLib:CreateWindow(windowCfg)
     innerGrad.Rotation = 180
     innerGrad.Parent = MainFrame
 
-    -- Viewport resize handler
+    -- VIEWPORT RESIZE HANDLER
+
     local _lastVP = Vector2.new(0, 0)
     local _vpConnection = nil
-
     local ExtraFrame = nil
     local ToggleFrame = nil
     local DragBar = nil
@@ -1559,9 +1515,7 @@ function FlycerLib:CreateWindow(windowCfg)
 
     local function onViewportChanged()
         local vp = Camera.ViewportSize
-        if math.abs(vp.X - _lastVP.X) < 2 and math.abs(vp.Y - _lastVP.Y) < 2 then
-            return
-        end
+        if math.abs(vp.X - _lastVP.X) < 2 and math.abs(vp.Y - _lastVP.Y) < 2 then return end
         _lastVP = vp
         if MainFrame and MainFrame.Parent then
             MainFrame.Position = getScreenCenter(MainFrame.AbsoluteSize.X, MainFrame.AbsoluteSize.Y)
@@ -1573,20 +1527,17 @@ function FlycerLib:CreateWindow(windowCfg)
 
     _vpConnection = Camera:GetPropertyChangedSignal("ViewportSize"):Connect(onViewportChanged)
     MainGui.Destroying:Connect(function()
-        if _vpConnection then
-            _vpConnection:Disconnect()
-            _vpConnection = nil
-        end
+        if _vpConnection then _vpConnection:Disconnect() _vpConnection = nil end
     end)
+
+    -- FADE EXEMPT SYSTEM
 
     local _tabFadeExempt = {}
     local function markFadeExempt(instance)
         _tabFadeExempt[instance] = true
     end
     local function isFadeExempt(instance, forToggle)
-        if forToggle then
-            return false
-        end
+        if forToggle then return false end
         return _tabFadeExempt[instance] == true
     end
 
@@ -1690,9 +1641,7 @@ function FlycerLib:CreateWindow(windowCfg)
     local lastPingUpdate = 0
 
     local function GetPing()
-        local ok, result = pcall(function()
-            return LocalPlayer:GetNetworkPing()
-        end)
+        local ok, result = pcall(function() return LocalPlayer:GetNetworkPing() end)
         if ok and result and result == result then
             return math.round(math.max(result * 1000, 0))
         end
@@ -1700,15 +1649,11 @@ function FlycerLib:CreateWindow(windowCfg)
     end
 
     local function StartPingCounter()
-        if pingConnection then
-            return
-        end
+        if pingConnection then return end
         lastPingUpdate = os.clock()
         pingConnection = RunService.Heartbeat:Connect(function()
             local now = os.clock()
-            if now - lastPingUpdate < PING_UPDATE_INTERVAL then
-                return
-            end
+            if now - lastPingUpdate < PING_UPDATE_INTERVAL then return end
             lastPingUpdate = now
             if pingLabel and pingLabel.Parent then
                 pingLabel.Text = "PING: " .. tostring(GetPing()) .. "ms"
@@ -1790,9 +1735,7 @@ function FlycerLib:CreateWindow(windowCfg)
     local lastUpdateTime = 0
 
     local function StartFPSCounter()
-        if fpsConnection then
-            return
-        end
+        if fpsConnection then return end
         frameCount = 0
         lastUpdateTime = os.clock()
 
@@ -1968,12 +1911,8 @@ function FlycerLib:CreateWindow(windowCfg)
     end
 
     local function activateTab(name)
-        if tabSwitchDebounce then
-            return
-        end
-        if activeTabName == name then
-            return
-        end
+        if tabSwitchDebounce then return end
+        if activeTabName == name then return end
         tabSwitchDebounce = true
 
         local INACTIVE_BG = Color3.fromRGB(22, 22, 34)
@@ -1996,9 +1935,7 @@ function FlycerLib:CreateWindow(windowCfg)
         end
 
         activeTabName = name
-        task.delay(0.18, function()
-            tabSwitchDebounce = false
-        end)
+        task.delay(0.18, function() tabSwitchDebounce = false end)
     end
 
     local function addTab(name, layoutOrderHint)
@@ -2079,9 +2016,7 @@ function FlycerLib:CreateWindow(windowCfg)
             layout = layout,
         })
 
-        if not firstTabName then
-            firstTabName = name
-        end
+        if not firstTabName then firstTabName = name end
 
         return canvas, layout
     end
@@ -2146,10 +2081,8 @@ function FlycerLib:CreateWindow(windowCfg)
     local isHovered = false
 
     UserInputService.InputEnded:Connect(function(input)
-        if
-            input.UserInputType == Enum.UserInputType.MouseButton1
-            or input.UserInputType == Enum.UserInputType.Touch
-        then
+        if input.UserInputType == Enum.UserInputType.MouseButton1
+            or input.UserInputType == Enum.UserInputType.Touch then
             if isDragging then
                 isDragging = false
                 TweenService:Create(DragBar, TWEEN_FAST, {
@@ -2175,16 +2108,15 @@ function FlycerLib:CreateWindow(windowCfg)
     end
 
     DragBarHitbox.InputBegan:Connect(function(input)
-        if
-            input.UserInputType == Enum.UserInputType.MouseButton1
-            or input.UserInputType == Enum.UserInputType.Touch
-        then
+        if input.UserInputType == Enum.UserInputType.MouseButton1
+            or input.UserInputType == Enum.UserInputType.Touch then
             isDragging = true
             TweenService:Create(DragBar, TWEEN_FAST, { BackgroundTransparency = 0.20 }):Play()
         end
     end)
 
-    -- setUILock
+    -- UI LOCK
+
     local function setUILock(locked)
         isUILocked = locked
         g.FlycerUILocked = locked
@@ -2198,9 +2130,7 @@ function FlycerLib:CreateWindow(windowCfg)
                     end
                 end)
             else
-                if DragBarHitbox then
-                    DragBarHitbox.Visible = true
-                end
+                if DragBarHitbox then DragBarHitbox.Visible = true end
                 TweenService:Create(DragBar, TWEEN_NORMAL, { BackgroundTransparency = 0.80 }):Play()
             end
         end
@@ -2213,7 +2143,7 @@ function FlycerLib:CreateWindow(windowCfg)
         })
     end
 
-    -- TIMER WHITELIST
+    -- TIMER LABEL
 
     local timerLabel = Instance.new("TextLabel")
     timerLabel.Position = UDim2.new(0, 4, 0.5, 0)
@@ -2241,9 +2171,7 @@ function FlycerLib:CreateWindow(windowCfg)
     timerStroke.Parent = timerLabel
 
     local function formatTimer(totalSeconds)
-        if totalSeconds <= 0 then
-            return nil
-        end
+        if totalSeconds <= 0 then return nil end
         return string.format(
             "%04dD : %02dH : %02dM",
             math.floor(totalSeconds / 86400),
@@ -2255,78 +2183,54 @@ function FlycerLib:CreateWindow(windowCfg)
     local function startKeyTimer()
         local SessionManager = _FLYCER_PRIVATE.Session
         if not SessionManager then
-            if timerLabel and timerLabel.Parent then
-                timerLabel.Text = "NO SESSION"
-            end
+            if timerLabel and timerLabel.Parent then timerLabel.Text = "NO SESSION" end
             return
         end
         task.spawn(function()
             local data = nil
             local elapsed = 0
             while not data and elapsed < 8 do
-                local ok, result = pcall(function()
-                    return SessionManager:getData()
-                end)
-                if ok and type(result) == "table" then
-                    data = result
-                    break
-                end
+                local ok, result = pcall(function() return SessionManager:getData() end)
+                if ok and type(result) == "table" then data = result break end
                 task.wait(0.5)
                 elapsed = elapsed + 0.5
             end
             if not data then
-                if timerLabel and timerLabel.Parent then
-                    timerLabel.Text = "NO KEY DATA"
-                end
+                if timerLabel and timerLabel.Parent then timerLabel.Text = "NO KEY DATA" end
                 return
             end
             local keyType = data.keyType
             local expireTimestamp = data.expireTimestamp
             if not keyType then
-                if timerLabel and timerLabel.Parent then
-                    timerLabel.Text = "NO KEY DATA"
-                end
+                if timerLabel and timerLabel.Parent then timerLabel.Text = "NO KEY DATA" end
                 return
             end
             if keyType == "lifetime" then
-                if timerLabel and timerLabel.Parent then
-                    timerLabel.Text = "LIFETIME ACCESS"
-                end
+                if timerLabel and timerLabel.Parent then timerLabel.Text = "LIFETIME ACCESS" end
                 return
             end
             if keyType == "free" and (not expireTimestamp or tonumber(expireTimestamp) == 0) then
-                if timerLabel and timerLabel.Parent then
-                    timerLabel.Text = "FREE UNLIMITED"
-                end
+                if timerLabel and timerLabel.Parent then timerLabel.Text = "FREE UNLIMITED" end
                 return
             end
             if expireTimestamp then
                 local expireTime = tonumber(expireTimestamp)
                 if not expireTime or expireTime - os.time() <= 0 then
-                    if timerLabel and timerLabel.Parent then
-                        timerLabel.Text = "EXPIRED"
-                    end
+                    if timerLabel and timerLabel.Parent then timerLabel.Text = "EXPIRED" end
                     return
                 end
                 task.spawn(function()
                     while timerLabel and timerLabel.Parent do
                         local remaining = expireTime - os.time()
-                        if remaining <= 0 then
-                            timerLabel.Text = "EXPIRED"
-                            break
-                        end
+                        if remaining <= 0 then timerLabel.Text = "EXPIRED" break end
                         local fmt = formatTimer(remaining)
                         timerLabel.Text = fmt or "EXPIRED"
-                        if not fmt then
-                            break
-                        end
+                        if not fmt then break end
                         task.wait(1)
                     end
                 end)
             else
-                if timerLabel and timerLabel.Parent then
-                    timerLabel.Text = "NO EXPIRE"
-                end
+                if timerLabel and timerLabel.Parent then timerLabel.Text = "NO EXPIRE" end
             end
         end)
     end
@@ -2334,32 +2238,6 @@ function FlycerLib:CreateWindow(windowCfg)
     task.defer(startKeyTimer)
 
     -- TOGGLE BUTTON SYSTEM
-
-    local TRANSPARENCY_PROPS = {
-        Frame = { "BackgroundTransparency" },
-        ScrollingFrame = { "BackgroundTransparency", "ScrollBarImageTransparency" },
-        TextLabel = { "BackgroundTransparency", "TextTransparency" },
-        TextButton = { "BackgroundTransparency", "TextTransparency" },
-        TextBox = { "BackgroundTransparency", "TextTransparency" },
-        ImageLabel = { "BackgroundTransparency", "ImageTransparency" },
-        ImageButton = { "BackgroundTransparency", "ImageTransparency" },
-        UIStroke = { "Transparency" },
-    }
-
-    local EXCLUDED_CLASSES = {
-        BillboardGui = true,
-        UIListLayout = true,
-        UIGridLayout = true,
-        UIPageLayout = true,
-        UITableLayout = true,
-        UIPadding = true,
-        UICorner = true,
-        UIGradient = true,
-        UIScale = true,
-        UIAspectRatioConstraint = true,
-        UISizeConstraint = true,
-        UITextSizeConstraint = true,
-    }
 
     local mainVisible = true
     local isAnimating = false
@@ -2379,7 +2257,7 @@ function FlycerLib:CreateWindow(windowCfg)
     ToggleFrame.Size = UDim2.new(0, 90, 0, 34)
     ToggleFrame.Position = initLayout.togglePos
     ToggleFrame.BackgroundColor3 = RX.Accent1
-    ToggleFrame.BackgroundTransparency = RX.MainAlpha
+    ToggleFrame.BackgroundTransparency = 1
     ToggleFrame.BorderSizePixel = 0
     ToggleFrame.Active = true
     ToggleFrame.Text = ""
@@ -2408,12 +2286,9 @@ function FlycerLib:CreateWindow(windowCfg)
     tStrokeGrad.Parent = tStroke
     registerStrokeTarget(tStrokeGrad)
 
-    table.insert(
-        eventConnections,
-        ToggleFrame.Destroying:Connect(function()
-            unregisterStrokeTarget(tStrokeGrad)
-        end)
-    )
+    table.insert(eventConnections, ToggleFrame.Destroying:Connect(function()
+        unregisterStrokeTarget(tStrokeGrad)
+    end))
 
     local tInnerGrad = Instance.new("UIGradient")
     tInnerGrad.Color = ColorSequence.new({
@@ -2492,72 +2367,51 @@ function FlycerLib:CreateWindow(windowCfg)
     ToggleText.Parent = ToggleFrame
 
     if not isMobile then
-        table.insert(
-            eventConnections,
-            ToggleFrame.MouseEnter:Connect(function()
-                TweenService:Create(ToggleFrame, TWEEN_FAST, {
-                    BackgroundTransparency = math.max(RX.MainAlpha - 0.05, 0),
-                }):Play()
-                TweenService:Create(tStroke, TWEEN_FAST, { Transparency = 0.3 }):Play()
-                TweenService:Create(ToggleIcon, TWEEN_FAST, { ImageColor3 = RX.Cyan }):Play()
-            end)
-        )
-        table.insert(
-            eventConnections,
-            ToggleFrame.MouseLeave:Connect(function()
-                TweenService:Create(ToggleFrame, TWEEN_FAST, { BackgroundTransparency = RX.MainAlpha }):Play()
-                TweenService:Create(tStroke, TWEEN_FAST, { Transparency = 0.5 }):Play()
-                TweenService:Create(ToggleIcon, TWEEN_FAST, { ImageColor3 = RX.T1 }):Play()
-            end)
-        )
+        table.insert(eventConnections, ToggleFrame.MouseEnter:Connect(function()
+            TweenService:Create(ToggleFrame, TWEEN_FAST, {
+                BackgroundTransparency = math.max(RX.MainAlpha - 0.05, 0),
+            }):Play()
+            TweenService:Create(tStroke, TWEEN_FAST, { Transparency = 0.3 }):Play()
+            TweenService:Create(ToggleIcon, TWEEN_FAST, { ImageColor3 = RX.Cyan }):Play()
+        end))
+        table.insert(eventConnections, ToggleFrame.MouseLeave:Connect(function()
+            TweenService:Create(ToggleFrame, TWEEN_FAST, { BackgroundTransparency = RX.MainAlpha }):Play()
+            TweenService:Create(tStroke, TWEEN_FAST, { Transparency = 0.5 }):Play()
+            TweenService:Create(ToggleIcon, TWEEN_FAST, { ImageColor3 = RX.T1 }):Play()
+        end))
     end
 
     makeDraggable(ToggleFrame)
 
-    -- Accent bar tweens with cancel safety
+    -- Accent tween dengan cancel safety
     local currentAccentTween = nil
-
     local function playAccentTween(color)
-        if currentAccentTween then
-            currentAccentTween:Cancel()
-        end
+        if currentAccentTween then currentAccentTween:Cancel() end
         currentAccentTween = TweenService:Create(tAccentBar, TWEEN_NORMAL, { BackgroundColor3 = color })
         currentAccentTween:Play()
     end
 
-    -- Fade cache helpers
+    -- FADE CACHE HELPERS
 
     local function cacheObj(obj, forToggle)
-        if not obj or not obj.Parent then
-            return
-        end
-        if isFadeExempt(obj, forToggle) then
-            return
-        end
+        if not obj or not obj.Parent then return end
+        if isFadeExempt(obj, forToggle) then return end
         local className = obj.ClassName
-        if not className or EXCLUDED_CLASSES[className] then
-            return
-        end
+        if not className or EXCLUDED_CLASSES[className] then return end
         local propList = TRANSPARENCY_PROPS[className]
-        if not propList then
-            return
-        end
+        if not propList then return end
         local cached = {}
         for _, propName in ipairs(propList) do
             local val = obj[propName]
             if val ~= nil then
                 if propName ~= "ScrollBarImageTransparency" then
-                    if val < 1 then
-                        cached[propName] = val
-                    end
+                    if val < 1 then cached[propName] = val end
                 else
                     cached[propName] = val
                 end
             end
         end
-        if next(cached) then
-            originalTransparencies[obj] = cached
-        end
+        if next(cached) then originalTransparencies[obj] = cached end
     end
 
     local function cacheDescendants(root, forToggle)
@@ -2579,9 +2433,7 @@ function FlycerLib:CreateWindow(windowCfg)
 
     local function cancelAllFadeTweens()
         for _, tw in ipairs(currentFadeTweens) do
-            pcall(function()
-                tw:Cancel()
-            end)
+            pcall(function() tw:Cancel() end)
         end
         currentFadeTweens = {}
     end
@@ -2617,9 +2469,7 @@ function FlycerLib:CreateWindow(windowCfg)
 
         if #tweenList == 0 then
             setAllInstant(targetAlpha)
-            if callback then
-                task.spawn(callback)
-            end
+            if callback then task.spawn(callback) end
             return
         end
 
@@ -2627,50 +2477,36 @@ function FlycerLib:CreateWindow(windowCfg)
         local callbackCalled = false
 
         local function finishFade()
-            if callbackCalled then
-                return
-            end
+            if callbackCalled then return end
             callbackCalled = true
             setAllInstant(targetAlpha)
-            if callback then
-                task.spawn(callback)
-            end
+            if callback then task.spawn(callback) end
         end
 
         for _, tw in ipairs(tweenList) do
             local conn
             conn = tw.Completed:Connect(function()
-                if conn then
-                    conn:Disconnect()
-                    conn = nil
-                end
+                if conn then conn:Disconnect() conn = nil end
                 activeTweens = activeTweens - 1
-                if activeTweens <= 0 then
-                    finishFade()
-                end
+                if activeTweens <= 0 then finishFade() end
             end)
             tw:Play()
         end
     end
 
-    -- Toggle logic
+    -- TOGGLE GUI
+
     local function toggleGUI()
         local now = tick()
-        if now - lastToggleTime < TOGGLE_DEBOUNCE then
-            return
-        end
+        if now - lastToggleTime < TOGGLE_DEBOUNCE then return end
         lastToggleTime = now
-        if isAnimating then
-            return
-        end
+        if isAnimating then return end
 
         isAnimating = true
         mainVisible = not mainVisible
 
         if mainVisible then
-            if MainFrame then
-                MainFrame.Visible = true
-            end
+            if MainFrame then MainFrame.Visible = true end
             ToggleText.Text = "HIDE"
             playAccentTween(RX.Accent1)
             StartPingCounter()
@@ -2686,9 +2522,7 @@ function FlycerLib:CreateWindow(windowCfg)
             StopFPSCounter()
             fadeAllTo(1, FADE_DURATION, function()
                 if not mainVisible then
-                    if MainFrame then
-                        MainFrame.Visible = false
-                    end
+                    if MainFrame then MainFrame.Visible = false end
                 end
                 isAnimating = false
             end)
@@ -2699,9 +2533,7 @@ function FlycerLib:CreateWindow(windowCfg)
 
     local function cleanupAll()
         cancelAllFadeTweens()
-        for _, conn in ipairs(eventConnections) do
-            conn:Disconnect()
-        end
+        for _, conn in ipairs(eventConnections) do conn:Disconnect() end
         eventConnections = {}
         originalTransparencies = {}
     end
@@ -2747,9 +2579,7 @@ function FlycerLib:CreateWindow(windowCfg)
 
     local resizeDebounce = false
     local function resizeHandler()
-        if resizeDebounce then
-            return
-        end
+        if resizeDebounce then return end
         resizeDebounce = true
 
         TweenService:Create(resizeButton, TweenInfo.new(0.12, Enum.EasingStyle.Quint, Enum.EasingDirection.Out), {
@@ -2762,21 +2592,15 @@ function FlycerLib:CreateWindow(windowCfg)
         }):Play()
 
         task.delay(0.22, function()
-            if not (resizeButton and resizeButton.Parent) then
-                return
-            end
-            TweenService
-                :Create(resizeButton, TweenInfo.new(0.20, Enum.EasingStyle.Quint, Enum.EasingDirection.Out), {
-                    BackgroundColor3 = RX.Accent2,
-                    BackgroundTransparency = 0.8,
-                })
-                :Play()
-            TweenService
-                :Create(resizeStroke, TweenInfo.new(0.20, Enum.EasingStyle.Quint, Enum.EasingDirection.Out), {
-                    Color = RX.Accent2,
-                    Transparency = 0.3,
-                })
-                :Play()
+            if not (resizeButton and resizeButton.Parent) then return end
+            TweenService:Create(resizeButton, TweenInfo.new(0.20, Enum.EasingStyle.Quint, Enum.EasingDirection.Out), {
+                BackgroundColor3 = RX.Accent2,
+                BackgroundTransparency = 0.8,
+            }):Play()
+            TweenService:Create(resizeStroke, TweenInfo.new(0.20, Enum.EasingStyle.Quint, Enum.EasingDirection.Out), {
+                Color = RX.Accent2,
+                Transparency = 0.3,
+            }):Play()
             task.delay(0.20, function()
                 openResizeGUI({
                     MainFrame = MainFrame,
@@ -2791,9 +2615,7 @@ function FlycerLib:CreateWindow(windowCfg)
             end)
         end)
 
-        task.delay(1.2, function()
-            resizeDebounce = false
-        end)
+        task.delay(1.2, function() resizeDebounce = false end)
     end
 
     resizeButton.Activated:Connect(resizeHandler)
@@ -2838,54 +2660,36 @@ function FlycerLib:CreateWindow(windowCfg)
 
         local discordClicking = false
         local function discordHandler()
-            if discordClicking then
-                return
-            end
+            if discordClicking then return end
             discordClicking = true
 
-            TweenService
-                :Create(discordButton, TweenInfo.new(0.12, Enum.EasingStyle.Quint, Enum.EasingDirection.Out), {
-                    BackgroundColor3 = Color3.fromRGB(180, 130, 255),
-                    BackgroundTransparency = 0.1,
-                })
-                :Play()
-            TweenService
-                :Create(discordStroke, TweenInfo.new(0.12, Enum.EasingStyle.Quint, Enum.EasingDirection.Out), {
-                    Color = Color3.fromRGB(200, 160, 255),
-                    Transparency = 0,
-                })
-                :Play()
+            TweenService:Create(discordButton, TweenInfo.new(0.12, Enum.EasingStyle.Quint, Enum.EasingDirection.Out), {
+                BackgroundColor3 = Color3.fromRGB(180, 130, 255),
+                BackgroundTransparency = 0.1,
+            }):Play()
+            TweenService:Create(discordStroke, TweenInfo.new(0.12, Enum.EasingStyle.Quint, Enum.EasingDirection.Out), {
+                Color = Color3.fromRGB(200, 160, 255),
+                Transparency = 0,
+            }):Play()
 
             task.delay(0.22, function()
-                if not (discordButton and discordButton.Parent) then
-                    return
-                end
-                TweenService
-                    :Create(discordButton, TweenInfo.new(0.20, Enum.EasingStyle.Quint, Enum.EasingDirection.Out), {
-                        BackgroundColor3 = RX.Accent1,
-                        BackgroundTransparency = 0.8,
-                    })
-                    :Play()
-                TweenService
-                    :Create(discordStroke, TweenInfo.new(0.20, Enum.EasingStyle.Quint, Enum.EasingDirection.Out), {
-                        Color = RX.Accent1,
-                        Transparency = 0.3,
-                    })
-                    :Play()
+                if not (discordButton and discordButton.Parent) then return end
+                TweenService:Create(discordButton, TweenInfo.new(0.20, Enum.EasingStyle.Quint, Enum.EasingDirection.Out), {
+                    BackgroundColor3 = RX.Accent1,
+                    BackgroundTransparency = 0.8,
+                }):Play()
+                TweenService:Create(discordStroke, TweenInfo.new(0.20, Enum.EasingStyle.Quint, Enum.EasingDirection.Out), {
+                    Color = RX.Accent1,
+                    Transparency = 0.3,
+                }):Play()
 
                 task.delay(0.20, function()
                     local copied = false
                     if EXECUTOR_APIS.setclipboard then
-                        pcall(function()
-                            setclipboard(discordLink)
-                            copied = true
-                        end)
+                        pcall(function() setclipboard(discordLink) copied = true end)
                     end
                     if not copied and EXECUTOR_APIS.toclipboard then
-                        pcall(function()
-                            toclipboard(discordLink)
-                            copied = true
-                        end)
+                        pcall(function() toclipboard(discordLink) copied = true end)
                     end
 
                     if discordButton and discordButton.Parent then
@@ -2907,9 +2711,7 @@ function FlycerLib:CreateWindow(windowCfg)
                 end)
             end)
 
-            task.delay(2, function()
-                discordClicking = false
-            end)
+            task.delay(2, function() discordClicking = false end)
         end
 
         discordButton.Activated:Connect(discordHandler)
@@ -2987,20 +2789,13 @@ function FlycerLib:CreateWindow(windowCfg)
 
             return {
                 Frame = f,
-                SetText = function(newText)
-                    lbl.Text = newText
-                end,
-                Destroy = function()
-                    if f and f.Parent then
-                        f:Destroy()
-                    end
-                end,
+                SetText = function(newText) lbl.Text = newText end,
+                Destroy = function() if f and f.Parent then f:Destroy() end end,
             }
         end
 
         function Components:CreateSection(cfg, layoutOrder)
             local title, order
-
             if type(cfg) == "table" then
                 title = cfg.Title or cfg.title or "Section"
                 order = cfg.LayoutOrder or cfg.layoutOrder or 50
@@ -3045,20 +2840,13 @@ function FlycerLib:CreateWindow(windowCfg)
 
             return {
                 Frame = container,
-                SetTitle = function(newTitle)
-                    label.Text = string.upper(newTitle)
-                end,
-                Destroy = function()
-                    if container and container.Parent then
-                        container:Destroy()
-                    end
-                end,
+                SetTitle = function(newTitle) label.Text = string.upper(newTitle) end,
+                Destroy = function() if container and container.Parent then container:Destroy() end end,
             }
         end
 
         function Components:CreateButton(cfg)
             cfg = cfg or {}
-
             local title = cfg.Name or cfg.Title or cfg.title or cfg.Label or cfg.label or "Button"
             local layoutOrder = cfg.LayoutOrder or cfg.layoutOrder or 99
             local lockedState = cfg.Locked == true or cfg.locked == true
@@ -3128,9 +2916,7 @@ function FlycerLib:CreateWindow(windowCfg)
             updateLockedVisuals(true)
 
             btn.Activated:Connect(function()
-                if locked or isDebounced then
-                    return
-                end
+                if locked or isDebounced then return end
                 isDebounced = true
                 TweenService:Create(btn, TWEEN_FAST, { BackgroundTransparency = 0 }):Play()
                 task.delay(0.15, function()
@@ -3138,12 +2924,8 @@ function FlycerLib:CreateWindow(windowCfg)
                         TweenService:Create(btn, TWEEN_FAST, { BackgroundTransparency = 0.15 }):Play()
                     end
                 end)
-                if typeof(callback) == "function" then
-                    task.spawn(callback)
-                end
-                task.delay(debounceTime, function()
-                    isDebounced = false
-                end)
+                if typeof(callback) == "function" then task.spawn(callback) end
+                task.delay(debounceTime, function() isDebounced = false end)
             end)
 
             if not isMobile then
@@ -3164,36 +2946,21 @@ function FlycerLib:CreateWindow(windowCfg)
             return {
                 Frame = frame,
                 Button = btn,
-                SetCallback = function(fn)
-                    callback = fn
-                end,
-                SetLocked = function(v)
-                    locked = v == true
-                    updateLockedVisuals(false)
-                end,
-                GetLocked = function()
-                    return locked
-                end,
-                SetTitle = function(newTitle)
-                    titleLbl.Text = newTitle
-                end,
-                Destroy = function()
-                    if frame and frame.Parent then
-                        frame:Destroy()
-                    end
-                end,
+                SetCallback = function(fn) callback = fn end,
+                SetLocked = function(v) locked = v == true updateLockedVisuals(false) end,
+                GetLocked = function() return locked end,
+                SetTitle = function(newTitle) titleLbl.Text = newTitle end,
+                Destroy = function() if frame and frame.Parent then frame:Destroy() end end,
             }
         end
 
         function Components:CreateToggle(cfg)
             cfg = cfg or {}
-
             local title = cfg.Name or cfg.Title or cfg.title or cfg.Label or cfg.label or "Toggle"
             local layoutOrder = cfg.LayoutOrder or cfg.layoutOrder or 99
             local defaultState = cfg.CurrentValue == true or cfg.Default == true or cfg.default == true
             local lockedState = cfg.Locked == true or cfg.locked == true
             local debounceTime = tonumber(cfg.Debounce or cfg.debounce) or 0.3
-            local flag = cfg.Flag or cfg.flag
             local callback = cfg.Callback or cfg.callback or cfg.onToggle
 
             local frame = makeBaseCard(layoutOrder, 34)
@@ -3271,11 +3038,9 @@ function FlycerLib:CreateWindow(windowCfg)
             local function updateToggle(enabled, instant)
                 local ti = instant and TweenInfo.new(0)
                     or TweenInfo.new(0.22, Enum.EasingStyle.Back, Enum.EasingDirection.Out)
-
                 TweenService:Create(knob, ti, {
                     Position = enabled and knobOn or knobOff,
-                    BackgroundColor3 = enabled and Color3.fromRGB(255, 255, 255)
-                        or Color3.fromRGB(150, 150, 170),
+                    BackgroundColor3 = enabled and Color3.fromRGB(255, 255, 255) or Color3.fromRGB(150, 150, 170),
                 }):Play()
                 TweenService:Create(knobGlow, TWEEN_FAST, {
                     BackgroundTransparency = enabled and 0.4 or 1,
@@ -3297,9 +3062,7 @@ function FlycerLib:CreateWindow(windowCfg)
 
             local function fireCallback()
                 if typeof(callback) == "function" then
-                    task.spawn(function()
-                        callback(state)
-                    end)
+                    task.spawn(function() callback(state) end)
                 end
             end
 
@@ -3307,16 +3070,12 @@ function FlycerLib:CreateWindow(windowCfg)
             updateLockedVisuals(true)
 
             toggleBtn.Activated:Connect(function()
-                if locked or isDebounced then
-                    return
-                end
+                if locked or isDebounced then return end
                 isDebounced = true
                 state = not state
                 updateToggle(state, false)
                 fireCallback()
-                task.delay(debounceTime, function()
-                    isDebounced = false
-                end)
+                task.delay(debounceTime, function() isDebounced = false end)
             end)
 
             return {
@@ -3325,35 +3084,20 @@ function FlycerLib:CreateWindow(windowCfg)
                 SetState = function(v, shouldCallback)
                     state = v == true
                     updateToggle(state, false)
-                    if shouldCallback == true then
-                        fireCallback()
-                    end
+                    if shouldCallback == true then fireCallback() end
                 end,
-                GetState = function()
-                    return state
-                end,
-                SetLocked = function(v)
-                    locked = v == true
-                    updateLockedVisuals(false)
-                end,
-                GetLocked = function()
-                    return locked
-                end,
-                SetCallback = function(fn)
-                    callback = fn
-                end,
-                Destroy = function()
-                    if frame and frame.Parent then
-                        frame:Destroy()
-                    end
-                end,
+                GetState = function() return state end,
+                SetLocked = function(v) locked = v == true updateLockedVisuals(false) end,
+                GetLocked = function() return locked end,
+                SetCallback = function(fn) callback = fn end,
+                Destroy = function() if frame and frame.Parent then frame:Destroy() end end,
             }
         end
 
         return Components
     end
 
-    -- INITIAL SYNC
+    -- INITIAL SYNC & LOADING SEQUENCE
 
     task.spawn(function()
         local waited = 0
@@ -3361,26 +3105,33 @@ function FlycerLib:CreateWindow(windowCfg)
             RunService.RenderStepped:Wait()
             waited = waited + 1 / 60
         end
+
         local syncLayout = calcLayout(currentGUIWidth, currentGUIHeight)
         MainFrame.Position = syncLayout.mainPos
         if ToggleFrame and ToggleFrame.Parent then
             ToggleFrame.Position = syncLayout.togglePos
         end
         _lastVP = Camera.ViewportSize
+
+        -- Tunggu semua elemen ter-render
         task.wait(0.1)
-        cacheOriginalValues()
+
+        -- Cache target reveal dari MainFrame dan ToggleFrame
+        cacheAllRevealTargets(MainFrame)
+        cacheAllRevealTargets(ToggleFrame)
+
+        -- Cache untuk sistem toggle hide/show setelah reveal selesai
+        task.defer(function()
+            task.wait(REVEAL_DURATION + 0.2)
+            cacheOriginalValues()
+        end)
     end)
 
-    -- Start counters
-    StartPingCounter()
-    StartFPSCounter()
+    -- BUILT-IN SETTINGS TAB
 
-    -- SETTINGS TAB (built-in)
-
-    local settingsCanvas, _settingsL = addTab("Settings", 999)
+    local settingsCanvas, _ = addTab("Settings", 999)
     local SettingsC = makeComponents(settingsCanvas)
 
-    -- Ping/FPS positioning
     local PING_POS_BOTH_ON = UDim2.new(1, -156, 0.5, 0)
     local FPS_POS_BOTH_ON = UDim2.new(1, -71, 0.5, 0)
     local PING_POS_SOLO = UDim2.new(1, -86, 0.5, 0)
@@ -3450,19 +3201,30 @@ function FlycerLib:CreateWindow(windowCfg)
         Callback = setUILock,
     })
 
-    -- WINDOW OBJECT (returned to user)
+    -- SHOW LOADING NOTIFICATION → REVEAL UI
+
+    ShowNotification({
+        title = loadingTitle,
+        body = loadingSubtitle,
+        duration = loadingDuration,
+        onComplete = function()
+            revealUI(function()
+                StartPingCounter()
+                StartFPSCounter()
+            end)
+        end,
+    })
+
+    -- WINDOW OBJECT
 
     local Window = {}
 
     function Window:CreateTab(name, layoutOrder)
-        local tabCanvas, tabLayout = addTab(name, layoutOrder)
+        local tabCanvas, _ = addTab(name, layoutOrder)
         local TabObj = makeComponents(tabCanvas)
-
-        -- Auto-activate first user tab
         if not activeTabName then
             activateTab(name)
         end
-
         return TabObj
     end
 
@@ -3472,15 +3234,10 @@ function FlycerLib:CreateWindow(windowCfg)
 
     function Window:Destroy()
         cleanupAll()
-        if MainGui and MainGui.Parent then
-            MainGui:Destroy()
-        end
-        if ToggleSG and ToggleSG.Parent then
-            ToggleSG:Destroy()
-        end
+        if MainGui and MainGui.Parent then MainGui:Destroy() end
+        if ToggleSG and ToggleSG.Parent then ToggleSG:Destroy() end
     end
 
-    -- Auto-activate first tab if none active
     task.defer(function()
         if not activeTabName and firstTabName then
             activateTab(firstTabName)
@@ -3494,15 +3251,9 @@ end
 
 if getgenv then
     getgenv()._FlycerUI = {
-        GetRefs = function()
-            return _FLYCER_PRIVATE.Refs
-        end,
-        GetFrame = function()
-            return _FLYCER_PRIVATE.MainFrame
-        end,
-        Notify = function(c)
-            ShowNotification(c)
-        end,
+        GetRefs = function() return _FLYCER_PRIVATE.Refs end,
+        GetFrame = function() return _FLYCER_PRIVATE.MainFrame end,
+        Notify = function(c) ShowNotification(c) end,
     }
 end
 
