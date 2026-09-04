@@ -104,6 +104,7 @@ jobs:
                         \"author\": {
                           \"name\": \"${{ github.repository }}\",
                           \"url\": \"https://github.com/${{ github.repository }}\",
+                          \"icon_url\": \"https://raw.githubusercontent.com/Footagesus/WindUI/main/docs/logo.png\"
                         }
                       }]
                     }"
