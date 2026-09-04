@@ -1,10 +1,6 @@
 --[[
-     _      ___         ____  ______
-    | | /| / (_)__  ___/ / / / /  _/
-    | |/ |/ / / _ \/ _  / /_/ // /  
-    |__/|__/_/_//_/\_,_/\____/___/
     
-    v1.0.0  |  2026-09-04  |  A Roblox UI Library based on WindUI.
+    v1.6.66  |  2026-09-04  |  A Roblox UI Library based on WindUI.
     
     To view the source code, see the `src/` folder on the official GitHub repository.
     
@@ -2474,7 +2470,7 @@ New=a.load'j'.New
 return[[
 {
   "name": "flycerui",
-  "version": "1.0.0",
+  "version": "1.6.66",
   "description": "A Roblox UI Library based on WindUI.",
   "main": "dist/main.lua",
   "repository": "https://github.com/Kyoukara/FlycerUI",
