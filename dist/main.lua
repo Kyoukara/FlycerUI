@@ -1,3 +1,19 @@
+--[[
+     _      ___         ____  ______
+    | | /| / (_)__  ___/ / / / /  _/
+    | |/ |/ / / _ \/ _  / /_/ // /  
+    |__/|__/_/_//_/\_,_/\____/___/
+    
+    v1.0.0  |  2026-09-04  |  A Roblox UI Library based on WindUI.
+    
+    To view the source code, see the `src/` folder on the official GitHub repository.
+    
+    Author: Footagesus (Footages, .ftgs, oftgs)
+    Github: https://github.com/Kyoukara/FlycerUI
+    Discord: 
+    License: MIT
+]]
+
 type ConfigType__DARKLUA_TYPE_a={
 Object:Instance,
 Camera:Instance?,
@@ -2457,34 +2473,16 @@ New=a.load'j'.New
 
 return[[
 {
-    "name": "flycerui",
-    "version": "1.6.65",
-    "main": "./dist/main.lua",
-    "repository": "https://github.com/Kyoukara/FlycerUI",
-    "discord": "https://discord.gg/ftgs-development-hub-1300692552005189632",
-    "author": "Footagesus",
-    "description": "Roblox UI Library for scripts",
-    "license": "MIT",
-    "scripts": {
-        "dev": "bash build/build.sh dev $INPUT_FILE",
-        "build": "bash build/build.sh build $INPUT_FILE",
-        "live": "python3 -m http.server 8642",
-        "watch": "chokidar . -i 'node_modules' -i 'dist' -i 'build' -c 'npm run dev --'",
-        "live-build": "concurrently \"npm run live\" \"npm run watch --\"",
-        "example-live-build": "INPUT_FILE=main_example.lua npm run live-build",
-        "updater": "python3 updater/main.py"
-    },
-    "keywords": [
-        "ui-library",
-        "ui-design",
-        "script",
-        "script-hub",
-        "exploiting"
-    ],
-    "devDependencies": {
-        "chokidar-cli": "^3.0.0",
-        "concurrently": "^9.2.0"
-    }
+  "name": "flycerui",
+  "version": "1.0.0",
+  "description": "A Roblox UI Library based on WindUI.",
+  "main": "dist/main.lua",
+  "repository": "https://github.com/Kyoukara/FlycerUI",
+  "license": "MIT",
+  "scripts": {
+    "build": "bash build/build.sh"
+  },
+  "devDependencies": {}
 }
 ]]end function a.m()
 
@@ -3619,6 +3617,7 @@ return ah
 end end function a.s()
 
 
+
 local aa=a.load'd'
 local ab=a.load'r'
 
@@ -3992,6 +3991,7 @@ return ag
 end
 
 return aa end function a.v()
+
 return function(aa,ab)
 return{
 Dark={
@@ -5161,6 +5161,7 @@ return ae.Configs[ag]
 end
 
 return ae end function a.A()
+
 local aa={}
 
 local ab=a.load'd'
@@ -5446,6 +5447,7 @@ end
 
 
 return aa end function a.B()
+
 local aa={}
 
 local ab=a.load'd'
@@ -5608,6 +5610,7 @@ end
 
 
 return aa end function a.C()
+
 game:GetService"ReplicatedStorage"
 local aa=a.load'd'
 local ab=aa.New
@@ -7000,6 +7003,7 @@ end
 
 
 return aa end function a.H()
+
 local aa=a.load'd'local ab=
 aa.New local ac=
 aa.Tween
@@ -12414,6 +12418,7 @@ end
 
 
 return aa end function a.ac()
+
 return{
 Tab="table-of-contents",
 Paragraph="type",
@@ -12426,6 +12431,7 @@ Dropdown="chevrons-up-down",
 Code="terminal",
 Colorpicker="palette",
 }end function a.ad()
+
 local aa=(cloneref or clonereference or function(aa)
 return aa
 end)
