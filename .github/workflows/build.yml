@@ -21,11 +21,17 @@ jobs:
         with:
           node-version: "20"
 
-      - name: Install DarkLua
-        uses: ok-nick/setup-aftman@v0.3.0
+      - name: Install Aftman
+        uses: ok-nick/setup-aftman@v0.4.2
+        with:
+          token: ${{ github.token }}
 
       - name: Install tools
-        run: aftman install
+        run: |
+          aftman install --no-trust-check
+          echo "$HOME/.aftman/bin" >> "$GITHUB_PATH"
+          export PATH="$HOME/.aftman/bin:$PATH"
+          darklua --version
 
       - name: Build FlycerUI
         run: npm run build
