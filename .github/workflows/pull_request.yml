@@ -1,7 +1,7 @@
 name: Build FlycerUI (Pull Request)
 
 on:
-    pull_request:
+    pull_request_target:
         types: [opened, synchronize, reopened]
 
 jobs:
@@ -59,7 +59,7 @@ jobs:
                   LINE_COUNT=$(wc -l < "$EXAMPLE_FILE")
                   echo "line_count=$LINE_COUNT" >> $GITHUB_OUTPUT
 
-                  if grep -q "loadstring(game:HttpGet('https://raw.githubusercontent.com/Footagesus/WindUI/refs/heads/main/main.client.lua'))()" "$EXAMPLE_FILE"; then
+                  if grep -q "loadstring(game:HttpGet('https://raw.githubusercontent.com/Kyoukara/FlycerUI/refs/heads/main/main.client.lua'))()" "$EXAMPLE_FILE"; then
                     echo "file_exists=true" >> $GITHUB_OUTPUT
                     echo "using_main_client=true" >> $GITHUB_OUTPUT
                     echo "Should update with PR dist/main.lua"
