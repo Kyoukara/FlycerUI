@@ -1,4 +1,6 @@
-# Tools used to build FlycerUI.
+# File ini berisi daftar toolchain yang dikelola oleh Aftman.
+# Informasi lebih lanjut, https://github.com/LPGhatguy/aftman
+
 [tools]
 rojo = "rojo-rbx/rojo@7.3.0"
 darklua = "seaofvoices/darklua@0.17.1"
