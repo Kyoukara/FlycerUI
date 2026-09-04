@@ -104,7 +104,6 @@ jobs:
                         \"author\": {
                           \"name\": \"${{ github.repository }}\",
                           \"url\": \"https://github.com/${{ github.repository }}\",
-                          \"icon_url\": \"https://raw.githubusercontent.com/Kyoukara/FlycerUI/main/docs/logo.png\"
                         }
                       }]
                     }"
