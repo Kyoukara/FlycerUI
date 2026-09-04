@@ -27,11 +27,14 @@ fi
 OUTPUT="dist/main.lua"
 CONFIG="build/darklua.dev.config.json"
 
-PKG=$(node -e "const p=require('./package.json');console.log(JSON.stringify({v:p.version||'',d:p.description||'',r:p.repository||'',s:p.discord||'',l:p.license||''}))")
+PKG=$(node -e "const p=require('./package.json');console.log(JSON.stringify({v:p.version||'',d:p.description||'',r:typeof p.repository==='string'?p.repository:(p.repository?.url||''),s:p.discord||'',l:p.license||''}))")
 
-[ $? -ne 0 ] && echo -e "${E}[ × ]${R} Failed to read package.json" && exit 1
+if [ $? -ne 0 ]; then
+    echo -e "${E}[ × ]${R} Failed to read package.json"
+    exit 1
+fi
 
-VER=$(echo $PKG | node -pe "JSON.parse(require('fs').readFileSync(0,'utf-8')).v")
+VER=$(echo "$PKG" | node -pe "JSON.parse(require('fs').readFileSync(0,'utf-8')).v")
 DATE=$(date '+%Y-%m-%d')
 
 HEADER=$(cat build/header.lua | node -e "
@@ -47,7 +50,20 @@ console.log(h);
 ")
 
 START=$(date +%s%N)
-DARKLUA_OUT=$(darklua process "$INPUT" dist/temp.lua --config "$CONFIG" 2>&1)
+
+# Cari DarkLua yang tersedia
+if command -v darklua >/dev/null 2>&1; then
+    DARKLUA_CMD="darklua"
+elif command -v aftman >/dev/null 2>&1; then
+    DARKLUA_CMD="aftman run darklua"
+else
+    echo -e "${E}[ × ]${R} DarkLua tidak ditemukan"
+    echo "Pastikan aftman.toml berisi DarkLua dan Aftman sudah di-install."
+    exit 1
+fi
+
+# Jalankan DarkLua
+DARKLUA_OUT=$($DARKLUA_CMD process "$INPUT" dist/temp.lua --config "$CONFIG" 2>&1)
 DARKLUA_EXIT=$?
 
 if [ $DARKLUA_EXIT -ne 0 ]; then
