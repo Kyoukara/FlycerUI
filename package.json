@@ -1,0 +1,12 @@
+{
+  "name": "flycerui",
+  "version": "1.0.0",
+  "description": "A Roblox UI Library based on WindUI.",
+  "main": "dist/main.lua",
+  "repository": "https://github.com/Kyoukara/FlycerUI",
+  "license": "MIT",
+  "scripts": {
+    "build": "bash build/build.sh"
+  },
+  "devDependencies": {}
+}
