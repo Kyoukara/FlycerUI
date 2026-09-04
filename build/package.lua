@@ -3,9 +3,9 @@
 return [[
 {
     "name": "flycerui",
-    "version": "1.6.66",
+    "version": "1.6.65",
     "main": "./dist/main.lua",
-    "repository": "https://github.com/Footagesus/FlycerUI",
+    "repository": "https://github.com/Kyoukara/FlycerUI",
     "discord": "https://discord.gg/ftgs-development-hub-1300692552005189632",
     "author": "Footagesus",
     "description": "Roblox UI Library for scripts",
