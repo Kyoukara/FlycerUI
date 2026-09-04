@@ -47,7 +47,7 @@ console.log(h);
 ")
 
 START=$(date +%s%N)
-DARKLUA_OUT=$("$HOME/.aftman/bin/darklua" process "$INPUT" dist/temp.lua --config "$CONFIG" 2>DARKLUA_OUT=$(darklua process "$INPUT" dist/temp.lua --config "$CONFIG" 2>&1)1)
+DARKLUA_OUT=$(darklua process "$INPUT" dist/temp.lua --config "$CONFIG" 2>&1)
 DARKLUA_EXIT=$?
 
 if [ $DARKLUA_EXIT -ne 0 ]; then
