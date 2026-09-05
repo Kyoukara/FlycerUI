@@ -5189,32 +5189,12 @@ end)
 
 ae(game:GetService"UserInputService")
 
-
 function aa.New(af)
 local ag={
-CustomeSize=2,
-
-
-Preset1={
-ButtonHeight=44,
-IconSize=28,
-TextSize=17,
-},
-Preset2={
-ButtonHeight=34,
-IconSize=24,
-TextSize=13,
-},
-}
-
-
-local ah=ag.CustomeSize==2 and ag.Preset2 or ag.Preset1
-
-local ai={
 Button=nil,
 }
 
-local aj
+local ah
 
 
 
@@ -5228,16 +5208,16 @@ local aj
 
 
 
-local ak=ac("TextLabel",{
+local ai=ac("TextLabel",{
 Text=af.Title,
-TextSize=ah.TextSize,
+TextSize=17,
 FontFace=Font.new(ab.Font,Enum.FontWeight.Medium),
 BackgroundTransparency=1,
 AutomaticSize="XY",
 })
 
-local al=ac("Frame",{
-Size=UDim2.new(0,ah.ButtonHeight-8,0,ah.ButtonHeight-8),
+local aj=ac("Frame",{
+Size=UDim2.new(0,36,0,36),
 BackgroundTransparency=1,
 Name="Drag",
 },{
@@ -5255,7 +5235,7 @@ ImageColor3="Icon",
 ImageTransparency=0.3,
 }),
 })
-local am=ac("Frame",{
+local ak=ac("Frame",{
 Size=UDim2.new(0,1,1,0),
 Position=UDim2.new(0,36,0.5,0),
 AnchorPoint=Vector2.new(0,0.5),
@@ -5263,9 +5243,9 @@ BackgroundColor3=Color3.new(1,1,1),
 BackgroundTransparency=0.9,
 })
 
-local an=ac("Frame",{
+local al=ac("Frame",{
 Size=UDim2.new(0,0,0,0),
-Position=UDim2.new(0.5,0,0,6+ah.ButtonHeight/2),
+Position=UDim2.new(0.5,0,0,28),
 AnchorPoint=Vector2.new(0.5,0.5),
 Parent=af.Parent,
 BackgroundTransparency=1,
@@ -5273,20 +5253,20 @@ Active=true,
 Visible=false,
 })
 
-local ao=ac("UIScale",{
+local am=ac("UIScale",{
 Scale=1,
 })
 
-local ap=ac("Frame",{
-Size=UDim2.new(0,0,0,ah.ButtonHeight),
+local an=ac("Frame",{
+Size=UDim2.new(0,0,0,44),
 AutomaticSize="X",
-Parent=an,
+Parent=al,
 Active=false,
 BackgroundTransparency=0.25,
 ZIndex=99,
 BackgroundColor3=Color3.new(0,0,0),
 },{
-ao,
+am,
 ac("UICorner",{
 CornerRadius=UDim.new(1,0),
 }),
@@ -5300,8 +5280,8 @@ ac("UIGradient",{
 Color=ColorSequence.new(Color3.fromHex"40c9ff",Color3.fromHex"e81cff"),
 }),
 }),
-al,
-am,
+aj,
+ak,
 
 ac("UIListLayout",{
 Padding=UDim.new(0,4),
@@ -5313,20 +5293,20 @@ ac("TextButton",{
 AutomaticSize="XY",
 Active=true,
 BackgroundTransparency=1,
-Size=UDim2.new(0,0,0,ah.ButtonHeight-(8)),
+Size=UDim2.new(0,0,0,36),
 
 BackgroundColor3=Color3.new(1,1,1),
 },{
 ac("UICorner",{
 CornerRadius=UDim.new(1,-4),
 }),
-aj,
+ah,
 ac("UIListLayout",{
 Padding=UDim.new(0,af.UIPadding),
 FillDirection="Horizontal",
 VerticalAlignment="Center",
 }),
-ak,
+ai,
 ac("UIPadding",{
 PaddingLeft=UDim.new(0,11),
 PaddingRight=UDim.new(0,11),
@@ -5338,121 +5318,120 @@ PaddingRight=UDim.new(0,4),
 }),
 })
 
-ai.Button=ap
+ag.Button=an
 
-function ai.SetIcon(aq,ar)
-if aj then
-aj:Destroy()
+function ag.SetIcon(ao,ap)
+if ah then
+ah:Destroy()
 end
-if ar then
-aj=ab.Image(ar,af.Title,0,af.Folder,"OpenButton",true,af.IconThemed)
-
-aj.Size=UDim2.new(0,ah.IconSize,0,ah.IconSize)
-aj.LayoutOrder=-1
-aj.Parent=ai.Button.TextButton
+if ap then
+ah=ab.Image(ap,af.Title,0,af.Folder,"OpenButton",true,af.IconThemed)
+ah.Size=UDim2.new(0,22,0,22)
+ah.LayoutOrder=-1
+ah.Parent=ag.Button.TextButton
 end
 end
 
 if af.Icon then
-ai:SetIcon(af.Icon)
+ag:SetIcon(af.Icon)
 end
 
-ab.AddSignal(ap:GetPropertyChangedSignal"AbsoluteSize",function()
-an.Size=UDim2.new(0,ap.AbsoluteSize.X,0,ap.AbsoluteSize.Y)
+ab.AddSignal(an:GetPropertyChangedSignal"AbsoluteSize",function()
+al.Size=UDim2.new(0,an.AbsoluteSize.X,0,an.AbsoluteSize.Y)
 end)
 
-ab.AddSignal(ap.TextButton.MouseEnter,function()
-ad(ap.TextButton,0.1,{BackgroundTransparency=0.93}):Play()
+ab.AddSignal(an.TextButton.MouseEnter,function()
+ad(an.TextButton,0.1,{BackgroundTransparency=0.93}):Play()
 end)
-ab.AddSignal(ap.TextButton.MouseLeave,function()
-ad(ap.TextButton,0.1,{BackgroundTransparency=1}):Play()
+ab.AddSignal(an.TextButton.MouseLeave,function()
+ad(an.TextButton,0.1,{BackgroundTransparency=1}):Play()
 end)
 
-local aq=ab.Drag(an)
+local ao=ab.Drag(al)
 
-function ai.Visible(ar,as)
-an.Visible=as
+function ag.Visible(ap,aq)
+al.Visible=aq
 end
 
-function ai.SetScale(ar,as)
-ao.Scale=as
+function ag.SetScale(ap,aq)
+am.Scale=aq
 end
 
-function ai.Edit(ar,as)
-local at={
-Title=as.Title,
-Icon=as.Icon,
-Enabled=as.Enabled,
-Position=as.Position,
-OnlyIcon=as.OnlyIcon or false,
-Draggable=as.Draggable or nil,
-OnlyMobile=as.OnlyMobile,
-CornerRadius=as.CornerRadius or UDim.new(1,0),
-StrokeThickness=as.StrokeThickness or 2,
-Scale=as.Scale or 1,
-Color=as.Color or ColorSequence.new(Color3.fromHex"40c9ff",Color3.fromHex"e81cff"),
+function ag.Edit(ap,aq)
+local ar={
+Title=aq.Title,
+Icon=aq.Icon,
+Enabled=aq.Enabled,
+Position=aq.Position,
+OnlyIcon=aq.OnlyIcon or false,
+Draggable=aq.Draggable or nil,
+OnlyMobile=aq.OnlyMobile,
+CornerRadius=aq.CornerRadius or UDim.new(1,0),
+StrokeThickness=aq.StrokeThickness or 2,
+Scale=aq.Scale or 1,
+Color=aq.Color or ColorSequence.new(Color3.fromHex"40c9ff",Color3.fromHex"e81cff"),
 }
 
-if at.Enabled==false then
+if ar.Enabled==false then
 af.IsOpenButtonEnabled=false
 end
 
-if at.OnlyMobile~=false then
-at.OnlyMobile=true
+if ar.OnlyMobile~=false then
+ar.OnlyMobile=true
 else
 af.IsPC=false
 end
 
-if at.Draggable==false and al and am then
-al.Visible=at.Draggable
-am.Visible=at.Draggable
+if ar.Draggable==false and aj and ak then
+aj.Visible=ar.Draggable
+ak.Visible=ar.Draggable
 
-if aq then
-aq:Set(at.Draggable)
+if ao then
+ao:Set(ar.Draggable)
 end
 end
 
-if at.Position and an then
-an.Position=at.Position
+if ar.Position and al then
+al.Position=ar.Position
 end
 
-if at.OnlyIcon==true and ak then
-ak.Visible=false
-ap.TextButton.UIPadding.PaddingLeft=UDim.new(0,7)
-ap.TextButton.UIPadding.PaddingRight=UDim.new(0,7)
-elseif at.OnlyIcon==false then
-ak.Visible=true
-ap.TextButton.UIPadding.PaddingLeft=UDim.new(0,11)
-ap.TextButton.UIPadding.PaddingRight=UDim.new(0,11)
+if ar.OnlyIcon==true and ai then
+ai.Visible=false
+an.TextButton.UIPadding.PaddingLeft=UDim.new(0,7)
+an.TextButton.UIPadding.PaddingRight=UDim.new(0,7)
+elseif ar.OnlyIcon==false then
+ai.Visible=true
+an.TextButton.UIPadding.PaddingLeft=UDim.new(0,11)
+an.TextButton.UIPadding.PaddingRight=UDim.new(0,11)
 end
 
-if ak then
-if at.Title then
-ak.Text=at.Title
-ab:ChangeTranslationKey(ak,at.Title)
-elseif at.Title==nil then
+if ai then
+if ar.Title then
+ai.Text=ar.Title
+ab:ChangeTranslationKey(ai,ar.Title)
+elseif ar.Title==nil then
 
 end
 end
 
-if at.Icon then
-ai:SetIcon(at.Icon)
+if ar.Icon then
+ag:SetIcon(ar.Icon)
 end
 
-ap.UIStroke.UIGradient.Color=at.Color
+an.UIStroke.UIGradient.Color=ar.Color
 if Glow then
-Glow.UIGradient.Color=at.Color
+Glow.UIGradient.Color=ar.Color
 end
 
-ap.UICorner.CornerRadius=at.CornerRadius
-ap.TextButton.UICorner.CornerRadius=
-UDim.new(at.CornerRadius.Scale,at.CornerRadius.Offset-4)
-ap.UIStroke.Thickness=at.StrokeThickness
+an.UICorner.CornerRadius=ar.CornerRadius
+an.TextButton.UICorner.CornerRadius=
+UDim.new(ar.CornerRadius.Scale,ar.CornerRadius.Offset-4)
+an.UIStroke.Thickness=ar.StrokeThickness
 
-ai:SetScale(at.Scale)
+ag:SetScale(ar.Scale)
 end
 
-return ai
+return ag
 end
 
 
