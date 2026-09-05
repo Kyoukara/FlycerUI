@@ -20,7 +20,7 @@ local Window, FlycerUI, UIScale
 --    KONFIGURASI ACCENT/AKSEN BIRU (UBAH DI SINI)
 -- ============================================
 local ACCENT_COLOR = Color3.fromRGB(64, 156, 255) -- Warna biru aksen
-local ACCENT_WIDTH = 3                             -- Ketebalan garis aksen
+local ACCENT_WIDTH = 5                             -- Ketebalan garis aksen
 local TWEEN_FAST = TweenInfo.new(0.15, Enum.EasingStyle.Quart, Enum.EasingDirection.Out)
 local TWEEN_NORMAL = TweenInfo.new(0.25, Enum.EasingStyle.Quart, Enum.EasingDirection.Out)
 -- ============================================
