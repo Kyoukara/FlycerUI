@@ -3,6 +3,7 @@ local cloneref = (cloneref or clonereference or function(instance)
 end)
 
 local Players = game:GetService("Players")
+local TweenService = game:GetService("TweenService")
 
 local UserInputService = cloneref(game:GetService("UserInputService"))
 local Mouse = Players.LocalPlayer:GetMouse()
@@ -15,9 +16,16 @@ local CreateScrollSlider = require("../ui/ScrollSlider").New
 
 local Window, FlycerUI, UIScale
 
+-- ============================================
+--    KONFIGURASI ACCENT/AKSEN BIRU (UBAH DI SINI)
+-- ============================================
+local ACCENT_COLOR = Color3.fromRGB(64, 156, 255) -- Warna biru aksen
+local ACCENT_WIDTH = 3                             -- Ketebalan garis aksen
+local TWEEN_FAST = TweenInfo.new(0.15, Enum.EasingStyle.Quart, Enum.EasingDirection.Out)
+local TWEEN_NORMAL = TweenInfo.new(0.25, Enum.EasingStyle.Quart, Enum.EasingDirection.Out)
+-- ============================================
+
 local TabModule = {
-	--Window = nil,
-	--FlycerUI = nil,
 	Tabs = {},
 	Containers = {},
 	SelectedTab = nil,
@@ -66,14 +74,6 @@ function TabModule.New(Config, UIScale)
 		TitlePaddingY = 0,
 	}
 
-	-- if Tab.TabTitleAlign == "Left" then
-	-- 	Tab.TabTitleAlign = "Top"
-	-- elseif Tab.TabTitleAlign == "Right" then
-	-- 	Tab.TabTitleAlign = "Bottom"
-	-- elseif Tab.TabTitleAlign == "Center" then
-	-- 	Tab.TabTitleAlign = "Center"
-	-- end
-
 	if Tab.IconShape then
 		Tab.TabPaddingX = 2 + (Window.UIPadding / 4)
 		Tab.TabPaddingY = 2 + (Window.UIPadding / 4)
@@ -102,30 +102,16 @@ function TabModule.New(Config, UIScale)
 			},
 			AnchorPoint = Vector2.new(0.5, 0.5),
 			Position = UDim2.new(0.5, 0, 0.5, 0),
-			ImageTransparency = 1, -- .7
+			ImageTransparency = 1,
 			Name = "Outline",
-		}, {
-			-- New("UIGradient", {
-			--     Rotation = 80,
-			--     Color = ColorSequence.new({
-			--         ColorSequenceKeypoint.new(0.0, Color3.fromRGB(255, 255, 255)),
-			--         ColorSequenceKeypoint.new(0.5, Color3.fromRGB(255, 255, 255)),
-			--         ColorSequenceKeypoint.new(1.0, Color3.fromRGB(255, 255, 255)),
-			--     }),
-			--     Transparency = NumberSequence.new({
-			--         NumberSequenceKeypoint.new(0.0, 0.1),
-			--         NumberSequenceKeypoint.new(0.5, 1),
-			--         NumberSequenceKeypoint.new(1.0, 0.1),
-			--     })
-			-- }),
-		}),
+		}, {}),
 		Creator.NewRoundFrame(Tab.UICorner, "Squircle", {
 			Size = UDim2.new(1, 0, 0, 0),
 			AutomaticSize = "Y",
 			ThemeTag = {
 				ImageColor3 = "Text",
 			},
-			ImageTransparency = 1, -- .95
+			ImageTransparency = 1,
 			Name = "Frame",
 		}, {
 			New("UIListLayout", {
@@ -152,19 +138,37 @@ function TabModule.New(Config, UIScale)
 			}, {
 				New("UIPadding", {
 					PaddingTop = UDim.new(0, Tab.TitlePaddingY),
-					--PaddingLeft = UDim.new(0,2+(Window.UIPadding/2)),
-					--PaddingRight = UDim.new(0,2+(Window.UIPadding/2)),
 					PaddingBottom = UDim.new(0, Tab.TitlePaddingY),
 				}),
 			}),
 			New("UIPadding", {
 				PaddingTop = UDim.new(0, Tab.TabPaddingY),
-				PaddingLeft = UDim.new(0, Tab.TabPaddingX),
+				PaddingLeft = UDim.new(0, Tab.TabPaddingX + 6), -- Tambahan padding kiri untuk memberi ruang aksen
 				PaddingRight = UDim.new(0, Tab.TabPaddingX),
 				PaddingBottom = UDim.new(0, Tab.TabPaddingY),
 			}),
 		}),
 	}, true)
+
+	-- ============================================
+	--       INDIKATOR AKSEN BIRU (ACCENT)
+	-- ============================================
+	Tab.UIElements.AccentIndicator = New("Frame", {
+		Name = "AccentIndicator",
+		BackgroundColor3 = ACCENT_COLOR,
+		BorderSizePixel = 0,
+		AnchorPoint = Vector2.new(0, 0.5),
+		Position = UDim2.new(0, 2, 0.5, 0), -- Posisi tengah vertikal, dekat kiri
+		Size = UDim2.new(0, ACCENT_WIDTH, 0, 0), -- Tinggi 0 (Awalnya tidak terlihat)
+		BackgroundTransparency = 1,
+		ZIndex = 10,
+		Parent = Tab.UIElements.Main,
+	}, {
+		New("UICorner", {
+			CornerRadius = UDim.new(1, 0), -- Bulat sempurna di ujung
+		}),
+	})
+	-- ============================================
 
 	local TextOffset = 0
 	local Icon
@@ -213,21 +217,7 @@ function TabModule.New(Config, UIScale)
 							ImageTransparency = 0,
 							Name = "Outline",
 						},
-						{
-							-- New("UIGradient", {
-							--     Rotation = 45,
-							--     Color = ColorSequence.new({
-							--         ColorSequenceKeypoint.new(0.0, Color3.fromRGB(255, 255, 255)),
-							--         ColorSequenceKeypoint.new(0.5, Color3.fromRGB(255, 255, 255)),
-							--         ColorSequenceKeypoint.new(1.0, Color3.fromRGB(255, 255, 255)),
-							--     }),
-							--     Transparency = NumberSequence.new({
-							--         NumberSequenceKeypoint.new(0.0, 0.1),
-							--         NumberSequenceKeypoint.new(0.5, 1),
-							--         NumberSequenceKeypoint.new(1.0, 0.1),
-							--     })
-							-- }),
-						}
+						{}
 					),
 				}
 			)
@@ -244,10 +234,6 @@ function TabModule.New(Config, UIScale)
 		Icon2.Size = UDim2.new(0, 16, 0, 16)
 		Icon2.ImageLabel.ImageTransparency = not Tab.Locked and 0 or 0.7
 		TextOffset = -30
-
-		--Icon2.Parent = Tab.UIElements.Main.Frame
-		--Tab.UIElements.Main.Frame.TextLabel.Size = UDim2.new(1,-30,0,0)
-		--Tab.UIElements.Icon = Icon
 	end
 
 	Tab.UIElements.ContainerFrame = New("ScrollingFrame", {
@@ -259,7 +245,6 @@ function TabModule.New(Config, UIScale)
 		AnchorPoint = Vector2.new(0, 1),
 		Position = UDim2.new(0, 0, 1, 0),
 		AutomaticCanvasSize = "Y",
-		--Visible = false,
 		ScrollingDirection = "Y",
 	}, {
 		New("UIPadding", {
@@ -274,10 +259,6 @@ function TabModule.New(Config, UIScale)
 			HorizontalAlignment = "Center",
 		}),
 	})
-
-	-- Tab.UIElements.ContainerFrame.UIListLayout:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function()
-	--     Tab.UIElements.ContainerFrame.CanvasSize = UDim2.new(0,0,0,Tab.UIElements.ContainerFrame.UIListLayout.AbsoluteContentSize.Y+Window.UIPadding*2)
-	-- end)
 
 	Tab.UIElements.ContainerFrameCanvas = New("Frame", {
 		Size = UDim2.new(1, 0, 1, 0),
@@ -310,7 +291,6 @@ function TabModule.New(Config, UIScale)
 				TextTransparency = 0.1,
 				Size = UDim2.new(0, 0, 1, 0),
 				FontFace = Font.new(Creator.Font, Enum.FontWeight.SemiBold),
-				--TextTruncate = "AtEnd",
 				RichText = true,
 				LayoutOrder = 2,
 				TextXAlignment = "Left",
@@ -368,7 +348,6 @@ function TabModule.New(Config, UIScale)
 	local MouseConn
 	local IsHovering = false
 
-	-- ToolTip
 	if Tab.Desc then
 		Creator.AddSignal(Tab.UIElements.Main.InputBegan, function()
 			IsHovering = true
@@ -398,6 +377,14 @@ function TabModule.New(Config, UIScale)
 				ImageTransparency = "TabBackgroundHoverTransparency",
 				ImageColor3 = "TabBackgroundHover",
 			}, 0.1)
+			
+			-- [EFEK BARU] Aksen sedikit memanjang tipis saat mouse hover (jika tab tidak sedang aktif)
+			if not Tab.Selected then
+				TweenService:Create(Tab.UIElements.AccentIndicator, TWEEN_FAST, {
+					Size = UDim2.new(0, ACCENT_WIDTH, 0.3, 0),
+					BackgroundTransparency = 0.5,
+				}):Play()
+			end
 		end
 	end)
 	Creator.AddSignal(Tab.UIElements.Main.InputEnded, function()
@@ -421,6 +408,14 @@ function TabModule.New(Config, UIScale)
 			Creator.SetThemeTag(Tab.UIElements.Main.Frame, {
 				ImageTransparency = "TabBorderTransparency",
 			}, 0.1)
+			
+			-- [EFEK BARU] Sembunyikan kembali aksen saat mouse pergi (jika tab tidak sedang aktif)
+			if not Tab.Selected then
+				TweenService:Create(Tab.UIElements.AccentIndicator, TWEEN_FAST, {
+					Size = UDim2.new(0, ACCENT_WIDTH, 0, 0),
+					BackgroundTransparency = 1,
+				}):Play()
+			end
 		end
 	end)
 
@@ -448,8 +443,6 @@ function TabModule.New(Config, UIScale)
 		return Tab
 	end
 
-	-- yo
-
 	local ElementsModule = require("../../elements/Init")
 
 	ElementsModule.Load(
@@ -465,7 +458,6 @@ function TabModule.New(Config, UIScale)
 	)
 
 	function Tab:LockAll()
-		--print("LockAll called, number of elements: " .. #self.Elements)
 		for _, element in next, Window.AllElements do
 			if element.Tab and element.Tab.Index and element.Tab.Index == Tab.Index and element.Lock then
 				element:Lock()
@@ -481,24 +473,20 @@ function TabModule.New(Config, UIScale)
 	end
 	function Tab:GetLocked()
 		local LockedElements = {}
-
 		for _, element in next, Window.AllElements do
 			if element.Tab and element.Tab.Index and element.Tab.Index == Tab.Index and element.Locked == true then
 				table.insert(LockedElements, element)
 			end
 		end
-
 		return LockedElements
 	end
 	function Tab:GetUnlocked()
 		local UnlockedElements = {}
-
 		for _, element in next, Window.AllElements do
 			if element.Tab and element.Tab.Index and element.Tab.Index == Tab.Index and element.Locked == false then
 				table.insert(UnlockedElements, element)
 			end
 		end
-
 		return UnlockedElements
 	end
 
@@ -527,19 +515,8 @@ function TabModule.New(Config, UIScale)
 				HorizontalAlignment = "Center",
 				FillDirection = "Vertical",
 			}),
-			-- New("ImageLabel", {
-			-- 	Size = UDim2.new(0, 48, 0, 48),
-			-- 	Image = Creator.Icon("frown")[1],
-			-- 	ImageRectOffset = Creator.Icon("frown")[2].ImageRectPosition,
-			-- 	ImageRectSize = Creator.Icon("frown")[2].ImageRectSize,
-			-- 	ThemeTag = {
-			-- 		ImageColor3 = "Icon",
-			-- 	},
-			-- 	BackgroundTransparency = 1,
-			-- 	ImageTransparency = 0.6,
-			-- }),
 			EmptyPageIcon,
-			Tab.CustomEmptyPage.Title and New("TextLabel", { -- Title
+			Tab.CustomEmptyPage.Title and New("TextLabel", {
 				AutomaticSize = "XY",
 				Text = Tab.CustomEmptyPage.Title,
 				ThemeTag = {
@@ -550,7 +527,7 @@ function TabModule.New(Config, UIScale)
 				BackgroundTransparency = 1,
 				FontFace = Font.new(Creator.Font, Enum.FontWeight.Medium),
 			}) or nil,
-			Tab.CustomEmptyPage.Desc and New("TextLabel", { -- Desc
+			Tab.CustomEmptyPage.Desc and New("TextLabel", {
 				AutomaticSize = "XY",
 				Text = Tab.CustomEmptyPage.Desc,
 				ThemeTag = {
@@ -562,10 +539,6 @@ function TabModule.New(Config, UIScale)
 				FontFace = Font.new(Creator.Font, Enum.FontWeight.Regular),
 			}) or nil,
 		})
-
-		-- Empty.TextLabel:GetPropertyChangedSignal("TextBounds"):Connect(function()
-		--     Empty.TextLabel.Size = UDim2.new(0,Empty.TextLabel.TextBounds.X,0,Empty.TextLabel.TextBounds.Y)
-		-- end)
 
 		local CreationConn
 		CreationConn = Creator.AddSignal(Tab.UIElements.ContainerFrame.ChildAdded, function()
@@ -604,8 +577,17 @@ function TabModule:SelectTab(TabIndex)
 					}, 0.15)
 				end
 				TabObject.Selected = false
+				
+				-- [EFEK BARU] Kembalikan Accent Indicator ke posisi awal (mengkerut ke tengah)
+				if TabObject.UIElements.AccentIndicator then
+					TweenService:Create(TabObject.UIElements.AccentIndicator, TWEEN_FAST, {
+						Size = UDim2.new(0, ACCENT_WIDTH, 0, 0),
+						BackgroundTransparency = 1,
+					}):Play()
+				end
 			end
 		end
+		
 		Creator.SetThemeTag(TabModule.Tabs[TabIndex].UIElements.Main, {
 			ImageColor3 = "TabBackgroundActive",
 			ImageTransparency = "TabBackgroundActiveTransparency",
@@ -624,6 +606,14 @@ function TabModule:SelectTab(TabIndex)
 			}, 0.15)
 		end
 		TabModule.Tabs[TabIndex].Selected = true
+		
+		-- [EFEK BARU] Animasi Accent Indicator memanjang vertikal secara halus (Stretching)
+		if TabModule.Tabs[TabIndex].UIElements.AccentIndicator then
+			TweenService:Create(TabModule.Tabs[TabIndex].UIElements.AccentIndicator, TWEEN_NORMAL, {
+				Size = UDim2.new(0, ACCENT_WIDTH, 0.6, 0),
+				BackgroundTransparency = 0,
+			}):Play()
+		end
 
 		task.spawn(function()
 			for _, ContainerObject in next, TabModule.Containers do
@@ -631,8 +621,7 @@ function TabModule:SelectTab(TabIndex)
 				ContainerObject.Visible = false
 			end
 			TabModule.Containers[TabIndex].Visible = true
-			local TweenService = game:GetService("TweenService")
-
+			
 			local tweenInfo = TweenInfo.new(0.15, Enum.EasingStyle.Quart, Enum.EasingDirection.Out)
 			local tween = TweenService:Create(TabModule.Containers[TabIndex], tweenInfo, {
 				AnchorPoint = Vector2.new(0, 0),
