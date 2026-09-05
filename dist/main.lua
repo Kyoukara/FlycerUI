@@ -11600,14 +11600,10 @@ local ao=a.load'x'.New
 
 
 
-
-
-
 local ap=Color3.fromRGB(64,156,255)
-local aq=5
+local aq=3
 local ar=TweenInfo.new(0.15,Enum.EasingStyle.Quart,Enum.EasingDirection.Out)
 local as=TweenInfo.new(0.25,Enum.EasingStyle.Quart,Enum.EasingDirection.Out)
-
 
 local at={
 Tabs={},
@@ -11734,9 +11730,6 @@ PaddingBottom=UDim.new(0,aw.TabPaddingY),
 }),
 },true)
 
-
-
-
 aw.UIElements.AccentIndicator=am("Frame",{
 Name="AccentIndicator",
 BackgroundColor3=ap,
@@ -11752,7 +11745,6 @@ am("UICorner",{
 CornerRadius=UDim.new(1,0),
 }),
 })
-
 
 local ay=0
 local az
@@ -11962,7 +11954,6 @@ ImageTransparency="TabBackgroundHoverTransparency",
 ImageColor3="TabBackgroundHover",
 },0.1)
 
-
 if not aw.Selected then
 ai:Create(aw.UIElements.AccentIndicator,ar,{
 Size=UDim2.new(0,aq,0.3,0),
@@ -11992,7 +11983,6 @@ if not aw.Locked then
 al.SetThemeTag(aw.UIElements.Main.Frame,{
 ImageTransparency="TabBorderTransparency",
 },0.1)
-
 
 if not aw.Selected then
 ai:Create(aw.UIElements.AccentIndicator,ar,{
@@ -12162,7 +12152,6 @@ ImageTransparency="TabIconTransparency",
 end
 ax.Selected=false
 
-
 if ax.UIElements.AccentIndicator then
 ai:Create(ax.UIElements.AccentIndicator,ar,{
 Size=UDim2.new(0,aq,0,0),
@@ -12191,7 +12180,6 @@ ImageTransparency="TabIconTransparencyActive",
 end
 at.Tabs[av].Selected=true
 
-
 if at.Tabs[av].UIElements.AccentIndicator then
 ai:Create(at.Tabs[av].UIElements.AccentIndicator,as,{
 Size=UDim2.new(0,aq,0.6,0),
@@ -12216,6 +12204,7 @@ end)
 at.OnChangeFunc(av)
 end
 end
+
 
 return at end function a.ab()
 
