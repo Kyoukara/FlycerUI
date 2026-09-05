@@ -13,15 +13,30 @@ local UserInputService = cloneref(game:GetService("UserInputService"))
 
 function OpenButton.New(Window)
 	local Config = {
-		IconSize = 28,
+		CustomeSize = 2,
+
+		-- Present Openbutton
+		Preset1 = { -- DEFAULT
+			ButtonHeight = 44,
+			IconSize = 22,
+			TextSize = 17,
+		},
+		Preset2 = { -- MOBILE
+			ButtonHeight = 34,
+			IconSize = 16,
+			TextSize = 13,
+		},
 	}
 	
+
+	local ActivePreset = Config.CustomeSize == 2 and Config.Preset2 or Config.Preset1
 
 	local OpenButtonMain = {
 		Button = nil,
 	}
 
 	local Icon
+	
 
 	-- Icon = New("ImageLabel", {
 	--     Image = "",
@@ -32,17 +47,18 @@ function OpenButton.New(Window)
 	--     BackgroundTransparency = 1,
 	--     Name = "Icon"
 	-- })
+	
 
 	local Title = New("TextLabel", {
 		Text = Window.Title,
-		TextSize = 17,
+		TextSize = ActivePreset.TextSize,
 		FontFace = Font.new(Creator.Font, Enum.FontWeight.Medium),
 		BackgroundTransparency = 1,
 		AutomaticSize = "XY",
 	})
 
 	local Drag = New("Frame", {
-		Size = UDim2.new(0, 44 - 8, 0, 44 - 8),
+		Size = UDim2.new(0, ActivePreset.ButtonHeight - 8, 0, ActivePreset.ButtonHeight - 8),
 		BackgroundTransparency = 1,
 		Name = "Drag",
 	}, {
@@ -70,7 +86,7 @@ function OpenButton.New(Window)
 
 	local Container = New("Frame", {
 		Size = UDim2.new(0, 0, 0, 0),
-		Position = UDim2.new(0.5, 0, 0, 6 + 44 / 2),
+		Position = UDim2.new(0.5, 0, 0, 6 + ActivePreset.ButtonHeight / 2),
 		AnchorPoint = Vector2.new(0.5, 0.5),
 		Parent = Window.Parent,
 		BackgroundTransparency = 1,
@@ -83,7 +99,7 @@ function OpenButton.New(Window)
 	})
 
 	local Button = New("Frame", {
-		Size = UDim2.new(0, 0, 0, 44),
+		Size = UDim2.new(0, 0, 0, ActivePreset.ButtonHeight),
 		AutomaticSize = "X",
 		Parent = Container,
 		Active = false,
@@ -117,9 +133,9 @@ function OpenButton.New(Window)
 		New("TextButton", {
 			AutomaticSize = "XY",
 			Active = true,
-			BackgroundTransparency = 1,
-			Size = UDim2.new(0, 0, 0, 44 - (4 * 2)),
-		 -- Position = UDim2.new(0,20+16+16+1,0,0),
+			BackgroundTransparency = 1, -- .93
+			Size = UDim2.new(0, 0, 0, ActivePreset.ButtonHeight - (4 * 2)),
+			-- Position = UDim2.new(0,20+16+16+1,0,0),
 			BackgroundColor3 = Color3.new(1, 1, 1),
 		}, {
 			New("UICorner", {
@@ -151,7 +167,8 @@ function OpenButton.New(Window)
 		end
 		if newIcon then
 			Icon = Creator.Image(newIcon, Window.Title, 0, Window.Folder, "OpenButton", true, Window.IconThemed)
-			Icon.Size = UDim2.new(0, Config.IconSize, 0, Config.IconSize)
+			-- Menggunakan ukuran icon dari preset aktif
+			Icon.Size = UDim2.new(0, ActivePreset.IconSize, 0, ActivePreset.IconSize)
 			Icon.LayoutOrder = -1
 			Icon.Parent = OpenButtonMain.Button.TextButton
 		end
@@ -235,7 +252,7 @@ function OpenButton.New(Window)
 				Title.Text = OpenButtonModule.Title
 				Creator:ChangeTranslationKey(Title, OpenButtonModule.Title)
 			elseif OpenButtonModule.Title == nil then
-				--Title.Visible = false
+			   -- Title.Visible = false
 			end
 		end
 
