@@ -11604,7 +11604,7 @@ local ao=a.load'x'.New
 
 
 local ap=Color3.fromRGB(64,156,255)
-local aq=3
+local aq=5
 local ar=TweenInfo.new(0.15,Enum.EasingStyle.Quart,Enum.EasingDirection.Out)
 local as=TweenInfo.new(0.25,Enum.EasingStyle.Quart,Enum.EasingDirection.Out)
 
