@@ -5197,7 +5197,7 @@ CustomeSize=2,
 
 Preset1={
 ButtonHeight=44,
-IconSize=22,
+IconSize=28,
 TextSize=17,
 },
 Preset2={
