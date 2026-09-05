@@ -11,13 +11,16 @@ end)
 local UserInputService = cloneref(game:GetService("UserInputService"))
 
 function OpenButton.New(Window)
+	-- ====================================================================
+	--                BAGIAN CONFIG (UBAH UKURAN DI SINI)
+	-- ====================================================================
 	local Config = {
-		ButtonHeight = 36, -- Tinggi Frame Openbutton (Default asli: 44)
-		ButtonWide = 130, -- Lebar/Panjang Frame Openbutton
-		IconSize = 32, -- Ukuran Icon (Default asli: 22)
+		ButtonHeight = 36, -- Tinggi Frame OpenButton (Default asli: 44)
+		ButtonWide = 130, -- Lebar Frame (Isi angka untuk lebar tetap, isi 0 untuk otomatis mengikuti teks)
+		IconSize = 30, -- Ukuran Icon (Default asli: 22)
 		TextSize = 17, -- Ukuran Font/Teks (Default asli: 17)
 	}
-
+	-- ====================================================================
 
 	local OpenButtonMain = {
 		Button = nil,
@@ -25,12 +28,16 @@ function OpenButton.New(Window)
 
 	local Icon
 
+	-- Menentukan apakah menggunakan lebar tetap (Fixed Width) atau otomatis
+	local isFixedWidth = Config.ButtonWide and Config.ButtonWide > 0
+
+	-- [KEMBALI KE AUTOSIZE ASLI] Teks menggunakan AutoSize murni
 	local Title = New("TextLabel", {
 		Text = Window.Title,
 		TextSize = Config.TextSize,
 		FontFace = Font.new(Creator.Font, Enum.FontWeight.Medium),
 		BackgroundTransparency = 1,
-		AutomaticSize = "XY",
+		AutomaticSize = "XY", -- AutoSize aktif sepenuhnya
 	})
 
 	local Drag = New("Frame", {
@@ -74,9 +81,8 @@ function OpenButton.New(Window)
 		Scale = 1,
 	})
 
-	local isFixedWidth = Config.ButtonWide and Config.ButtonWide > 0
-
 	local Button = New("Frame", {
+		-- Jika isFixedWidth aktif, gunakan ButtonWide. Jika 0, lebar otomatis (0)
 		Size = UDim2.new(0, isFixedWidth and Config.ButtonWide or 0, 0, Config.ButtonHeight),
 		AutomaticSize = isFixedWidth and Enum.AutomaticSize.None or Enum.AutomaticSize.X,
 		Parent = Container,
@@ -108,8 +114,9 @@ function OpenButton.New(Window)
 			VerticalAlignment = "Center",
 		}),
 
+		-- [KEMBALI KE AUTOSIZE ASLI] Tombol text menggunakan AutoSize murni
 		New("TextButton", {
-			AutomaticSize = "XY",
+			AutomaticSize = "XY", -- AutoSize aktif sepenuhnya
 			Active = true,
 			BackgroundTransparency = 1,
 			Size = UDim2.new(0, 0, 0, Config.ButtonHeight - (4 * 2)),
@@ -251,6 +258,5 @@ function OpenButton.New(Window)
 
 	return OpenButtonMain
 end
-
 
 return OpenButton
