@@ -11,12 +11,13 @@ end)
 local UserInputService = cloneref(game:GetService("UserInputService"))
 
 function OpenButton.New(Window)
-	
 	local Config = {
-		ButtonHeight = 36, -- Tinggi Frame OpenButton (Default asli: 44)
-		IconSize = 25, -- Ukuran Icon (Default asli: 22)
+		ButtonHeight = 36, -- Tinggi Frame Openbutton (Default asli: 44)
+		ButtonWide = 130, -- Lebar/Panjang Frame Openbutton
+		IconSize = 32, -- Ukuran Icon (Default asli: 22)
 		TextSize = 17, -- Ukuran Font/Teks (Default asli: 17)
 	}
+
 
 	local OpenButtonMain = {
 		Button = nil,
@@ -73,9 +74,11 @@ function OpenButton.New(Window)
 		Scale = 1,
 	})
 
+	local isFixedWidth = Config.ButtonWide and Config.ButtonWide > 0
+
 	local Button = New("Frame", {
-		Size = UDim2.new(0, 0, 0, Config.ButtonHeight),
-		AutomaticSize = "X",
+		Size = UDim2.new(0, isFixedWidth and Config.ButtonWide or 0, 0, Config.ButtonHeight),
+		AutomaticSize = isFixedWidth and Enum.AutomaticSize.None or Enum.AutomaticSize.X,
 		Parent = Container,
 		Active = false,
 		BackgroundTransparency = 0.25,
@@ -248,5 +251,6 @@ function OpenButton.New(Window)
 
 	return OpenButtonMain
 end
+
 
 return OpenButton
