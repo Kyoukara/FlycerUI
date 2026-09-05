@@ -52,7 +52,7 @@ function OpenButton.New(Window)
 	local Title = New("TextLabel", {
 		Text = Window.Title,
 		TextSize = ActivePreset.TextSize,
-		FontFace = Font.new(Creator.Font, Enum.Font.FredokaOne),
+		FontFace = Font.new(Creator.Font, Enum.FontWeight.Medium),
 		BackgroundTransparency = 1,
 		AutomaticSize = "XY",
 	})
