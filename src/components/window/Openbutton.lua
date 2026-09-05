@@ -11,14 +11,15 @@ end)
 local UserInputService = cloneref(game:GetService("UserInputService"))
 
 function OpenButton.New(Window)
+	
 	-- ====================================================================
 	--                BAGIAN CONFIG (UBAH UKURAN DI SINI)
 	-- ====================================================================
 	local Config = {
 		ButtonHeight = 36, -- Tinggi Frame OpenButton (Default asli: 44)
-		ButtonWide = 130, -- Lebar Frame (Isi angka untuk lebar tetap, isi 0 untuk otomatis mengikuti teks)
-		IconSize = 30, -- Ukuran Icon (Default asli: 22)
-		TextSize = 17, -- Ukuran Font/Teks (Default asli: 17)
+		ButtonWide = 130,  -- Lebar MINIMAL Frame (Teks pendek = tetap 130, teks panjang = otomatis memanjang)
+		IconSize = 30,     -- Ukuran Icon (Default asli: 22)
+		TextSize = 17,     -- Ukuran Font/Teks (Default asli: 17)
 	}
 	-- ====================================================================
 
@@ -28,16 +29,16 @@ function OpenButton.New(Window)
 
 	local Icon
 
-	-- Menentukan apakah menggunakan lebar tetap (Fixed Width) atau otomatis
+	-- Menentukan apakah menggunakan lebar minimal (Constraint)
 	local isFixedWidth = Config.ButtonWide and Config.ButtonWide > 0
 
-	-- [KEMBALI KE AUTOSIZE ASLI] Teks menggunakan AutoSize murni
+	-- [AUTOSIZE ASLI] Teks otomatis menyesuaikan ukuran kontennya
 	local Title = New("TextLabel", {
 		Text = Window.Title,
 		TextSize = Config.TextSize,
 		FontFace = Font.new(Creator.Font, Enum.FontWeight.Medium),
 		BackgroundTransparency = 1,
-		AutomaticSize = "XY", -- AutoSize aktif sepenuhnya
+		AutomaticSize = "XY",
 	})
 
 	local Drag = New("Frame", {
@@ -82,9 +83,8 @@ function OpenButton.New(Window)
 	})
 
 	local Button = New("Frame", {
-		-- Jika isFixedWidth aktif, gunakan ButtonWide. Jika 0, lebar otomatis (0)
-		Size = UDim2.new(0, isFixedWidth and Config.ButtonWide or 0, 0, Config.ButtonHeight),
-		AutomaticSize = isFixedWidth and Enum.AutomaticSize.None or Enum.AutomaticSize.X,
+		Size = UDim2.new(0, 0, 0, Config.ButtonHeight), -- Mulai dari 0 karena diatur oleh AutoSize & Constraint
+		AutomaticSize = "X",                            -- AutoSize X Tetap Aktif penuh
 		Parent = Container,
 		Active = false,
 		BackgroundTransparency = 0.25,
@@ -105,6 +105,13 @@ function OpenButton.New(Window)
 				Color = ColorSequence.new(Color3.fromHex("40c9ff"), Color3.fromHex("e81cff")),
 			}),
 		}),
+		
+		-- [SISTEM CERDAS] Membatasi lebar agar minimal sesuai Config.ButtonWide
+		New("UISizeConstraint", {
+			MinSize = Vector2.new(isFixedWidth and Config.ButtonWide or 0, 0),
+			MaxSize = Vector2.new(math.huge, math.huge),
+		}),
+		
 		Drag,
 		Divider,
 
@@ -114,9 +121,9 @@ function OpenButton.New(Window)
 			VerticalAlignment = "Center",
 		}),
 
-		-- [KEMBALI KE AUTOSIZE ASLI] Tombol text menggunakan AutoSize murni
+		-- [AUTOSIZE ASLI] Tombol teks menyesuaikan isinya secara otomatis
 		New("TextButton", {
-			AutomaticSize = "XY", -- AutoSize aktif sepenuhnya
+			AutomaticSize = "XY",
 			Active = true,
 			BackgroundTransparency = 1,
 			Size = UDim2.new(0, 0, 0, Config.ButtonHeight - (4 * 2)),
@@ -235,7 +242,7 @@ function OpenButton.New(Window)
 				Title.Text = OpenButtonModule.Title
 				Creator:ChangeTranslationKey(Title, OpenButtonModule.Title)
 			elseif OpenButtonModule.Title == nil then
-				-- Title.Visible = false
+			  -- Title.Visible = false
 			end
 		end
 
