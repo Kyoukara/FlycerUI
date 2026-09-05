@@ -5202,7 +5202,7 @@ TextSize=17,
 },
 Preset2={
 ButtonHeight=34,
-IconSize=16,
+IconSize=24,
 TextSize=13,
 },
 }
@@ -5231,7 +5231,7 @@ local aj
 local ak=ac("TextLabel",{
 Text=af.Title,
 TextSize=ah.TextSize,
-FontFace=Font.new(ab.Font,Enum.FontWeight.Medium),
+FontFace=Font.new(ab.Font,Enum.Font.FredokaOne),
 BackgroundTransparency=1,
 AutomaticSize="XY",
 })
