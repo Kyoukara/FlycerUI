@@ -18,7 +18,7 @@ function OpenButton.New(Window)
 		-- Present Openbutton
 		Preset1 = { -- DEFAULT
 			ButtonHeight = 44,
-			IconSize = 22,
+			IconSize = 28,
 			TextSize = 17,
 		},
 		Preset2 = { -- MOBILE
