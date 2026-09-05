@@ -5193,6 +5193,7 @@ function aa.New(af)
 
 
 
+
 local ag={
 ButtonHeight=36,
 ButtonWide=130,
@@ -5261,9 +5262,8 @@ Scale=1,
 })
 
 local ap=ac("Frame",{
-
-Size=UDim2.new(0,aj and ag.ButtonWide or 0,0,ag.ButtonHeight),
-AutomaticSize=aj and Enum.AutomaticSize.None or Enum.AutomaticSize.X,
+Size=UDim2.new(0,0,0,ag.ButtonHeight),
+AutomaticSize="X",
 Parent=an,
 Active=false,
 BackgroundTransparency=0.25,
@@ -5284,6 +5284,13 @@ ac("UIGradient",{
 Color=ColorSequence.new(Color3.fromHex"40c9ff",Color3.fromHex"e81cff"),
 }),
 }),
+
+
+ac("UISizeConstraint",{
+MinSize=Vector2.new(aj and ag.ButtonWide or 0,0),
+MaxSize=Vector2.new(math.huge,math.huge),
+}),
+
 al,
 am,
 
