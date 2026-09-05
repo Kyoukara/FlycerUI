@@ -16,14 +16,10 @@ local CreateScrollSlider = require("../ui/ScrollSlider").New
 
 local Window, FlycerUI, UIScale
 
--- ============================================
---    KONFIGURASI ACCENT/AKSEN BIRU (UBAH DI SINI)
--- ============================================
-local ACCENT_COLOR = Color3.fromRGB(64, 156, 255) -- Warna biru aksen
-local ACCENT_WIDTH = 5                             -- Ketebalan garis aksen
+local ACCENT_COLOR = Color3.fromRGB(64, 156, 255)
+local ACCENT_WIDTH = 3
 local TWEEN_FAST = TweenInfo.new(0.15, Enum.EasingStyle.Quart, Enum.EasingDirection.Out)
 local TWEEN_NORMAL = TweenInfo.new(0.25, Enum.EasingStyle.Quart, Enum.EasingDirection.Out)
--- ============================================
 
 local TabModule = {
 	Tabs = {},
@@ -143,32 +139,28 @@ function TabModule.New(Config, UIScale)
 			}),
 			New("UIPadding", {
 				PaddingTop = UDim.new(0, Tab.TabPaddingY),
-				PaddingLeft = UDim.new(0, Tab.TabPaddingX + 6), -- Tambahan padding kiri untuk memberi ruang aksen
+				PaddingLeft = UDim.new(0, Tab.TabPaddingX + 6),
 				PaddingRight = UDim.new(0, Tab.TabPaddingX),
 				PaddingBottom = UDim.new(0, Tab.TabPaddingY),
 			}),
 		}),
 	}, true)
 
-	-- ============================================
-	--       INDIKATOR AKSEN BIRU (ACCENT)
-	-- ============================================
 	Tab.UIElements.AccentIndicator = New("Frame", {
 		Name = "AccentIndicator",
 		BackgroundColor3 = ACCENT_COLOR,
 		BorderSizePixel = 0,
 		AnchorPoint = Vector2.new(0, 0.5),
-		Position = UDim2.new(0, 2, 0.5, 0), -- Posisi tengah vertikal, dekat kiri
-		Size = UDim2.new(0, ACCENT_WIDTH, 0, 0), -- Tinggi 0 (Awalnya tidak terlihat)
+		Position = UDim2.new(0, 2, 0.5, 0),
+		Size = UDim2.new(0, ACCENT_WIDTH, 0, 0),
 		BackgroundTransparency = 1,
 		ZIndex = 10,
 		Parent = Tab.UIElements.Main,
 	}, {
 		New("UICorner", {
-			CornerRadius = UDim.new(1, 0), -- Bulat sempurna di ujung
+			CornerRadius = UDim.new(1, 0),
 		}),
 	})
-	-- ============================================
 
 	local TextOffset = 0
 	local Icon
@@ -377,8 +369,7 @@ function TabModule.New(Config, UIScale)
 				ImageTransparency = "TabBackgroundHoverTransparency",
 				ImageColor3 = "TabBackgroundHover",
 			}, 0.1)
-			
-			-- [EFEK BARU] Aksen sedikit memanjang tipis saat mouse hover (jika tab tidak sedang aktif)
+
 			if not Tab.Selected then
 				TweenService:Create(Tab.UIElements.AccentIndicator, TWEEN_FAST, {
 					Size = UDim2.new(0, ACCENT_WIDTH, 0.3, 0),
@@ -408,8 +399,7 @@ function TabModule.New(Config, UIScale)
 			Creator.SetThemeTag(Tab.UIElements.Main.Frame, {
 				ImageTransparency = "TabBorderTransparency",
 			}, 0.1)
-			
-			-- [EFEK BARU] Sembunyikan kembali aksen saat mouse pergi (jika tab tidak sedang aktif)
+
 			if not Tab.Selected then
 				TweenService:Create(Tab.UIElements.AccentIndicator, TWEEN_FAST, {
 					Size = UDim2.new(0, ACCENT_WIDTH, 0, 0),
@@ -577,8 +567,7 @@ function TabModule:SelectTab(TabIndex)
 					}, 0.15)
 				end
 				TabObject.Selected = false
-				
-				-- [EFEK BARU] Kembalikan Accent Indicator ke posisi awal (mengkerut ke tengah)
+
 				if TabObject.UIElements.AccentIndicator then
 					TweenService:Create(TabObject.UIElements.AccentIndicator, TWEEN_FAST, {
 						Size = UDim2.new(0, ACCENT_WIDTH, 0, 0),
@@ -587,7 +576,7 @@ function TabModule:SelectTab(TabIndex)
 				end
 			end
 		end
-		
+
 		Creator.SetThemeTag(TabModule.Tabs[TabIndex].UIElements.Main, {
 			ImageColor3 = "TabBackgroundActive",
 			ImageTransparency = "TabBackgroundActiveTransparency",
@@ -606,8 +595,7 @@ function TabModule:SelectTab(TabIndex)
 			}, 0.15)
 		end
 		TabModule.Tabs[TabIndex].Selected = true
-		
-		-- [EFEK BARU] Animasi Accent Indicator memanjang vertikal secara halus (Stretching)
+
 		if TabModule.Tabs[TabIndex].UIElements.AccentIndicator then
 			TweenService:Create(TabModule.Tabs[TabIndex].UIElements.AccentIndicator, TWEEN_NORMAL, {
 				Size = UDim2.new(0, ACCENT_WIDTH, 0.6, 0),
@@ -621,7 +609,7 @@ function TabModule:SelectTab(TabIndex)
 				ContainerObject.Visible = false
 			end
 			TabModule.Containers[TabIndex].Visible = true
-			
+
 			local tweenInfo = TweenInfo.new(0.15, Enum.EasingStyle.Quart, Enum.EasingDirection.Out)
 			local tween = TweenService:Create(TabModule.Containers[TabIndex], tweenInfo, {
 				AnchorPoint = Vector2.new(0, 0),
@@ -632,5 +620,6 @@ function TabModule:SelectTab(TabIndex)
 		TabModule.OnChangeFunc(TabIndex)
 	end
 end
+
 
 return TabModule
