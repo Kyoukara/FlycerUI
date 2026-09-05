@@ -5190,10 +5190,13 @@ end)
 ae(game:GetService"UserInputService")
 
 function aa.New(af)
+
+
+
 local ag={
 ButtonHeight=36,
 ButtonWide=130,
-IconSize=32,
+IconSize=30,
 TextSize=17,
 }
 
@@ -5204,7 +5207,11 @@ Button=nil,
 
 local ai
 
-local aj=ac("TextLabel",{
+
+local aj=ag.ButtonWide and ag.ButtonWide>0
+
+
+local ak=ac("TextLabel",{
 Text=af.Title,
 TextSize=ag.TextSize,
 FontFace=Font.new(ab.Font,Enum.FontWeight.Medium),
@@ -5212,7 +5219,7 @@ BackgroundTransparency=1,
 AutomaticSize="XY",
 })
 
-local ak=ac("Frame",{
+local al=ac("Frame",{
 Size=UDim2.new(0,ag.ButtonHeight-8,0,ag.ButtonHeight-8),
 BackgroundTransparency=1,
 Name="Drag",
@@ -5231,7 +5238,7 @@ ImageColor3="Icon",
 ImageTransparency=0.3,
 }),
 })
-local al=ac("Frame",{
+local am=ac("Frame",{
 Size=UDim2.new(0,1,1,0),
 Position=UDim2.new(0,36,0.5,0),
 AnchorPoint=Vector2.new(0,0.5),
@@ -5239,7 +5246,7 @@ BackgroundColor3=Color3.new(1,1,1),
 BackgroundTransparency=0.9,
 })
 
-local am=ac("Frame",{
+local an=ac("Frame",{
 Size=UDim2.new(0,0,0,0),
 Position=UDim2.new(0.5,0,0,6+ag.ButtonHeight/2),
 AnchorPoint=Vector2.new(0.5,0.5),
@@ -5249,22 +5256,21 @@ Active=true,
 Visible=false,
 })
 
-local an=ac("UIScale",{
+local ao=ac("UIScale",{
 Scale=1,
 })
 
-local ao=ag.ButtonWide and ag.ButtonWide>0
-
 local ap=ac("Frame",{
-Size=UDim2.new(0,ao and ag.ButtonWide or 0,0,ag.ButtonHeight),
-AutomaticSize=ao and Enum.AutomaticSize.None or Enum.AutomaticSize.X,
-Parent=am,
+
+Size=UDim2.new(0,aj and ag.ButtonWide or 0,0,ag.ButtonHeight),
+AutomaticSize=aj and Enum.AutomaticSize.None or Enum.AutomaticSize.X,
+Parent=an,
 Active=false,
 BackgroundTransparency=0.25,
 ZIndex=99,
 BackgroundColor3=Color3.new(0,0,0),
 },{
-an,
+ao,
 ac("UICorner",{
 CornerRadius=UDim.new(1,0),
 }),
@@ -5278,14 +5284,15 @@ ac("UIGradient",{
 Color=ColorSequence.new(Color3.fromHex"40c9ff",Color3.fromHex"e81cff"),
 }),
 }),
-ak,
 al,
+am,
 
 ac("UIListLayout",{
 Padding=UDim.new(0,4),
 FillDirection="Horizontal",
 VerticalAlignment="Center",
 }),
+
 
 ac("TextButton",{
 AutomaticSize="XY",
@@ -5303,7 +5310,7 @@ Padding=UDim.new(0,af.UIPadding),
 FillDirection="Horizontal",
 VerticalAlignment="Center",
 }),
-aj,
+ak,
 ac("UIPadding",{
 PaddingLeft=UDim.new(0,11),
 PaddingRight=UDim.new(0,11),
@@ -5334,7 +5341,7 @@ ah:SetIcon(af.Icon)
 end
 
 ab.AddSignal(ap:GetPropertyChangedSignal"AbsoluteSize",function()
-am.Size=UDim2.new(0,ap.AbsoluteSize.X,0,ap.AbsoluteSize.Y)
+an.Size=UDim2.new(0,ap.AbsoluteSize.X,0,ap.AbsoluteSize.Y)
 end)
 
 ab.AddSignal(ap.TextButton.MouseEnter,function()
@@ -5344,14 +5351,14 @@ ab.AddSignal(ap.TextButton.MouseLeave,function()
 ad(ap.TextButton,0.1,{BackgroundTransparency=1}):Play()
 end)
 
-local aq=ab.Drag(am)
+local aq=ab.Drag(an)
 
 function ah.Visible(ar,as)
-am.Visible=as
+an.Visible=as
 end
 
 function ah.SetScale(ar,as)
-an.Scale=as
+ao.Scale=as
 end
 
 function ah.Edit(ar,as)
@@ -5379,33 +5386,33 @@ else
 af.IsPC=false
 end
 
-if at.Draggable==false and ak and al then
-ak.Visible=at.Draggable
+if at.Draggable==false and al and am then
 al.Visible=at.Draggable
+am.Visible=at.Draggable
 
 if aq then
 aq:Set(at.Draggable)
 end
 end
 
-if at.Position and am then
-am.Position=at.Position
+if at.Position and an then
+an.Position=at.Position
 end
 
-if at.OnlyIcon==true and aj then
-aj.Visible=false
+if at.OnlyIcon==true and ak then
+ak.Visible=false
 ap.TextButton.UIPadding.PaddingLeft=UDim.new(0,7)
 ap.TextButton.UIPadding.PaddingRight=UDim.new(0,7)
 elseif at.OnlyIcon==false then
-aj.Visible=true
+ak.Visible=true
 ap.TextButton.UIPadding.PaddingLeft=UDim.new(0,11)
 ap.TextButton.UIPadding.PaddingRight=UDim.new(0,11)
 end
 
-if aj then
+if ak then
 if at.Title then
-aj.Text=at.Title
-ab:ChangeTranslationKey(aj,at.Title)
+ak.Text=at.Title
+ab:ChangeTranslationKey(ak,at.Title)
 elseif at.Title==nil then
 
 end
@@ -5430,7 +5437,6 @@ end
 
 return ah
 end
-
 
 return aa end function a.B()
 
