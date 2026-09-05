@@ -10,18 +10,12 @@ end)
 
 local UserInputService = cloneref(game:GetService("UserInputService"))
 
+
 function OpenButton.New(Window)
-	
-	-- ====================================================================
-	--                BAGIAN CONFIG (UBAH UKURAN DI SINI)
-	-- ====================================================================
 	local Config = {
-		ButtonHeight = 36, -- Tinggi Frame OpenButton (Default asli: 44)
-		ButtonWide = 130,  -- Lebar MINIMAL Frame (Teks pendek = tetap 130, teks panjang = otomatis memanjang)
-		IconSize = 30,     -- Ukuran Icon (Default asli: 22)
-		TextSize = 17,     -- Ukuran Font/Teks (Default asli: 17)
+		IconSize = 28,
 	}
-	-- ====================================================================
+	
 
 	local OpenButtonMain = {
 		Button = nil,
@@ -29,20 +23,26 @@ function OpenButton.New(Window)
 
 	local Icon
 
-	-- Menentukan apakah menggunakan lebar minimal (Constraint)
-	local isFixedWidth = Config.ButtonWide and Config.ButtonWide > 0
+	-- Icon = New("ImageLabel", {
+	--     Image = "",
+	--     Size = UDim2.new(0,22,0,22),
+	--     Position = UDim2.new(0.5,0,0.5,0),
+	--     LayoutOrder = -1,
+	--     AnchorPoint = Vector2.new(0.5,0.5),
+	--     BackgroundTransparency = 1,
+	--     Name = "Icon"
+	-- })
 
-	-- [AUTOSIZE ASLI] Teks otomatis menyesuaikan ukuran kontennya
 	local Title = New("TextLabel", {
 		Text = Window.Title,
-		TextSize = Config.TextSize,
+		TextSize = 17,
 		FontFace = Font.new(Creator.Font, Enum.FontWeight.Medium),
 		BackgroundTransparency = 1,
 		AutomaticSize = "XY",
 	})
 
 	local Drag = New("Frame", {
-		Size = UDim2.new(0, Config.ButtonHeight - 8, 0, Config.ButtonHeight - 8),
+		Size = UDim2.new(0, 44 - 8, 0, 44 - 8),
 		BackgroundTransparency = 1,
 		Name = "Drag",
 	}, {
@@ -70,7 +70,7 @@ function OpenButton.New(Window)
 
 	local Container = New("Frame", {
 		Size = UDim2.new(0, 0, 0, 0),
-		Position = UDim2.new(0.5, 0, 0, 6 + Config.ButtonHeight / 2),
+		Position = UDim2.new(0.5, 0, 0, 6 + 44 / 2),
 		AnchorPoint = Vector2.new(0.5, 0.5),
 		Parent = Window.Parent,
 		BackgroundTransparency = 1,
@@ -83,8 +83,8 @@ function OpenButton.New(Window)
 	})
 
 	local Button = New("Frame", {
-		Size = UDim2.new(0, 0, 0, Config.ButtonHeight), -- Mulai dari 0 karena diatur oleh AutoSize & Constraint
-		AutomaticSize = "X",                            -- AutoSize X Tetap Aktif penuh
+		Size = UDim2.new(0, 0, 0, 44),
+		AutomaticSize = "X",
 		Parent = Container,
 		Active = false,
 		BackgroundTransparency = 0.25,
@@ -105,13 +105,6 @@ function OpenButton.New(Window)
 				Color = ColorSequence.new(Color3.fromHex("40c9ff"), Color3.fromHex("e81cff")),
 			}),
 		}),
-		
-		-- [SISTEM CERDAS] Membatasi lebar agar minimal sesuai Config.ButtonWide
-		New("UISizeConstraint", {
-			MinSize = Vector2.new(isFixedWidth and Config.ButtonWide or 0, 0),
-			MaxSize = Vector2.new(math.huge, math.huge),
-		}),
-		
 		Drag,
 		Divider,
 
@@ -121,12 +114,12 @@ function OpenButton.New(Window)
 			VerticalAlignment = "Center",
 		}),
 
-		-- [AUTOSIZE ASLI] Tombol teks menyesuaikan isinya secara otomatis
 		New("TextButton", {
 			AutomaticSize = "XY",
 			Active = true,
 			BackgroundTransparency = 1,
-			Size = UDim2.new(0, 0, 0, Config.ButtonHeight - (4 * 2)),
+			Size = UDim2.new(0, 0, 0, 44 - (4 * 2)),
+		 -- Position = UDim2.new(0,20+16+16+1,0,0),
 			BackgroundColor3 = Color3.new(1, 1, 1),
 		}, {
 			New("UICorner", {
@@ -242,7 +235,7 @@ function OpenButton.New(Window)
 				Title.Text = OpenButtonModule.Title
 				Creator:ChangeTranslationKey(Title, OpenButtonModule.Title)
 			elseif OpenButtonModule.Title == nil then
-			  -- Title.Visible = false
+				--Title.Visible = false
 			end
 		end
 
@@ -265,5 +258,6 @@ function OpenButton.New(Window)
 
 	return OpenButtonMain
 end
+
 
 return OpenButton
