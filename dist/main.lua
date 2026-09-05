@@ -5231,7 +5231,7 @@ local aj
 local ak=ac("TextLabel",{
 Text=af.Title,
 TextSize=ah.TextSize,
-FontFace=Font.new(ab.Font,Enum.Font.FredokaOne),
+FontFace=Font.new(ab.Font,Enum.FontWeight.Medium),
 BackgroundTransparency=1,
 AutomaticSize="XY",
 })
