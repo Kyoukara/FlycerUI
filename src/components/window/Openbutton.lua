@@ -23,7 +23,7 @@ function OpenButton.New(Window)
 		},
 		Preset2 = { -- MOBILE
 			ButtonHeight = 34,
-			IconSize = 16,
+			IconSize = 24,
 			TextSize = 13,
 		},
 	}
@@ -52,7 +52,7 @@ function OpenButton.New(Window)
 	local Title = New("TextLabel", {
 		Text = Window.Title,
 		TextSize = ActivePreset.TextSize,
-		FontFace = Font.new(Creator.Font, Enum.FontWeight.Medium),
+		FontFace = Font.new(Creator.Font, Enum.Font.FredokaOne),
 		BackgroundTransparency = 1,
 		AutomaticSize = "XY",
 	})
