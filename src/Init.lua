@@ -334,24 +334,22 @@ function FlycerUI:CreateWindow(Config)
 
 	local Filename
 
-	-- Flycer KeyValidator can choose what local key-cache identifier to use.
-	-- Username -> Roblox UserId (account-bound)
-	-- Device -> executor HWID / Roblox client ID (device-bound)
-	if Config.KeySystem and Config.KeySystem.KeyValidator then
-		local identifier, identifierType, identifierError = KeySystem.GetFlycerIdentifier(Config)
-		if identifier then
-			Filename = identifier
-		else
-			Filename = nil
-			warn("[FlycerUI] " .. tostring(identifierError or ("Unable to determine " .. tostring(identifierType) .. " identifier.")))
-		end
+	-- Flycer uses the selected lock identifier for its local key cache.
+	-- Username -> Roblox UserId.
+	-- Device -> executor HWID, then Roblox client ID.
+	if Config.KeySystem and (Config.KeySystem.KeyValidator or type(Config.KeySystem.Flycer) == "table") then
+		local identifier = KeySystem.GetFlycerIdentifier(Config)
+		Filename = identifier or "flycer_identifier_unavailable"
 	else
 		local hwid = gethwid or function()
 			return Players.LocalPlayer.UserId
 		end
 
-		Filename = hwid()
+		Filename = tostring(hwid())
 	end
+
+	-- Keep the cache filename safe for executors/filesystems.
+	Filename = tostring(Filename):gsub('[^%w%._%-]', '_')
 
 	if Config.KeySystem then
 		CanLoadWindow = false
@@ -362,10 +360,44 @@ function FlycerUI:CreateWindow(Config)
 			end)
 		end
 
-		local keyPath = Filename and ((Config.Folder or "Temp") .. "/" .. Filename .. ".key") or nil
+		local keyPath = (Config.Folder or "Temp") .. "/" .. Filename .. ".key"
 
-		if Config.KeySystem.KeyValidator then
-			if Config.KeySystem.SaveKey and keyPath and isfile(keyPath) then
+		-- Flycer is authoritative whenever it is configured.
+		-- A saved key must go through the same remote validation as a newly
+		-- submitted key so expiry, active state, lock type and identifier
+		-- binding are checked again on every script start.
+		if type(Config.KeySystem.Flycer) == "table" then
+			if not Config.KeySystem.Flycer.Endpoint then
+				loadKeysystem()
+			elseif Config.KeySystem.SaveKey and isfile(keyPath) then
+				local savedKey = readfile(keyPath)
+				local flycerConfig = Config.KeySystem.Flycer
+				local serviceData = FlycerUI.Services.flycer
+				local isValid = false
+
+				if serviceData then
+					local service = serviceData.New(
+						flycerConfig.Endpoint,
+						flycerConfig.Product or Config.Title,
+						flycerConfig.LockType or Config.KeySystem.LockType or "Device",
+						flycerConfig.Client or "FlycerUI",
+						flycerConfig.Version or "1.0.0"
+					)
+					isValid = service.Verify(savedKey)
+				end
+
+				if isValid then
+					CanLoadWindow = true
+				else
+					-- Invalid/expired/rebound key: remove the stale local cache.
+					pcall(delfile, keyPath)
+					loadKeysystem()
+				end
+			else
+				loadKeysystem()
+			end
+		elseif Config.KeySystem.KeyValidator then
+			if Config.KeySystem.SaveKey and isfile(keyPath) then
 				local savedKey = readfile(keyPath)
 				local isValid = Config.KeySystem.KeyValidator(savedKey)
 
@@ -378,7 +410,7 @@ function FlycerUI:CreateWindow(Config)
 				loadKeysystem()
 			end
 		elseif not Config.KeySystem.API then
-			if Config.KeySystem.SaveKey and keyPath and isfile(keyPath) then
+			if Config.KeySystem.SaveKey and isfile(keyPath) then
 				local savedKey = readfile(keyPath)
 				local isKey = (type(Config.KeySystem.Key) == "table") and table.find(Config.KeySystem.Key, savedKey)
 					or tostring(Config.KeySystem.Key) == tostring(savedKey)
