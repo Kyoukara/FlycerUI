@@ -15729,29 +15729,44 @@ local d=aa.Themes[aA.Theme or"Dark"]
 
 as.SetTheme(d)
 
-local f=gethwid or function()
+local f
+
+
+
+
+if aA.KeySystem and aA.KeySystem.KeyValidator then
+local g,h,i=ar.GetFlycerIdentifier(aA)
+if g then
+f=g
+else
+f=nil
+warn("[FlycerUI] "..tostring(i or("Unable to determine "..tostring(h).." identifier.")))
+end
+else
+local g=gethwid or function()
 return ak.LocalPlayer.UserId
 end
 
-local g=f()
+f=g()
+end
 
 if aA.KeySystem then
 b=false
 
 local function loadKeysystem()
-ar.new(aA,g,function(h)
-b=h
+ar.new(aA,f,function(g)
+b=g
 end)
 end
 
-local h=(aA.Folder or"Temp").."/"..g..".key"
+local g=f and((aA.Folder or"Temp").."/"..f..".key")or nil
 
 if aA.KeySystem.KeyValidator then
-if aA.KeySystem.SaveKey and isfile(h)then
-local i=readfile(h)
-local l=aA.KeySystem.KeyValidator(i)
+if aA.KeySystem.SaveKey and g and isfile(g)then
+local h=readfile(g)
+local i=aA.KeySystem.KeyValidator(h)
 
-if l then
+if i then
 b=true
 else
 loadKeysystem()
@@ -15760,12 +15775,12 @@ else
 loadKeysystem()
 end
 elseif not aA.KeySystem.API then
-if aA.KeySystem.SaveKey and isfile(h)then
-local i=readfile(h)
-local l=(type(aA.KeySystem.Key)=="table")and table.find(aA.KeySystem.Key,i)
-or tostring(aA.KeySystem.Key)==tostring(i)
+if aA.KeySystem.SaveKey and g and isfile(g)then
+local h=readfile(g)
+local i=(type(aA.KeySystem.Key)=="table")and table.find(aA.KeySystem.Key,h)
+or tostring(aA.KeySystem.Key)==tostring(h)
 
-if l then
+if i then
 b=true
 else
 loadKeysystem()
@@ -15774,29 +15789,29 @@ else
 loadKeysystem()
 end
 else
-if isfile(h)then
-local i=readfile(h)
-local l=false
+if isfile(g)then
+local h=readfile(g)
+local i=false
 
-for m,p in next,aA.KeySystem.API do
-local r=aa.Services[p.Type]
-if r then
-local u={}
-for v,x in next,r.Args do
-table.insert(u,p[x])
+for l,m in next,aA.KeySystem.API do
+local p=aa.Services[m.Type]
+if p then
+local r={}
+for u,v in next,p.Args do
+table.insert(r,m[v])
 end
 
-local v=r.New(table.unpack(u))
-local x=v.Verify(i)
-if x then
-l=true
+local u=p.New(table.unpack(r))
+local v=u.Verify(h)
+if v then
+i=true
 break
 end
 end
 end
 
-b=l
-if not l then
+b=i
+if not i then
 loadKeysystem()
 end
 else
@@ -15809,10 +15824,10 @@ task.wait()
 until b
 end
 
-local h=aB(aA)
+local g=aB(aA)
 
 aa.Transparent=aA.Transparent
-aa.Window=h
+aa.Window=g
 
 if aA.Acrylic then
 au.init()
@@ -15830,7 +15845,7 @@ end
 
 
 
-return h
+return g
 end
 
 return aa
