@@ -19,7 +19,7 @@ local function CopyToClipboard(value)
 	return ok
 end
 
-local function OpenFlycerServiceDialog(Config, Filename)
+local function OpenFlycerServiceDialog(Config, Filename, KeyDialog, DropdownContainer, ChevronDown)
 	local DialogModule = require("./window/Dialog")
 	local Dialog = DialogModule.Create(
 		true,
@@ -29,8 +29,34 @@ local function OpenFlycerServiceDialog(Config, Filename)
 		Config.FlycerUI.ScreenGui.KeySystem
 	)
 
+	-- Hide the original KeyValidator dialog while the Flycer service dialog is open.
+	-- This prevents both dialogs from occupying the same space.
+	if DropdownContainer then
+		DropdownContainer.Size = UDim2.new(0, 0, 0, 0)
+	end
+	if ChevronDown then
+		ChevronDown.Rotation = 0
+	end
+	if KeyDialog and KeyDialog.UIElements.MainContainer then
+		KeyDialog.UIElements.MainContainer.Visible = false
+	end
+
+	local Closed = false
+	local function CloseFlycerDialog()
+		if Closed then
+			return
+		end
+		Closed = true
+		Dialog:Close()()
+		task.delay(0.12, function()
+			if KeyDialog and KeyDialog.UIElements.MainContainer then
+				KeyDialog.UIElements.MainContainer.Visible = true
+			end
+		end)
+	end
+
 	Dialog.UIElements.Main.AutomaticSize = "Y"
-	Dialog.UIElements.Main.Size = UDim2.new(0, 360, 0, 0)
+	Dialog.UIElements.Main.Size = UDim2.new(0, 470, 0, 0)
 
 	local Title = New("TextLabel", {
 		Text = "Flycer",
@@ -60,17 +86,17 @@ local function OpenFlycerServiceDialog(Config, Filename)
 	}, {
 		New("UIListLayout", {
 			FillDirection = "Horizontal",
-			HorizontalAlignment = "Right",
+			HorizontalAlignment = "Center",
 			VerticalAlignment = "Center",
 			Padding = UDim.new(0, 8),
 		}),
 	})
 
 	local CloseButton = CreateButton("Close", "x", function()
-		Dialog:Close()()
+		CloseFlycerDialog()
 	end, "Tertiary", Buttons)
 
-	CreateButton("Copy HWID", "copy", function()
+	local CopyButton = CreateButton("Copy HWID", "copy", function()
 		if CopyToClipboard(Filename) then
 			Config.FlycerUI:Notify({
 				Title = "Flycer",
@@ -87,8 +113,9 @@ local function OpenFlycerServiceDialog(Config, Filename)
 	end, "Primary", Buttons)
 
 	local Discord = Config.KeySystem.Discord or Config.KeySystem.DiscordURL
+	local DiscordButton
 	if Discord and Discord ~= "" then
-		CreateButton("Discord", "message-circle", function()
+		DiscordButton = CreateButton("Discord", "message-circle", function()
 			if CopyToClipboard(Discord) then
 				Config.FlycerUI:Notify({
 					Title = "Flycer",
@@ -98,6 +125,14 @@ local function OpenFlycerServiceDialog(Config, Filename)
 			end
 		end, "Secondary", Buttons)
 	end
+
+	-- Keep every action button inside the dialog bounds on small/mobile screens.
+	CloseButton.Size = UDim2.new(0, 105, 0, 42)
+	CopyButton.Size = UDim2.new(0, 145, 0, 42)
+	if DiscordButton then
+		DiscordButton.Size = UDim2.new(0, 125, 0, 42)
+	end
+
 
 	New("Frame", {
 		BackgroundTransparency = 1,
@@ -463,7 +498,7 @@ function KeySystem.new(Config, Filename, func, keyValidator)
 				Tween(APIFrame, 0.08, { ImageTransparency = 1 }):Play()
 			end)
 			Creator.AddSignal(APIFrame.MouseButton1Click, function()
-				OpenFlycerServiceDialog(Config, Filename)
+				OpenFlycerServiceDialog(Config, Filename, KeyDialog, DropdownContainer, ChevronDown)
 			end)
 		end
 
