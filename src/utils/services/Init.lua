@@ -1,4 +1,11 @@
 return {
+    flycer = {
+        Name = "Flycer",
+        Icon = "key",
+        Args = {"Endpoint", "Product", "LockType", "Client", "Version"},
+
+        New = require("./Flycer").New
+    },
     platoboost = {
         Name = "Platoboost",
         Icon = "rbxassetid://75920162824531",
