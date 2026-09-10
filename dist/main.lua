@@ -1956,6 +1956,161 @@ end
 
 return f end function a.g()
 
+local b=(cloneref or clonereference or function(b)
+return b
+end)
+
+local d=b(game:GetService"HttpService")
+local e=b(game:GetService"Players")
+
+local f={}
+
+local function GetIdentifier(g)
+local h=e.LocalPlayer
+g=string.lower(tostring(g or"Device"))
+
+if g=="username"then
+return tostring(h.UserId),"Username"
+end
+
+if g~="device"then
+return nil,"Invalid","LockType must be 'Device' or 'Username'."
+end
+
+local i=gethwid
+if type(i)=="function"then
+local l,m=pcall(i)
+if l and m~=nil and tostring(m)~=""then
+return tostring(m),"Device"
+end
+end
+
+local l,m=pcall(function()
+return b(game:GetService"RbxAnalyticsService"):GetClientId()
+end)
+if l and m~=nil and tostring(m)~=""then
+return tostring(m),"Device"
+end
+
+return nil,"Device","No device identifier is available in this executor."
+end
+
+function f.New(g,h,i,l,m)
+g=tostring(g or""):gsub("/$","")
+h=tostring(h or"default")
+i=tostring(i or"Device")
+l=tostring(l or"FlycerUI")
+m=tostring(m or"1.0.0")
+
+local function ValidateKey(p)
+if g==""then
+return false,"Flycer API endpoint is not configured."
+end
+
+local r,u,v=GetIdentifier(i)
+if not r then
+return false,v or"Unable to determine identifier."
+end
+
+local x=request or http_request or(syn and syn.request)
+if type(x)~="function"then
+return false,"HTTP request is not available in this executor."
+end
+
+p=tostring(p or""):gsub("^%s+",""):gsub("%s+$","")
+if p==""then
+return false,"Please enter a license key."
+end
+
+local z=d:JSONEncode{
+product=h,
+key=tostring(p),
+lock_type=string.lower(u),
+identifier=r,
+client=l,
+client_version=m,
+}
+
+local A=g.."/api/license/validate"
+
+local B,C=pcall(function()
+return x{
+Url=A,
+Method="POST",
+Headers={
+["Content-Type"]="application/json",
+["User-Agent"]="FlycerUI/"..m,
+},
+Body=z,
+}
+end)
+
+if not B or not C then
+return false,"Unable to contact Flycer API."
+end
+
+if not C.Success then
+local F=tonumber(C.StatusCode)
+local G=tostring(C.Body or"")
+local H="Flycer API request failed"
+if F then
+H=H.." ("..tostring(F)..")"
+end
+if G~=""then
+local J,L=pcall(function()
+return d:JSONDecode(G)
+end)
+if J and type(L)=="table"and L.message then
+H=tostring(L.message)
+end
+end
+return false,H
+end
+
+local F,G=pcall(function()
+return d:JSONDecode(C.Body or"")
+end)
+
+if not F or type(G)~="table"then
+return false,"Flycer API returned an invalid response."
+end
+
+if G.success==true then
+return true,G.message or G.code or"Authenticated",G
+end
+
+return false,G.message or G.code or"License validation failed.",G
+end
+
+local function Copy()local
+p, r, u=GetIdentifier(i)
+if not p then
+return false,u or"Identifier unavailable."
+end
+
+local v=setclipboard or toclipboard
+if type(v)~="function"then
+return false,"Clipboard is not available in this executor."
+end
+
+local x=pcall(function()
+v(p)
+end)
+return x,x and p or"Unable to copy identifier."
+end
+
+return{
+Type="flycer",
+Verify=ValidateKey,
+Copy=Copy,
+GetIdentifier=function()
+return GetIdentifier(i)
+end,
+}
+end
+
+return f end function a.h()
+
 
 
 
@@ -2237,7 +2392,7 @@ Copy=au,
 end
 
 
-return X end function a.h()
+return X end function a.i()
 
 
 
@@ -2323,7 +2478,7 @@ Copy=CopyLink,
 }
 end
 
-return ac end function a.i()
+return ac end function a.j()
 
 
 
@@ -2366,7 +2521,7 @@ Copy=CopyLink,
 }
 end
 
-return aa end function a.j()
+return aa end function a.k()
 
 
 
@@ -2428,42 +2583,49 @@ Copy=copyLink
 }
 end
 
-return aa end function a.k()
+return aa end function a.l()
 
 
 
 return{
+flycer={
+Name="Flycer",
+Icon="key",
+Args={"Endpoint","Product","LockType","Client","Version"},
+
+New=a.load'g'.New
+},
 platoboost={
 Name="Platoboost",
 Icon="rbxassetid://75920162824531",
 Args={"ServiceId","Secret"},
 
-New=a.load'g'.New
+New=a.load'h'.New
 },
 pandadevelopment={
 Name="Panda Development",
 Icon="panda",
 Args={"ServiceId"},
 
-New=a.load'h'.New
+New=a.load'i'.New
 },
 luarmor={
 Name="Luarmor",
 Icon="rbxassetid://130918283130165",
 Args={"ScriptId","Discord"},
 
-New=a.load'i'.New
+New=a.load'j'.New
 },
 junkiedevelopment={
 Name="Junkie Development",
 Icon="rbxassetid://106310347705078",
 Args={"ServiceId","ApiKey","Provider"},
 
-New=a.load'j'.New
+New=a.load'k'.New
 },
 
 
-}end function a.l()
+}end function a.m()
 
 
 
@@ -2480,7 +2642,7 @@ return[[
   },
   "devDependencies": {}
 }
-]]end function a.m()
+]]end function a.n()
 
 local aa={}
 
@@ -2627,7 +2789,7 @@ end)
 return ao
 end
 
-return aa end function a.n()
+return aa end function a.o()
 
 local aa={}
 
@@ -2752,7 +2914,7 @@ end
 return ar
 end
 
-return aa end function a.o()
+return aa end function a.p()
 
 local aa=a.load'd'
 local ab=aa.New
@@ -2933,7 +3095,7 @@ end
 return aj
 end
 
-return ad end function a.p()
+return ad end function a.q()
 
 local aa={}
 
@@ -2941,8 +3103,8 @@ local ab=a.load'd'
 local ac=ab.New
 local ad=ab.Tween
 
-local ae=a.load'm'.New
-local af=a.load'n'.New
+local ae=a.load'n'.New
+local af=a.load'o'.New
 
 local function CopyToClipboard(ag)
 if not ag or ag==""then
@@ -3019,7 +3181,7 @@ ah.Version or"1.0.0"
 end
 
 local function OpenFlycerServiceDialog(ag,ah,ai,aj,ak,al,am)
-local an=a.load'o'
+local an=a.load'p'
 local ao=an.Create(
 true,
 "Popup",
@@ -3158,7 +3320,7 @@ ao:Open()
 end
 
 function aa.new(ag,ah,ai,aj)
-local ak=a.load'o'
+local ak=a.load'p'
 local al=ak.Create(true,"Popup",ag.Window,ag.FlycerUI,ag.FlycerUI.ScreenGui.KeySystem)
 
 local am={}
@@ -3736,7 +3898,7 @@ aA.Position=UDim2.new(1,0,0.5,0)
 al:Open()
 end
 
-return aa end function a.q()
+return aa end function a.r()
 
 
 
@@ -3758,7 +3920,7 @@ local ab=aa(game:GetService"Workspace").CurrentCamera.ViewportSize.Y
 return map(ab,0,2560,8,56)
 end
 
-return{viewportPointToWorld,getOffset}end function a.r()
+return{viewportPointToWorld,getOffset}end function a.s()
 
 
 
@@ -3769,7 +3931,7 @@ local ab=a.load'd'
 local ac=ab.New
 
 
-local ad,ae=unpack(a.load'q')
+local ad,ae=unpack(a.load'r')
 local af=Instance.new("Folder",aa(game:GetService"Workspace").CurrentCamera)
 
 
@@ -3905,12 +4067,12 @@ ah.Frame=ak
 ah.Model=aj
 
 return ah
-end end function a.s()
+end end function a.t()
 
 
 
 local aa=a.load'd'
-local ab=a.load'r'
+local ab=a.load's'
 
 local ac=aa.New
 
@@ -4030,7 +4192,7 @@ ae.SetVisibility=af.SetVisibility
 end
 
 return ae,af
-end end function a.t()
+end end function a.u()
 
 
 
@@ -4038,9 +4200,9 @@ local aa=(cloneref or clonereference or function(aa)return aa end)
 
 
 local ab={
-AcrylicBlur=a.load'r',
+AcrylicBlur=a.load's',
 
-AcrylicPaint=a.load's',
+AcrylicPaint=a.load't',
 }
 
 function ab.init()
@@ -4087,7 +4249,7 @@ registerDefaults()
 ab.Enable()
 end
 
-return ab end function a.u()
+return ab end function a.v()
 
 local aa={}
 
@@ -4108,7 +4270,7 @@ Buttons=ae.Buttons,
 IconSize=22,
 }
 
-local ah=a.load'o'
+local ah=a.load'p'
 local ai=ah.Create(true,"Popup",ae.FlycerUI.Window,ae.FlycerUI,af)
 
 local aj=200
@@ -4269,7 +4431,7 @@ PaddingBottom=UDim.new(0,16),
 }),
 })
 
-local as=a.load'm'.New
+local as=a.load'n'.New
 
 for at,au in next,ag.Buttons do
 as(au.Title,au.Icon,au.Callback,au.Variant,aq,ai)
@@ -4281,7 +4443,7 @@ ai:Open()
 return ag
 end
 
-return aa end function a.v()
+return aa end function a.w()
 
 return function(aa,ab)
 return{
@@ -4662,7 +4824,7 @@ Button=aa:Gradient({
 Icon=Color3.fromHex"#ffffff",
 },
 }
-end end function a.w()
+end end function a.x()
 
 local aa={}
 
@@ -4753,7 +4915,7 @@ am,
 return an
 end
 
-return aa end function a.x()
+return aa end function a.y()
 
 local aa={}
 
@@ -4902,7 +5064,7 @@ UpdateVisuals()
 return ak
 end
 
-return aa end function a.y()
+return aa end function a.z()
 
 local aa={}
 
@@ -5070,7 +5232,7 @@ end)
 return ah
 end
 
-return aa end function a.z()
+return aa end function a.A()
 
 local aa=(cloneref or clonereference or function(aa)return aa end)
 
@@ -5451,7 +5613,7 @@ function ae.GetConfig(af,ag)
 return ae.Configs[ag]
 end
 
-return ae end function a.A()
+return ae end function a.B()
 
 local aa={}
 
@@ -5737,7 +5899,7 @@ end
 
 
 
-return aa end function a.B()
+return aa end function a.C()
 
 local aa={}
 
@@ -5900,7 +6062,7 @@ end
 
 
 
-return aa end function a.C()
+return aa end function a.D()
 
 game:GetService"ReplicatedStorage"
 local aa=a.load'd'
@@ -5914,7 +6076,7 @@ end)
 
 ae(game:GetService"UserInputService")
 
-local af=a.load'y'
+local af=a.load'z'
 
 local function Color3ToHSB(ag)
 local ah,ai,aj=ag.R,ag.G,ag.B
@@ -6618,14 +6780,14 @@ end
 
 
 return ah
-end end function a.D()
+end end function a.E()
 
 local aa=a.load'd'
 local ab=aa.New
 
 local ac={}
 
-local ad=a.load'm'.New
+local ad=a.load'n'.New
 
 function ac.New(ae,af)
 af.Hover=false
@@ -6640,7 +6802,7 @@ Desc=af.Desc or nil,
 
 Locked=af.Locked or false,
 }
-local ah=a.load'C'(af)
+local ah=a.load'D'(af)
 
 ag.ParagraphFrame=ah
 if af.Buttons and#af.Buttons>0 then
@@ -6675,7 +6837,7 @@ end
 return ag.__type,ag
 end
 
-return ac end function a.E()
+return ac end function a.F()
 
 local aa=a.load'd'local ab=
 aa.New
@@ -6701,7 +6863,7 @@ UIElements={},
 
 local ag=true
 
-af.ButtonFrame=a.load'C'{
+af.ButtonFrame=a.load'D'{
 Title=af.Title,
 Desc=af.Desc,
 Parent=ae.Parent,
@@ -6784,7 +6946,7 @@ end)
 return af.__type,af
 end
 
-return ac end function a.F()
+return ac end function a.G()
 
 local aa={}
 
@@ -7192,7 +7354,7 @@ end
 return ap,am
 end
 
-return aa end function a.G()
+return aa end function a.H()
 
 local aa={}
 
@@ -7293,14 +7455,14 @@ return an,ak
 end
 
 
-return aa end function a.H()
+return aa end function a.I()
 
 local aa=a.load'd'local ab=
 aa.New local ac=
 aa.Tween
 
-local ad=a.load'F'.New
-local ae=a.load'G'.New
+local ad=a.load'G'.New
+local ae=a.load'H'.New
 
 local af={}
 
@@ -7318,7 +7480,7 @@ Type=ah.Type or"Toggle",
 Callback=ah.Callback or function()end,
 UIElements={},
 }
-ai.ToggleFrame=a.load'C'{
+ai.ToggleFrame=a.load'D'{
 Title=ai.Title,
 Desc=ai.Desc,
 
@@ -7437,7 +7599,7 @@ end
 return ai.__type,ai
 end
 
-return af end function a.I()
+return af end function a.J()
 
 local aa=(cloneref or clonereference or function(aa)
 return aa
@@ -7545,7 +7707,7 @@ av.Size=UDim2.new(0,al.IconSize,0,al.IconSize)
 aw=aw+al.IconSize-2
 end
 end
-al.SliderFrame=a.load'C'{
+al.SliderFrame=a.load'D'{
 Title=al.Title,
 Desc=al.Desc,
 Parent=ak.Parent,
@@ -7639,7 +7801,7 @@ Visible=al.IsTextbox,
 
 local ax
 if al.IsTooltip then
-ax=a.load'B'.New(
+ax=a.load'C'.New(
 ap,
 al.UIElements.SliderIcon.Frame.Thumb,
 true,
@@ -7862,7 +8024,7 @@ end)
 return al.__type,al
 end
 
-return ah end function a.J()
+return ah end function a.K()
 
 local aa=a.load'd'
 local ac=aa.New
@@ -7968,7 +8130,7 @@ end
 return tostring(math.floor(ar+0.5)).."%"
 end
 
-ao.ProgressBarFrame=a.load'C'{
+ao.ProgressBarFrame=a.load'D'{
 Title=ao.Title,
 Desc=ao.Desc,
 Parent=ag.Parent,
@@ -8141,7 +8303,7 @@ Update(ao.Value.Default,true)
 return ao.__type,ao
 end
 
-return ae end function a.K()
+return ae end function a.L()
 
 local aa=(cloneref or clonereference or function(aa)
 return aa
@@ -8158,7 +8320,7 @@ UICorner=6,
 UIPadding=8,
 }
 
-local ah=a.load'w'.New
+local ah=a.load'x'.New
 
 function ag.New(ai,aj)
 local function NormalizeKeyCode(ak)
@@ -8194,7 +8356,7 @@ table.insert(al,Enum.KeyCode[NormalizeKeyCode"Escape"])
 
 local am=true
 
-ak.KeybindFrame=a.load'C'{
+ak.KeybindFrame=a.load'D'{
 Title=ak.Title,
 Desc=ak.Desc,
 Parent=aj.Parent,
@@ -8341,7 +8503,7 @@ end)
 return ak.__type,ak
 end
 
-return ag end function a.L()
+return ag end function a.M()
 
 local aa=a.load'd'local ac=
 aa.New local ad=
@@ -8350,10 +8512,10 @@ aa.Tween
 local ae={
 UICorner=8,
 UIPadding=8,
-}local af=a.load'm'
+}local af=a.load'n'
 
 .New
-local ag=a.load'n'.New
+local ag=a.load'o'.New
 
 function ae.New(ah,ai)
 local aj={
@@ -8375,7 +8537,7 @@ Width=150,
 
 local ak=true
 
-aj.InputFrame=a.load'C'{
+aj.InputFrame=a.load'D'{
 Title=aj.Title,
 Desc=aj.Desc,
 Parent=ai.Parent,
@@ -8451,7 +8613,7 @@ end
 return aj.__type,aj
 end
 
-return ae end function a.M()
+return ae end function a.N()
 
 local aa=a.load'd'
 local ae=aa.New
@@ -8479,7 +8641,7 @@ ai
 return"Divider",{__type="Divider",ElementFrame=aj}
 end
 
-return af end function a.N()
+return af end function a.O()
 local aa={}
 
 local ae=(cloneref or clonereference or function(ae)
@@ -8492,7 +8654,7 @@ local ah=ae(game:GetService"Workspace").CurrentCamera local ai=
 
 workspace.CurrentCamera
 
-local aj=a.load'n'.New
+local aj=a.load'o'.New
 
 local ak=a.load'd'
 local al=ak.New
@@ -9028,7 +9190,7 @@ end
 
 RecalculateCanvasSize()
 RecalculateListSize()
-else a.load'M'
+else a.load'N'
 :New{Parent=ap.UIElements.Menu.Frame.ScrollingFrame}
 end
 end
@@ -9161,7 +9323,7 @@ UpdatePosition
 return as
 end
 
-return aa end function a.O()
+return aa end function a.P()
 
 local aa=(cloneref or clonereference or function(aa)
 return aa
@@ -9175,9 +9337,9 @@ local af=a.load'd'
 local ag=af.New local ah=
 af.Tween
 
-local ai=a.load'w'.New local aj=a.load'n'
+local ai=a.load'x'.New local aj=a.load'o'
 .New
-local ak=a.load'N'.New local al=
+local ak=a.load'O'.New local al=
 
 workspace.CurrentCamera
 
@@ -9221,7 +9383,7 @@ if ap.Values and typeof(ap.Value)=="number"then
 ap.Value=ap.Values[ap.Value]
 end
 
-ap.DropdownFrame=a.load'C'{
+ap.DropdownFrame=a.load'D'{
 Title=ap.Title,
 Desc=ap.Desc,
 Parent=ao.Parent,
@@ -9294,7 +9456,7 @@ end
 return ap.__type,ap
 end
 
-return am end function a.P()
+return am end function a.Q()
 
 
 
@@ -9543,7 +9705,7 @@ end
 return table.concat(at)
 end
 
-return aa end function a.Q()
+return aa end function a.R()
 
 local aa={}
 
@@ -9551,7 +9713,7 @@ local af=a.load'd'
 local ag=af.New
 local ai=af.Tween
 
-local ak=a.load'P'
+local ak=a.load'Q'
 
 function aa.New(al,am,an,ao,ap)
 local aq={
@@ -9782,13 +9944,13 @@ end
 return aq
 end
 
-return aa end function a.R()
+return aa end function a.S()
 
 local aa=a.load'd'local af=
 aa.New
 
 
-local ag=a.load'Q'
+local ag=a.load'R'
 
 local ai={}
 
@@ -9884,7 +10046,7 @@ am.ElementFrame=ao.CodeFrame
 return am.__type,am
 end
 
-return ai end function a.S()
+return ai end function a.T()
 
 local aa=a.load'd'
 local af=aa.New local ag=
@@ -9903,8 +10065,8 @@ al.RenderStepped
 local ao=am.LocalPlayer
 local ap=ao:GetMouse()
 
-local aq=a.load'm'.New
-local ar=a.load'n'.New
+local aq=a.load'n'.New
+local ar=a.load'o'.New
 
 local as={
 UICorner=9,
@@ -9938,7 +10100,7 @@ end
 
 az:SetHSVFromRGB(az.Default)
 
-local b=a.load'o'
+local b=a.load'p'
 local d=b.Create(nil,"Dialog",aw,ax,aw.UIElements.Main.Main)
 
 az.ColorpickerFrame=d
@@ -10681,7 +10843,7 @@ local ax=true
 
 
 
-aw.ColorpickerFrame=a.load'C'{
+aw.ColorpickerFrame=a.load'D'{
 Title=aw.Title,
 Desc=aw.Desc,
 Parent=av.Parent,
@@ -10759,7 +10921,7 @@ end)
 return aw.__type,aw
 end
 
-return as end function a.T()
+return as end function a.U()
 
 local aa=a.load'd'
 local af=aa.New
@@ -11138,7 +11300,7 @@ end)
 return an.__type,an
 end
 
-return ak end function a.U()
+return ak end function a.V()
 
 local aa=a.load'd'
 local af=aa.New
@@ -11155,7 +11317,7 @@ BackgroundTransparency=1,
 return"Space",{__type="Space",ElementFrame=am}
 end
 
-return ai end function a.V()
+return ai end function a.W()
 local aa=a.load'd'
 local af=aa.New
 
@@ -11224,7 +11386,7 @@ end
 return am.__type,am
 end
 
-return ai end function a.W()
+return ai end function a.X()
 local aa=a.load'd'
 local af=aa.New
 
@@ -11309,7 +11471,7 @@ al.Tab
 return am.__type,am
 end
 
-return ai end function a.X()
+return ai end function a.Y()
 local aa=a.load'd'
 local af=aa.New
 
@@ -11409,7 +11571,7 @@ end
 return am.__type,am
 end
 
-return ai end function a.Y()
+return ai end function a.Z()
 
 local aa=a.load'd'
 local af=aa.New
@@ -11496,7 +11658,7 @@ al.Tab
 return am.__type,am
 end
 
-return ai end function a.Z()
+return ai end function a._()
 local aa=(cloneref or clonereference or function(aa)
 return aa
 end)
@@ -11732,28 +11894,28 @@ ao.Main=at
 return ao.__type,ao
 end
 
-return al end function a._()
+return al end function a.aa()
 
 return{
 Elements={
-Paragraph=a.load'D',
-Button=a.load'E',
-Toggle=a.load'H',
-Slider=a.load'I',
-ProgressBar=a.load'J',
-Keybind=a.load'K',
-Input=a.load'L',
-Dropdown=a.load'O',
-Code=a.load'R',
-Colorpicker=a.load'S',
-Section=a.load'T',
-Divider=a.load'M',
-Space=a.load'U',
-Image=a.load'V',
-Group=a.load'W',
-HStack=a.load'X',
-VStack=a.load'Y',
-Viewport=a.load'Z',
+Paragraph=a.load'E',
+Button=a.load'F',
+Toggle=a.load'I',
+Slider=a.load'J',
+ProgressBar=a.load'K',
+Keybind=a.load'L',
+Input=a.load'M',
+Dropdown=a.load'P',
+Code=a.load'S',
+Colorpicker=a.load'T',
+Section=a.load'U',
+Divider=a.load'N',
+Space=a.load'V',
+Image=a.load'W',
+Group=a.load'X',
+HStack=a.load'Y',
+VStack=a.load'Z',
+Viewport=a.load'_',
 
 },
 Load=function(aa,af,ai,ak,al,am,an,ao,ap)
@@ -11882,7 +12044,7 @@ end
 end
 end
 end,
-}end function a.aa()
+}end function a.ab()
 
 local aa=(cloneref or clonereference or function(aa)
 return aa
@@ -11896,8 +12058,8 @@ local ai=af.LocalPlayer:GetMouse()
 local ak=a.load'd'
 local al=ak.New
 
-local am=a.load'B'.New
-local an=a.load'x'.New
+local am=a.load'C'.New
+local an=a.load'y'.New
 
 
 
@@ -12336,7 +12498,7 @@ end
 
 
 
-local aA=a.load'_'
+local aA=a.load'aa'
 
 aA.Load(
 ar,
@@ -12530,7 +12692,7 @@ ao.OnChangeFunc(aq)
 end
 end
 
-return ao end function a.ab()
+return ao end function a.ac()
 
 local aa={}
 
@@ -12539,7 +12701,7 @@ local af=a.load'd'
 local ai=af.New
 local ak=af.Tween
 
-local al=a.load'aa'
+local al=a.load'ab'
 
 function aa.New(am,an,ao,ap,aq)
 local ar={
@@ -12708,7 +12870,7 @@ return ar
 end
 
 
-return aa end function a.ac()
+return aa end function a.ad()
 
 return{
 Tab="table-of-contents",
@@ -12721,7 +12883,7 @@ Input="text-cursor-input",
 Dropdown="chevrons-up-down",
 Code="terminal",
 Colorpicker="palette",
-}end function a.ad()
+}end function a.ae()
 
 local aa=(cloneref or clonereference or function(aa)
 return aa
@@ -12746,7 +12908,7 @@ Radius=22,
 Width=400,
 MaxHeight=380,
 
-Icons=a.load'ac',
+Icons=a.load'ad',
 }
 
 local aq=ak("TextBox",{
@@ -13261,7 +13423,7 @@ end)
 return ap
 end
 
-return af end function a.ae()
+return af end function a.af()
 
 
 
@@ -13275,19 +13437,19 @@ local ak=aa(game:GetService"Players")
 
 local al=workspace.CurrentCamera
 
-local am=a.load't'
+local am=a.load'u'
 
 local an=a.load'd'
 local ao=an.New
 local ap=an.Tween
 
 
-local aq=a.load'w'.New
-local ar=a.load'm'.New
-local as=a.load'x'.New
-local at=a.load'y'
+local aq=a.load'x'.New
+local ar=a.load'n'.New
+local as=a.load'y'.New
+local at=a.load'z'
 
-local au=a.load'z'
+local au=a.load'A'
 
 
 
@@ -14373,7 +14535,7 @@ end
 
 
 
-aw.OpenButtonMain=a.load'A'.New(aw)
+aw.OpenButtonMain=a.load'B'.New(aw)
 
 task.spawn(function()
 if aw.Icon then
@@ -14937,8 +15099,8 @@ if aw.OpenButton and typeof(aw.OpenButton)=="table"then
 aw:EditOpenButton(aw.OpenButton)
 end
 
-local C=a.load'aa'
-local F=a.load'ab'
+local C=a.load'ab'
+local F=a.load'ac'
 local G=C.Init(aw,av.FlycerUI,av.FlycerUI.TooltipGui)
 G:OnChange(function(H)
 aw.CurrentTab=H
@@ -15012,7 +15174,7 @@ J,
 return L
 end
 
-local H=a.load'o'
+local H=a.load'p'
 function aw.Dialog(J,L)
 local M={
 Title=L.Title or"Dialog",
@@ -15395,7 +15557,7 @@ end)
 
 
 if not aw.HideSearchBar then
-local Q=a.load'ad'
+local Q=a.load'ae'
 local R=false
 
 
@@ -15502,7 +15664,7 @@ UIScale=1,
 ConfigManager=nil,
 Version="0.0.0",
 
-Services=a.load'k',
+Services=a.load'l',
 
 OnThemeChangeFunction=nil,
 
@@ -15564,12 +15726,12 @@ end)
 
 local ap=ak.LocalPlayer or nil
 
-local aq=ai:JSONDecode(a.load'l')
+local aq=ai:JSONDecode(a.load'm')
 if aq then
 aa.Version=aq.version
 end
 
-local ar=a.load'p'
+local ar=a.load'q'
 
 local as=aa.Creator
 
@@ -15578,7 +15740,7 @@ local at=as.New
 
 
 
-local au=a.load't'
+local au=a.load'u'
 
 local av=protectgui or(syn and syn.protect_gui)or function()end
 
@@ -15780,10 +15942,10 @@ end
 
 function aa.Popup(az,aA)
 aA.FlycerUI=aa
-return a.load'u'.new(aA,aa.ScreenGui.Popups)
+return a.load'v'.new(aA,aa.ScreenGui.Popups)
 end
 
-aa.Themes=a.load'v'(aa,as)
+aa.Themes=a.load'w'(aa,as)
 
 as.Themes=aa.Themes
 
@@ -15791,7 +15953,7 @@ aa:SetTheme"Dark"
 aa:SetLanguage(as.Language)
 
 function aa.CreateWindow(az,aA)
-local aB=a.load'ae'
+local aB=a.load'af'
 
 if not am:IsStudio()and writefile then
 if not isfolder"FlycerUI"then
