@@ -3,8 +3,8 @@
 return [[
 {
   "name": "flycerui",
-  "version": "1.6.66",
-  "description": "A Roblox UI Library based on WindUI.",
+  "version": "1.6.67",
+  "description": "A Roblox UI Library based on WindUI with integrated Flycer license validation.",
   "main": "dist/main.lua",
   "repository": "https://github.com/Kyoukara/FlycerUI",
   "license": "MIT",
