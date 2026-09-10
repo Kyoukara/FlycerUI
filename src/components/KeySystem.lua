@@ -19,7 +19,69 @@ local function CopyToClipboard(value)
 	return ok
 end
 
-local function OpenFlycerServiceDialog(Config, Filename, KeyDialog, DropdownContainer, ChevronDown)
+-- Returns the identifier used by Flycer's selected lock mode.
+-- Username -> Roblox UserId (account-bound).
+-- Device -> executor HWID, then Roblox client ID.
+local function GetFlycerIdentifier(Config)
+	local LocalPlayer = game:GetService("Players").LocalPlayer
+	local FlycerConfig = type(Config.KeySystem.Flycer) == "table" and Config.KeySystem.Flycer or {}
+	local LockType = tostring(FlycerConfig.LockType or Config.KeySystem.LockType or "Device"):lower()
+
+	if LockType == "username" then
+		return tostring(LocalPlayer.UserId), "Username"
+	end
+
+	if LockType ~= "device" then
+		return nil, "Invalid", "LockType must be 'Device' or 'Username'."
+	end
+
+	local gethwidFn = gethwid
+	if type(gethwidFn) == "function" then
+		local ok, hwid = pcall(gethwidFn)
+		if ok and hwid ~= nil and tostring(hwid) ~= "" then
+			return tostring(hwid), "Device"
+		end
+	end
+
+	local ok, clientId = pcall(function()
+		return game:GetService("RbxAnalyticsService"):GetClientId()
+	end)
+	if ok and clientId ~= nil and tostring(clientId) ~= "" then
+		return tostring(clientId), "Device"
+	end
+
+	return nil, "Device", "No device identifier is available in this executor."
+end
+
+KeySystem.GetFlycerIdentifier = GetFlycerIdentifier
+
+-- Build the Flycer validator from the same configuration used by Init.lua.
+-- Flycer is intentionally authoritative when Config.KeySystem.Flycer exists.
+local function CreateFlycerService(Config)
+	local flycerConfig = Config.KeySystem and Config.KeySystem.Flycer
+	if type(flycerConfig) ~= "table" then
+		return nil, "Flycer configuration is missing."
+	end
+
+	if not flycerConfig.Endpoint or tostring(flycerConfig.Endpoint) == "" then
+		return nil, "Flycer API Endpoint is not configured."
+	end
+
+	local serviceData = Config.FlycerUI.Services.flycer
+	if not serviceData or type(serviceData.New) ~= "function" then
+		return nil, "Flycer service is not available in this FlycerUI build."
+	end
+
+	return serviceData.New(
+		flycerConfig.Endpoint,
+		flycerConfig.Product or Config.Title,
+		flycerConfig.LockType or Config.KeySystem.LockType or "Device",
+		flycerConfig.Client or "FlycerUI",
+		flycerConfig.Version or "1.0.0"
+	)
+end
+
+local function OpenFlycerServiceDialog(Config, Identifier, IdentifierType, KeyDialog, DropdownContainer, ChevronDown, IdentifierError)
 	local DialogModule = require("./window/Dialog")
 	local Dialog = DialogModule.Create(
 		true,
@@ -97,16 +159,16 @@ local function OpenFlycerServiceDialog(Config, Filename, KeyDialog, DropdownCont
 	end, "Tertiary", Buttons)
 
 	local CopyButton = CreateButton("Copy HWID", "copy", function()
-		if CopyToClipboard(Filename) then
+		if Identifier and CopyToClipboard(Identifier) then
 			Config.FlycerUI:Notify({
 				Title = "Flycer",
-				Content = "HWID copied to clipboard.",
+				Content = IdentifierType .. " identifier copied to clipboard.",
 				Image = "copy",
 			})
 		else
 			Config.FlycerUI:Notify({
 				Title = "Flycer",
-				Content = "Clipboard is not available in this executor.",
+				Content = IdentifierError or "Clipboard or identifier is not available in this executor.",
 				Icon = "triangle-alert",
 			})
 		end
@@ -498,18 +560,19 @@ function KeySystem.new(Config, Filename, func, keyValidator)
 				Tween(APIFrame, 0.08, { ImageTransparency = 1 }):Play()
 			end)
 			Creator.AddSignal(APIFrame.MouseButton1Click, function()
-				OpenFlycerServiceDialog(Config, Filename, KeyDialog, DropdownContainer, ChevronDown)
+				local Identifier, IdentifierType, IdentifierError = GetFlycerIdentifier(Config)
+				OpenFlycerServiceDialog(Config, Identifier, IdentifierType, KeyDialog, DropdownContainer, ChevronDown, IdentifierError)
 			end)
 		end
 
-		if Config.KeySystem.KeyValidator then
+		if Config.KeySystem.KeyValidator or type(Config.KeySystem.Flycer) == "table" then
 			AddFlycerService()
 		end
 
 		for _, i in next, (Config.KeySystem.API or {}) do
 			if i.Type ~= "flycer" then
 				local serviceDef = Config.FlycerUI.Services[i.Type]
-			if serviceDef then
+				if serviceDef then
 				local args = {}
 				for _, argName in next, serviceDef.Args do
 					table.insert(args, i[argName])
@@ -639,8 +702,15 @@ function KeySystem.new(Config, Filename, func, keyValidator)
 		local key = tostring(EnteredKey or "empty")
 		local folder = Config.Folder or Config.Title
 
-		if Config.KeySystem.KeyValidator then
-			local isValid = Config.KeySystem.KeyValidator(key)
+		if type(Config.KeySystem.Flycer) == "table" then
+			local serviceInstance, serviceError = CreateFlycerService(Config)
+			local isValid, validationMessage = false, serviceError
+
+			if serviceInstance then
+				-- Every submit goes to the remote API. The server decides whether
+				-- the key is active, expired, free, bound or mismatched.
+				isValid, validationMessage = serviceInstance.Verify(key)
+			end
 
 			if isValid then
 				if Config.KeySystem.SaveKey then
@@ -653,7 +723,28 @@ function KeySystem.new(Config, Filename, func, keyValidator)
 			else
 				Config.FlycerUI:Notify({
 					Title = "Key System. Error",
-					Content = "Invalid key.",
+					Content = validationMessage or "Invalid key.",
+					Icon = "triangle-alert",
+				})
+			end
+			return
+		end
+
+		if Config.KeySystem.KeyValidator then
+			local isValid, validationMessage = Config.KeySystem.KeyValidator(key)
+
+			if isValid then
+				if Config.KeySystem.SaveKey then
+					handleSuccess(key)
+				else
+					KeyDialog:Close()()
+					task.wait(0.4)
+					func(true)
+				end
+			else
+				Config.FlycerUI:Notify({
+					Title = "Key System. Error",
+					Content = validationMessage or "Invalid key.",
 					Icon = "triangle-alert",
 				})
 			end
