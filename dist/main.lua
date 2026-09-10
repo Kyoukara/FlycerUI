@@ -2944,6 +2944,122 @@ local ad=ab.Tween
 local ae=a.load'm'.New
 local af=a.load'n'.New
 
+local function CopyToClipboard(ag)
+if not ag or ag==""then
+return false
+end
+
+local ah=pcall(function()
+setclipboard(tostring(ag))
+end)
+
+return ah
+end
+
+local function OpenFlycerServiceDialog(ag,ah)
+local ai=a.load'o'
+local aj=ai.Create(
+true,
+"Popup",
+ag.Window,
+ag.FlycerUI,
+ag.FlycerUI.ScreenGui.KeySystem
+)
+
+aj.UIElements.Main.AutomaticSize="Y"
+aj.UIElements.Main.Size=UDim2.new(0,360,0,0)
+
+local ak=ac("TextLabel",{
+Text="Flycer",
+BackgroundTransparency=1,
+AutomaticSize="XY",
+FontFace=Font.new(ab.Font,Enum.FontWeight.SemiBold),
+ThemeTag={TextColor3="Text"},
+TextSize=20,
+})
+
+local al=ac("TextLabel",{
+Text="Choose an action below.",
+BackgroundTransparency=1,
+Size=UDim2.new(1,0,0,0),
+AutomaticSize="Y",
+FontFace=Font.new(ab.Font,Enum.FontWeight.Medium),
+ThemeTag={TextColor3="Text"},
+TextTransparency=0.35,
+TextSize=16,
+TextWrapped=true,
+TextXAlignment="Left",
+})
+
+local am=ac("Frame",{
+BackgroundTransparency=1,
+Size=UDim2.new(1,0,0,42),
+},{
+ac("UIListLayout",{
+FillDirection="Horizontal",
+HorizontalAlignment="Right",
+VerticalAlignment="Center",
+Padding=UDim.new(0,8),
+}),
+})
+
+ae("Close","x",function()
+aj:Close()()
+end,"Tertiary",am)
+
+ae("Copy HWID","copy",function()
+if CopyToClipboard(ah)then
+ag.FlycerUI:Notify{
+Title="Flycer",
+Content="HWID copied to clipboard.",
+Image="copy",
+}
+else
+ag.FlycerUI:Notify{
+Title="Flycer",
+Content="Clipboard is not available in this executor.",
+Icon="triangle-alert",
+}
+end
+end,"Primary",am)
+
+local an=ag.KeySystem.Discord or ag.KeySystem.DiscordURL
+if an and an~=""then
+ae("Discord","message-circle",function()
+if CopyToClipboard(an)then
+ag.FlycerUI:Notify{
+Title="Flycer",
+Content="Discord link copied to clipboard.",
+Image="message-circle",
+}
+end
+end,"Secondary",am)
+end
+
+ac("Frame",{
+BackgroundTransparency=1,
+Size=UDim2.new(1,0,0,0),
+AutomaticSize="Y",
+Parent=aj.UIElements.Main,
+},{
+ac("UIListLayout",{
+FillDirection="Vertical",
+Padding=UDim.new(0,14),
+}),
+ak,
+al,
+am,
+ac("UIPadding",{
+PaddingTop=UDim.new(0,16),
+PaddingLeft=UDim.new(0,16),
+PaddingRight=UDim.new(0,16),
+PaddingBottom=UDim.new(0,16),
+}),
+})
+
+aj:Open()
+end
+
 function aa.new(ag,ah,ai,aj)
 local ak=a.load'o'
 local al=ak.Create(true,"Popup",ag.Window,ag.FlycerUI,ag.FlycerUI.ScreenGui.KeySystem)
@@ -3138,13 +3254,13 @@ az.Position=UDim2.new(0,10,1,-10)
 az.AnchorPoint=Vector2.new(0,1)
 end
 
-if ag.KeySystem.URL then
+if ag.KeySystem.URL and not ag.KeySystem.KeyValidator then
 ae("Get key","key",function()
 setclipboard(ag.KeySystem.URL)
 end,"Secondary",ax.Frame)
 end
 
-if ag.KeySystem.API then
+if ag.KeySystem.API or ag.KeySystem.KeyValidator then
 
 
 
@@ -3241,7 +3357,59 @@ PaddingBottom=UDim.new(0,10),
 }),
 })
 
-for i,l in next,ag.KeySystem.API do
+local function AddFlycerService()
+local i=ab.Image("key","key",0,"Temp","KeySystem",true)
+i.Size=UDim2.new(0,24,0,24)
+
+local l=ab.NewRoundFrame(10,"Squircle",{
+Size=UDim2.new(1,0,0,0),
+ThemeTag={ImageColor3="Text"},
+ImageTransparency=1,
+Parent=g,
+AutomaticSize="Y",
+},{
+ac("UIListLayout",{
+FillDirection="Horizontal",
+Padding=UDim.new(0,10),
+VerticalAlignment="Center",
+}),
+i,
+ac("UIPadding",{
+PaddingTop=UDim.new(0,10),
+PaddingLeft=UDim.new(0,10),
+PaddingRight=UDim.new(0,10),
+PaddingBottom=UDim.new(0,10),
+}),
+ac("TextLabel",{
+Text="Flycer",
+BackgroundTransparency=1,
+FontFace=Font.new(ab.Font,Enum.FontWeight.Medium),
+ThemeTag={TextColor3="Text"},
+TextSize=18,
+Size=UDim2.new(1,-34,0,0),
+AutomaticSize="Y",
+TextWrapped=true,
+TextXAlignment="Left",
+}),
+},true)
+
+ab.AddSignal(l.MouseEnter,function()
+ad(l,0.08,{ImageTransparency=0.95}):Play()
+end)
+ab.AddSignal(l.InputEnded,function()
+ad(l,0.08,{ImageTransparency=1}):Play()
+end)
+ab.AddSignal(l.MouseButton1Click,function()
+OpenFlycerServiceDialog(ag,ah)
+end)
+end
+
+if ag.KeySystem.KeyValidator then
+AddFlycerService()
+end
+
+for i,l in next,(ag.KeySystem.API or{})do
+if l.Type~="flycer"then
 local m=ag.FlycerUI.Services[l.Type]
 if m then
 local p={}
@@ -3254,8 +3422,8 @@ r.Type=l.Type
 table.insert(am,r)
 
 local u=ab.Image(
-l.Icon or m.Icon or Icons[l.Type]or"user",
-l.Icon or m.Icon or Icons[l.Type]or"user",
+l.Icon or m.Icon or"user",
+l.Icon or m.Icon or"user",
 0,
 "Temp",
 "KeySystem",
@@ -3334,6 +3502,7 @@ Content="Key link copied to clipboard.",
 Image="key",
 }
 end)
+end
 end
 end
 
