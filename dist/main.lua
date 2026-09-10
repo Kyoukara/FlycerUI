@@ -15987,21 +15987,19 @@ local f
 
 
 
-if aA.KeySystem and aA.KeySystem.KeyValidator then
-local g,h,i=ar.GetFlycerIdentifier(aA)
-if g then
-f=g
-else
-f=nil
-warn("[FlycerUI] "..tostring(i or("Unable to determine "..tostring(h).." identifier.")))
-end
+if aA.KeySystem and(aA.KeySystem.KeyValidator or type(aA.KeySystem.Flycer)=="table")then
+local g=ar.GetFlycerIdentifier(aA)
+f=g or"flycer_identifier_unavailable"
 else
 local g=gethwid or function()
 return ak.LocalPlayer.UserId
 end
 
-f=g()
+f=tostring(g())
 end
+
+
+f=tostring(f):gsub('[^%w%._%-]','_')
 
 if aA.KeySystem then
 b=false
@@ -16012,10 +16010,44 @@ b=g
 end)
 end
 
-local g=f and((aA.Folder or"Temp").."/"..f..".key")or nil
+local g=(aA.Folder or"Temp").."/"..f..".key"
 
-if aA.KeySystem.KeyValidator then
-if aA.KeySystem.SaveKey and g and isfile(g)then
+
+
+
+
+if type(aA.KeySystem.Flycer)=="table"then
+if not aA.KeySystem.Flycer.Endpoint then
+loadKeysystem()
+elseif aA.KeySystem.SaveKey and isfile(g)then
+local h=readfile(g)
+local i=aA.KeySystem.Flycer
+local l=aa.Services.flycer
+local m=false
+
+if l then
+local p=l.New(
+i.Endpoint,
+i.Product or aA.Title,
+i.LockType or aA.KeySystem.LockType or"Device",
+i.Client or"FlycerUI",
+i.Version or"1.0.0"
+)
+m=p.Verify(h)
+end
+
+if m then
+b=true
+else
+
+pcall(delfile,g)
+loadKeysystem()
+end
+else
+loadKeysystem()
+end
+elseif aA.KeySystem.KeyValidator then
+if aA.KeySystem.SaveKey and isfile(g)then
 local h=readfile(g)
 local i=aA.KeySystem.KeyValidator(h)
 
@@ -16028,7 +16060,7 @@ else
 loadKeysystem()
 end
 elseif not aA.KeySystem.API then
-if aA.KeySystem.SaveKey and g and isfile(g)then
+if aA.KeySystem.SaveKey and isfile(g)then
 local h=readfile(g)
 local i=(type(aA.KeySystem.Key)=="table")and table.find(aA.KeySystem.Key,h)
 or tostring(aA.KeySystem.Key)==tostring(h)
