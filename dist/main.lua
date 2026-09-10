@@ -2956,9 +2956,71 @@ end)
 return ah
 end
 
-local function OpenFlycerServiceDialog(ag,ah,ai,aj,ak)
-local al=a.load'o'
-local am=al.Create(
+
+
+
+local function GetFlycerIdentifier(ag)
+local ah=game:GetService"Players".LocalPlayer
+local ai=type(ag.KeySystem.Flycer)=="table"and ag.KeySystem.Flycer or{}
+local aj=tostring(ai.LockType or ag.KeySystem.LockType or"Device"):lower()
+
+if aj=="username"then
+return tostring(ah.UserId),"Username"
+end
+
+if aj~="device"then
+return nil,"Invalid","LockType must be 'Device' or 'Username'."
+end
+
+local ak=gethwid
+if type(ak)=="function"then
+local al,am=pcall(ak)
+if al and am~=nil and tostring(am)~=""then
+return tostring(am),"Device"
+end
+end
+
+local al,am=pcall(function()
+return game:GetService"RbxAnalyticsService":GetClientId()
+end)
+if al and am~=nil and tostring(am)~=""then
+return tostring(am),"Device"
+end
+
+return nil,"Device","No device identifier is available in this executor."
+end
+
+aa.GetFlycerIdentifier=GetFlycerIdentifier
+
+
+
+local function CreateFlycerService(ag)
+local ah=ag.KeySystem and ag.KeySystem.Flycer
+if type(ah)~="table"then
+return nil,"Flycer configuration is missing."
+end
+
+if not ah.Endpoint or tostring(ah.Endpoint)==""then
+return nil,"Flycer API Endpoint is not configured."
+end
+
+local ai=ag.FlycerUI.Services.flycer
+if not ai or type(ai.New)~="function"then
+return nil,"Flycer service is not available in this FlycerUI build."
+end
+
+return ai.New(
+ah.Endpoint,
+ah.Product or ag.Title,
+ah.LockType or ag.KeySystem.LockType or"Device",
+ah.Client or"FlycerUI",
+ah.Version or"1.0.0"
+)
+end
+
+local function OpenFlycerServiceDialog(ag,ah,ai,aj,ak,al,am)
+local an=a.load'o'
+local ao=an.Create(
 true,
 "Popup",
 ag.Window,
@@ -2968,34 +3030,34 @@ ag.FlycerUI.ScreenGui.KeySystem
 
 
 
-if aj then
-aj.Size=UDim2.new(0,0,0,0)
-end
 if ak then
-ak.Rotation=0
+ak.Size=UDim2.new(0,0,0,0)
 end
-if ai and ai.UIElements.MainContainer then
-ai.UIElements.MainContainer.Visible=false
+if al then
+al.Rotation=0
+end
+if aj and aj.UIElements.MainContainer then
+aj.UIElements.MainContainer.Visible=false
 end
 
-local an=false
+local ap=false
 local function CloseFlycerDialog()
-if an then
+if ap then
 return
 end
-an=true
-am:Close()()
+ap=true
+ao:Close()()
 task.delay(0.12,function()
-if ai and ai.UIElements.MainContainer then
-ai.UIElements.MainContainer.Visible=true
+if aj and aj.UIElements.MainContainer then
+aj.UIElements.MainContainer.Visible=true
 end
 end)
 end
 
-am.UIElements.Main.AutomaticSize="Y"
-am.UIElements.Main.Size=UDim2.new(0,470,0,0)
+ao.UIElements.Main.AutomaticSize="Y"
+ao.UIElements.Main.Size=UDim2.new(0,470,0,0)
 
-local ao=ac("TextLabel",{
+local aq=ac("TextLabel",{
 Text="Flycer",
 BackgroundTransparency=1,
 AutomaticSize="XY",
@@ -3004,7 +3066,7 @@ ThemeTag={TextColor3="Text"},
 TextSize=20,
 })
 
-local ap=ac("TextLabel",{
+local ar=ac("TextLabel",{
 Text="Choose an action below.",
 BackgroundTransparency=1,
 Size=UDim2.new(1,0,0,0),
@@ -3017,7 +3079,7 @@ TextWrapped=true,
 TextXAlignment="Left",
 })
 
-local aq=ac("Frame",{
+local as=ac("Frame",{
 BackgroundTransparency=1,
 Size=UDim2.new(1,0,0,42),
 },{
@@ -3029,45 +3091,45 @@ Padding=UDim.new(0,8),
 }),
 })
 
-local ar=ae("Close","x",function()
+local at=ae("Close","x",function()
 CloseFlycerDialog()
-end,"Tertiary",aq)
+end,"Tertiary",as)
 
-local as=ae("Copy HWID","copy",function()
-if CopyToClipboard(ah)then
+local au=ae("Copy HWID","copy",function()
+if ah and CopyToClipboard(ah)then
 ag.FlycerUI:Notify{
 Title="Flycer",
-Content="HWID copied to clipboard.",
+Content=ai.." identifier copied to clipboard.",
 Image="copy",
 }
 else
 ag.FlycerUI:Notify{
 Title="Flycer",
-Content="Clipboard is not available in this executor.",
+Content=am or"Clipboard or identifier is not available in this executor.",
 Icon="triangle-alert",
 }
 end
-end,"Primary",aq)
+end,"Primary",as)
 
-local at=ag.KeySystem.Discord or ag.KeySystem.DiscordURL
-local au
-if at and at~=""then
-au=ae("Discord","message-circle",function()
-if CopyToClipboard(at)then
+local av=ag.KeySystem.Discord or ag.KeySystem.DiscordURL
+local aw
+if av and av~=""then
+aw=ae("Discord","message-circle",function()
+if CopyToClipboard(av)then
 ag.FlycerUI:Notify{
 Title="Flycer",
 Content="Discord link copied to clipboard.",
 Image="message-circle",
 }
 end
-end,"Secondary",aq)
+end,"Secondary",as)
 end
 
 
-ar.Size=UDim2.new(0,105,0,42)
-as.Size=UDim2.new(0,145,0,42)
-if au then
-au.Size=UDim2.new(0,125,0,42)
+at.Size=UDim2.new(0,105,0,42)
+au.Size=UDim2.new(0,145,0,42)
+if aw then
+aw.Size=UDim2.new(0,125,0,42)
 end
 
 
@@ -3075,15 +3137,15 @@ ac("Frame",{
 BackgroundTransparency=1,
 Size=UDim2.new(1,0,0,0),
 AutomaticSize="Y",
-Parent=am.UIElements.Main,
+Parent=ao.UIElements.Main,
 },{
 ac("UIListLayout",{
 FillDirection="Vertical",
 Padding=UDim.new(0,14),
 }),
-ao,
-ap,
 aq,
+ar,
+as,
 ac("UIPadding",{
 PaddingTop=UDim.new(0,16),
 PaddingLeft=UDim.new(0,16),
@@ -3092,7 +3154,7 @@ PaddingBottom=UDim.new(0,16),
 }),
 })
 
-am:Open()
+ao:Open()
 end
 
 function aa.new(ag,ah,ai,aj)
@@ -3435,11 +3497,12 @@ ab.AddSignal(l.InputEnded,function()
 ad(l,0.08,{ImageTransparency=1}):Play()
 end)
 ab.AddSignal(l.MouseButton1Click,function()
-OpenFlycerServiceDialog(ag,ah,al,h,f)
+local m,p,r=GetFlycerIdentifier(ag)
+OpenFlycerServiceDialog(ag,m,p,al,h,f,r)
 end)
 end
 
-if ag.KeySystem.KeyValidator then
+if ag.KeySystem.KeyValidator or type(ag.KeySystem.Flycer)=="table"then
 AddFlycerService()
 end
 
@@ -3576,8 +3639,36 @@ local aA=ae("Submit","arrow-right",function()
 local aA=tostring(an or"empty")local aB=
 ag.Folder or ag.Title
 
+if type(ag.KeySystem.Flycer)=="table"then
+local b,d=CreateFlycerService(ag)
+local f,g=false,d
+
+if b then
+
+
+f,g=b.Verify(aA)
+end
+
+if f then
+if ag.KeySystem.SaveKey then
+handleSuccess(aA)
+else
+al:Close()()
+task.wait(0.4)
+ai(true)
+end
+else
+ag.FlycerUI:Notify{
+Title="Key System. Error",
+Content=g or"Invalid key.",
+Icon="triangle-alert",
+}
+end
+return
+end
+
 if ag.KeySystem.KeyValidator then
-local b=ag.KeySystem.KeyValidator(aA)
+local b,d=ag.KeySystem.KeyValidator(aA)
 
 if b then
 if ag.KeySystem.SaveKey then
@@ -3590,7 +3681,7 @@ end
 else
 ag.FlycerUI:Notify{
 Title="Key System. Error",
-Content="Invalid key.",
+Content=d or"Invalid key.",
 Icon="triangle-alert",
 }
 end
