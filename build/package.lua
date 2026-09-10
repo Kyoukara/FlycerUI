@@ -1,0 +1,16 @@
+-- Generated from package.json | build/build.sh
+
+return [[
+{
+  "name": "flycerui",
+  "version": "1.6.66",
+  "description": "A Roblox UI Library based on WindUI.",
+  "main": "dist/main.lua",
+  "repository": "https://github.com/Kyoukara/FlycerUI",
+  "license": "MIT",
+  "scripts": {
+    "build": "bash build/build.sh"
+  },
+  "devDependencies": {}
+}
+]]
