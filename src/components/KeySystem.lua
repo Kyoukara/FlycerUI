@@ -7,6 +7,122 @@ local Tween = Creator.Tween
 local CreateButton = require("./ui/Button").New
 local CreateInput = require("./ui/Input").New
 
+local function CopyToClipboard(value)
+	if not value or value == "" then
+		return false
+	end
+
+	local ok = pcall(function()
+		setclipboard(tostring(value))
+	end)
+
+	return ok
+end
+
+local function OpenFlycerServiceDialog(Config, Filename)
+	local DialogModule = require("./window/Dialog")
+	local Dialog = DialogModule.Create(
+		true,
+		"Popup",
+		Config.Window,
+		Config.FlycerUI,
+		Config.FlycerUI.ScreenGui.KeySystem
+	)
+
+	Dialog.UIElements.Main.AutomaticSize = "Y"
+	Dialog.UIElements.Main.Size = UDim2.new(0, 360, 0, 0)
+
+	local Title = New("TextLabel", {
+		Text = "Flycer",
+		BackgroundTransparency = 1,
+		AutomaticSize = "XY",
+		FontFace = Font.new(Creator.Font, Enum.FontWeight.SemiBold),
+		ThemeTag = { TextColor3 = "Text" },
+		TextSize = 20,
+	})
+
+	local Description = New("TextLabel", {
+		Text = "Choose an action below.",
+		BackgroundTransparency = 1,
+		Size = UDim2.new(1, 0, 0, 0),
+		AutomaticSize = "Y",
+		FontFace = Font.new(Creator.Font, Enum.FontWeight.Medium),
+		ThemeTag = { TextColor3 = "Text" },
+		TextTransparency = 0.35,
+		TextSize = 16,
+		TextWrapped = true,
+		TextXAlignment = "Left",
+	})
+
+	local Buttons = New("Frame", {
+		BackgroundTransparency = 1,
+		Size = UDim2.new(1, 0, 0, 42),
+	}, {
+		New("UIListLayout", {
+			FillDirection = "Horizontal",
+			HorizontalAlignment = "Right",
+			VerticalAlignment = "Center",
+			Padding = UDim.new(0, 8),
+		}),
+	})
+
+	local CloseButton = CreateButton("Close", "x", function()
+		Dialog:Close()()
+	end, "Tertiary", Buttons)
+
+	CreateButton("Copy HWID", "copy", function()
+		if CopyToClipboard(Filename) then
+			Config.FlycerUI:Notify({
+				Title = "Flycer",
+				Content = "HWID copied to clipboard.",
+				Image = "copy",
+			})
+		else
+			Config.FlycerUI:Notify({
+				Title = "Flycer",
+				Content = "Clipboard is not available in this executor.",
+				Icon = "triangle-alert",
+			})
+		end
+	end, "Primary", Buttons)
+
+	local Discord = Config.KeySystem.Discord or Config.KeySystem.DiscordURL
+	if Discord and Discord ~= "" then
+		CreateButton("Discord", "message-circle", function()
+			if CopyToClipboard(Discord) then
+				Config.FlycerUI:Notify({
+					Title = "Flycer",
+					Content = "Discord link copied to clipboard.",
+					Image = "message-circle",
+				})
+			end
+		end, "Secondary", Buttons)
+	end
+
+	New("Frame", {
+		BackgroundTransparency = 1,
+		Size = UDim2.new(1, 0, 0, 0),
+		AutomaticSize = "Y",
+		Parent = Dialog.UIElements.Main,
+	}, {
+		New("UIListLayout", {
+			FillDirection = "Vertical",
+			Padding = UDim.new(0, 14),
+		}),
+		Title,
+		Description,
+		Buttons,
+		New("UIPadding", {
+			PaddingTop = UDim.new(0, 16),
+			PaddingLeft = UDim.new(0, 16),
+			PaddingRight = UDim.new(0, 16),
+			PaddingBottom = UDim.new(0, 16),
+		}),
+	})
+
+	Dialog:Open()
+end
+
 function KeySystem.new(Config, Filename, func, keyValidator)
 	local KeyDialogInit = require("./window/Dialog")
 	local KeyDialog = KeyDialogInit.Create(true, "Popup", Config.Window, Config.FlycerUI, Config.FlycerUI.ScreenGui.KeySystem)
@@ -201,13 +317,13 @@ function KeySystem.new(Config, Filename, func, keyValidator)
 		ExitButton.AnchorPoint = Vector2.new(0, 1)
 	end
 
-	if Config.KeySystem.URL then
+	if Config.KeySystem.URL and not Config.KeySystem.KeyValidator then
 		CreateButton("Get key", "key", function()
 			setclipboard(Config.KeySystem.URL)
 		end, "Secondary", ButtonsContainer.Frame)
 	end
 
-	if Config.KeySystem.API then
+	if Config.KeySystem.API or Config.KeySystem.KeyValidator then
 		-- local Icons = {
 		--     platoboost = "rbxassetid://75920162824531",
 		--     pandadevelopment = "panda",
@@ -304,8 +420,60 @@ function KeySystem.new(Config, Filename, func, keyValidator)
 			}),
 		})
 
-		for _, i in next, Config.KeySystem.API do
-			local serviceDef = Config.FlycerUI.Services[i.Type]
+		local function AddFlycerService()
+			local IconFrame = Creator.Image("key", "key", 0, "Temp", "KeySystem", true)
+			IconFrame.Size = UDim2.new(0, 24, 0, 24)
+
+			local APIFrame = Creator.NewRoundFrame(10, "Squircle", {
+				Size = UDim2.new(1, 0, 0, 0),
+				ThemeTag = { ImageColor3 = "Text" },
+				ImageTransparency = 1,
+				Parent = DropdownFrame,
+				AutomaticSize = "Y",
+			}, {
+				New("UIListLayout", {
+					FillDirection = "Horizontal",
+					Padding = UDim.new(0, 10),
+					VerticalAlignment = "Center",
+				}),
+				IconFrame,
+				New("UIPadding", {
+					PaddingTop = UDim.new(0, 10),
+					PaddingLeft = UDim.new(0, 10),
+					PaddingRight = UDim.new(0, 10),
+					PaddingBottom = UDim.new(0, 10),
+				}),
+				New("TextLabel", {
+					Text = "Flycer",
+					BackgroundTransparency = 1,
+					FontFace = Font.new(Creator.Font, Enum.FontWeight.Medium),
+					ThemeTag = { TextColor3 = "Text" },
+					TextSize = 18,
+					Size = UDim2.new(1, -34, 0, 0),
+					AutomaticSize = "Y",
+					TextWrapped = true,
+					TextXAlignment = "Left",
+				}),
+			}, true)
+
+			Creator.AddSignal(APIFrame.MouseEnter, function()
+				Tween(APIFrame, 0.08, { ImageTransparency = 0.95 }):Play()
+			end)
+			Creator.AddSignal(APIFrame.InputEnded, function()
+				Tween(APIFrame, 0.08, { ImageTransparency = 1 }):Play()
+			end)
+			Creator.AddSignal(APIFrame.MouseButton1Click, function()
+				OpenFlycerServiceDialog(Config, Filename)
+			end)
+		end
+
+		if Config.KeySystem.KeyValidator then
+			AddFlycerService()
+		end
+
+		for _, i in next, (Config.KeySystem.API or {}) do
+			if i.Type ~= "flycer" then
+				local serviceDef = Config.FlycerUI.Services[i.Type]
 			if serviceDef then
 				local args = {}
 				for _, argName in next, serviceDef.Args do
@@ -317,8 +485,8 @@ function KeySystem.new(Config, Filename, func, keyValidator)
 				table.insert(Services, serviceInstance)
 
 				local IconFrame = Creator.Image(
-					i.Icon or serviceDef.Icon or Icons[i.Type] or "user",
-					i.Icon or serviceDef.Icon or Icons[i.Type] or "user",
+					i.Icon or serviceDef.Icon or "user",
+					i.Icon or serviceDef.Icon or "user",
 					0,
 					"Temp",
 					"KeySystem",
@@ -397,6 +565,7 @@ function KeySystem.new(Config, Filename, func, keyValidator)
 						Image = "key",
 					})
 				end)
+			end
 			end
 		end
 
