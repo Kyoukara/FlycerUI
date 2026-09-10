@@ -2956,9 +2956,9 @@ end)
 return ah
 end
 
-local function OpenFlycerServiceDialog(ag,ah)
-local ai=a.load'o'
-local aj=ai.Create(
+local function OpenFlycerServiceDialog(ag,ah,ai,aj,ak)
+local al=a.load'o'
+local am=al.Create(
 true,
 "Popup",
 ag.Window,
@@ -2966,10 +2966,36 @@ ag.FlycerUI,
 ag.FlycerUI.ScreenGui.KeySystem
 )
 
-aj.UIElements.Main.AutomaticSize="Y"
-aj.UIElements.Main.Size=UDim2.new(0,360,0,0)
 
-local ak=ac("TextLabel",{
+
+if aj then
+aj.Size=UDim2.new(0,0,0,0)
+end
+if ak then
+ak.Rotation=0
+end
+if ai and ai.UIElements.MainContainer then
+ai.UIElements.MainContainer.Visible=false
+end
+
+local an=false
+local function CloseFlycerDialog()
+if an then
+return
+end
+an=true
+am:Close()()
+task.delay(0.12,function()
+if ai and ai.UIElements.MainContainer then
+ai.UIElements.MainContainer.Visible=true
+end
+end)
+end
+
+am.UIElements.Main.AutomaticSize="Y"
+am.UIElements.Main.Size=UDim2.new(0,470,0,0)
+
+local ao=ac("TextLabel",{
 Text="Flycer",
 BackgroundTransparency=1,
 AutomaticSize="XY",
@@ -2978,7 +3004,7 @@ ThemeTag={TextColor3="Text"},
 TextSize=20,
 })
 
-local al=ac("TextLabel",{
+local ap=ac("TextLabel",{
 Text="Choose an action below.",
 BackgroundTransparency=1,
 Size=UDim2.new(1,0,0,0),
@@ -2991,23 +3017,23 @@ TextWrapped=true,
 TextXAlignment="Left",
 })
 
-local am=ac("Frame",{
+local aq=ac("Frame",{
 BackgroundTransparency=1,
 Size=UDim2.new(1,0,0,42),
 },{
 ac("UIListLayout",{
 FillDirection="Horizontal",
-HorizontalAlignment="Right",
+HorizontalAlignment="Center",
 VerticalAlignment="Center",
 Padding=UDim.new(0,8),
 }),
 })
 
-ae("Close","x",function()
-aj:Close()()
-end,"Tertiary",am)
+local ar=ae("Close","x",function()
+CloseFlycerDialog()
+end,"Tertiary",aq)
 
-ae("Copy HWID","copy",function()
+local as=ae("Copy HWID","copy",function()
 if CopyToClipboard(ah)then
 ag.FlycerUI:Notify{
 Title="Flycer",
@@ -3021,34 +3047,43 @@ Content="Clipboard is not available in this executor.",
 Icon="triangle-alert",
 }
 end
-end,"Primary",am)
+end,"Primary",aq)
 
-local an=ag.KeySystem.Discord or ag.KeySystem.DiscordURL
-if an and an~=""then
-ae("Discord","message-circle",function()
-if CopyToClipboard(an)then
+local at=ag.KeySystem.Discord or ag.KeySystem.DiscordURL
+local au
+if at and at~=""then
+au=ae("Discord","message-circle",function()
+if CopyToClipboard(at)then
 ag.FlycerUI:Notify{
 Title="Flycer",
 Content="Discord link copied to clipboard.",
 Image="message-circle",
 }
 end
-end,"Secondary",am)
+end,"Secondary",aq)
 end
+
+
+ar.Size=UDim2.new(0,105,0,42)
+as.Size=UDim2.new(0,145,0,42)
+if au then
+au.Size=UDim2.new(0,125,0,42)
+end
+
 
 ac("Frame",{
 BackgroundTransparency=1,
 Size=UDim2.new(1,0,0,0),
 AutomaticSize="Y",
-Parent=aj.UIElements.Main,
+Parent=am.UIElements.Main,
 },{
 ac("UIListLayout",{
 FillDirection="Vertical",
 Padding=UDim.new(0,14),
 }),
-ak,
-al,
-am,
+ao,
+ap,
+aq,
 ac("UIPadding",{
 PaddingTop=UDim.new(0,16),
 PaddingLeft=UDim.new(0,16),
@@ -3057,7 +3092,7 @@ PaddingBottom=UDim.new(0,16),
 }),
 })
 
-aj:Open()
+am:Open()
 end
 
 function aa.new(ag,ah,ai,aj)
@@ -3400,7 +3435,7 @@ ab.AddSignal(l.InputEnded,function()
 ad(l,0.08,{ImageTransparency=1}):Play()
 end)
 ab.AddSignal(l.MouseButton1Click,function()
-OpenFlycerServiceDialog(ag,ah)
+OpenFlycerServiceDialog(ag,ah,al,h,f)
 end)
 end
 
