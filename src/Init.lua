@@ -332,11 +332,26 @@ function FlycerUI:CreateWindow(Config)
 	--FlycerUI.Theme = Theme
 	Creator.SetTheme(Theme)
 
-	local hwid = gethwid or function()
-		return Players.LocalPlayer.UserId
-	end
+	local Filename
 
-	local Filename = hwid()
+	-- Flycer KeyValidator can choose what local key-cache identifier to use.
+	-- Username -> Roblox UserId (account-bound)
+	-- Device -> executor HWID / Roblox client ID (device-bound)
+	if Config.KeySystem and Config.KeySystem.KeyValidator then
+		local identifier, identifierType, identifierError = KeySystem.GetFlycerIdentifier(Config)
+		if identifier then
+			Filename = identifier
+		else
+			Filename = nil
+			warn("[FlycerUI] " .. tostring(identifierError or ("Unable to determine " .. tostring(identifierType) .. " identifier.")))
+		end
+	else
+		local hwid = gethwid or function()
+			return Players.LocalPlayer.UserId
+		end
+
+		Filename = hwid()
+	end
 
 	if Config.KeySystem then
 		CanLoadWindow = false
@@ -347,10 +362,10 @@ function FlycerUI:CreateWindow(Config)
 			end)
 		end
 
-		local keyPath = (Config.Folder or "Temp") .. "/" .. Filename .. ".key"
+		local keyPath = Filename and ((Config.Folder or "Temp") .. "/" .. Filename .. ".key") or nil
 
 		if Config.KeySystem.KeyValidator then
-			if Config.KeySystem.SaveKey and isfile(keyPath) then
+			if Config.KeySystem.SaveKey and keyPath and isfile(keyPath) then
 				local savedKey = readfile(keyPath)
 				local isValid = Config.KeySystem.KeyValidator(savedKey)
 
@@ -363,7 +378,7 @@ function FlycerUI:CreateWindow(Config)
 				loadKeysystem()
 			end
 		elseif not Config.KeySystem.API then
-			if Config.KeySystem.SaveKey and isfile(keyPath) then
+			if Config.KeySystem.SaveKey and keyPath and isfile(keyPath) then
 				local savedKey = readfile(keyPath)
 				local isKey = (type(Config.KeySystem.Key) == "table") and table.find(Config.KeySystem.Key, savedKey)
 					or tostring(Config.KeySystem.Key) == tostring(savedKey)
