@@ -3106,7 +3106,6 @@ local ad=ab.Tween
 local ae=a.load'n'.New
 local af=a.load'o'.New
 
-
 local function FormatCountdown(ag)
 ag=tonumber(ag)
 
@@ -3232,15 +3231,18 @@ ah.Version or"1.0.0"
 )
 end
 
-local function OpenFlycerServiceDialog(ag,ah,ai,aj,ak,al,am)
-local an=a.load'p'
-local ao=an.Create(
-true,
-"Popup",
-ag.Window,
-ag.FlycerUI,
-ag.FlycerUI.ScreenGui.KeySystem
+local function OpenFlycerServiceDialog(
+ag,
+ah,
+ai,
+aj,
+ak,
+al,
+am
 )
+local an=a.load'p'
+local ao=
+an.Create(true,"Popup",ag.Window,ag.FlycerUI,ag.FlycerUI.ScreenGui.KeySystem)
 
 
 
@@ -3346,7 +3348,6 @@ if aw then
 aw.Size=UDim2.new(0,125,0,42)
 end
 
-
 ac("Frame",{
 BackgroundTransparency=1,
 Size=UDim2.new(1,0,0,0),
@@ -3373,7 +3374,8 @@ end
 
 function aa.new(ag,ah,ai,aj)
 local ak=a.load'p'
-local al=ak.Create(true,"Popup",ag.Window,ag.FlycerUI,ag.FlycerUI.ScreenGui.KeySystem)
+local al=
+ak.Create(true,"Popup",ag.Window,ag.FlycerUI,ag.FlycerUI.ScreenGui.KeySystem)
 
 local am={}
 
@@ -3714,7 +3716,15 @@ ad(p,0.08,{ImageTransparency=1}):Play()
 end)
 ab.AddSignal(p.MouseButton1Click,function()
 local r,u,v=GetFlycerIdentifier(ag)
-OpenFlycerServiceDialog(ag,r,u,al,l,h,v)
+OpenFlycerServiceDialog(
+ag,
+r,
+u,
+al,
+l,
+h,
+v
+)
 end)
 end
 
@@ -3861,14 +3871,24 @@ local h,i,l=false,g
 
 if f then
 
-
 h,i,l=f.Verify(b)
 end
 
 if h then
-local m=type(l)=="table"and l.license
-local p=type(m)=="table"and m.expires_at
-local r=type(m)=="table"and tostring(m.key_type or""):lower()or""
+
+local m
+
+if type(l)=="table"then
+m=l.license
+end
+
+local p
+local r
+
+if type(m)=="table"then
+p=tonumber(m.expires_at)
+r=tostring(m.key_type or""):lower()
+end
 
 
 if ap then
@@ -3876,12 +3896,16 @@ ap()
 ap=nil
 end
 
+
 if ao then
 ao:Destroy()
 ao=nil
 end
 
-if tonumber(p)and tonumber(p)>0 then
+
+
+
+if p and p>0 then
 ao=ag.Window:Tag{
 Title=FormatCountdown(p),
 Icon="clock-3",
@@ -3893,6 +3917,10 @@ if ao then
 ao:SetTitle(u)
 end
 end)
+
+
+
+
 elseif r=="lifetime"then
 ao=ag.Window:Tag{
 Title="Lifetime",
@@ -3900,6 +3928,8 @@ Icon="infinity",
 Color=Color3.fromHex"#315dff",
 }
 end
+
+
 if ag.KeySystem.SaveKey then
 handleSuccess(b)
 else
@@ -3914,6 +3944,7 @@ Content=i or"Invalid key.",
 Icon="triangle-alert",
 }
 end
+
 return
 end
 
