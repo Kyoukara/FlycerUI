@@ -7,115 +7,57 @@ local Tween = Creator.Tween
 local CreateButton = require("./ui/Button").New
 local CreateInput = require("./ui/Input").New
 
-local function FormatCountdown(expireTimestamp)
-	expireTimestamp = tonumber(expireTimestamp)
-
-	if not expireTimestamp or expireTimestamp <= 0 then
-		return "Lifetime"
-	end
-
-	local remaining = math.max(0, expireTimestamp - os.time())
-	local days = math.floor(remaining / 86400)
-	local hours = math.floor((remaining % 86400) / 3600)
-	local minutes = math.floor((remaining % 3600) / 60)
-
-	return string.format("%03dD : %02dH : %02dM", days, hours, minutes)
-end
-
-local function StartCountdown(expireTimestamp, updateCallback)
-	expireTimestamp = tonumber(expireTimestamp)
-
-	if not expireTimestamp or expireTimestamp <= 0 then
-		updateCallback("Lifetime")
-		return function() end
-	end
-
-	local stopped = false
-
-	task.spawn(function()
-		local lastText
-
-		while not stopped do
-			local remaining = expireTimestamp - os.time()
-			if remaining <= 0 then
-				updateCallback("000D : 00H : 00M")
-				break
-			end
-
-			local text = FormatCountdown(expireTimestamp)
-			if text ~= lastText then
-				lastText = text
-				updateCallback(text)
-			end
-
-			local waitTime = 60 - (os.time() % 60)
-			task.wait(math.max(1, waitTime))
-		end
-	end)
-
-	return function()
-		stopped = true
-	end
-end
-
 local function CopyToClipboard(value)
 	if not value or value == "" then
 		return false
 	end
 
-	local copy = setclipboard or toclipboard
-
-	if type(copy) ~= "function" then
-		return false
-	end
-
 	local ok = pcall(function()
-		copy(tostring(value))
+		setclipboard(tostring(value))
 	end)
 
 	return ok
 end
 
--- Forward declaration so GetFlycerIdentifier and the UI use the same service instance.
-local CreateFlycerService
-
--- Returns exactly the same identifier that Flycer.lua uses for validation.
--- This avoids having two independent HWID/username implementations that can
--- disagree between the Copy HWID dialog and the actual license request.
+-- Returns the identifier used by Flycer's selected lock mode.
+-- Username -> Roblox UserId (account-bound).
+-- Device -> executor HWID, then Roblox client ID.
 local function GetFlycerIdentifier(Config)
-	if type(Config) ~= "table" or type(Config.KeySystem) ~= "table" then
-		return nil, "Invalid", "Flycer configuration is missing."
+	local LocalPlayer = game:GetService("Players").LocalPlayer
+	local FlycerConfig = type(Config.KeySystem.Flycer) == "table" and Config.KeySystem.Flycer or {}
+	local LockType = tostring(FlycerConfig.LockType or Config.KeySystem.LockType or "Device"):lower()
+
+	if LockType == "username" then
+		return tostring(LocalPlayer.UserId), "Username"
 	end
 
-	local serviceInstance, serviceError = CreateFlycerService(Config)
-	if not serviceInstance then
-		return nil, "Invalid", serviceError or "Flycer service is not available."
+	if LockType ~= "device" then
+		return nil, "Invalid", "LockType must be 'Device' or 'Username'."
 	end
 
-	if type(serviceInstance.GetIdentifier) ~= "function" then
-		return nil, "Invalid", "Flycer service does not expose an identifier provider."
+	local gethwidFn = gethwid
+	if type(gethwidFn) == "function" then
+		local ok, hwid = pcall(gethwidFn)
+		if ok and hwid ~= nil and tostring(hwid) ~= "" then
+			return tostring(hwid), "Device"
+		end
 	end
 
-	local ok, identifier, identifierType, identifierError = pcall(function()
-		return serviceInstance.GetIdentifier()
+	local ok, clientId = pcall(function()
+		return game:GetService("RbxAnalyticsService"):GetClientId()
 	end)
-
-	if not ok then
-		return nil, "Invalid", "Unable to determine Flycer identifier."
+	if ok and clientId ~= nil and tostring(clientId) ~= "" then
+		return tostring(clientId), "Device"
 	end
 
-	if not identifier or tostring(identifier) == "" then
-		return nil, identifierType or "Invalid", identifierError or "Unable to determine Flycer identifier."
-	end
-
-	return tostring(identifier), identifierType, identifierError
+	return nil, "Device", "No device identifier is available in this executor."
 end
 
 KeySystem.GetFlycerIdentifier = GetFlycerIdentifier
 
 -- Build the Flycer validator from the same configuration used by Init.lua.
 -- Flycer is intentionally authoritative when Config.KeySystem.Flycer exists.
-CreateFlycerService = function(Config)
+local function CreateFlycerService(Config)
 	local flycerConfig = Config.KeySystem and Config.KeySystem.Flycer
 	if type(flycerConfig) ~= "table" then
 		return nil, "Flycer configuration is missing."
@@ -288,8 +230,6 @@ function KeySystem.new(Config, Filename, func, keyValidator)
 	local Services = {}
 
 	local EnteredKey
-	local ExpiryTag
-	local StopCountdown
 
 	local ThumbnailSize = (Config.KeySystem.Thumbnail and Config.KeySystem.Thumbnail.Width) or 200
 
@@ -775,69 +715,15 @@ function KeySystem.new(Config, Filename, func, keyValidator)
 
 		if type(Config.KeySystem.Flycer) == "table" then
 			local serviceInstance, serviceError = CreateFlycerService(Config)
-			local isValid, validationMessage, validationData = false, serviceError, nil
+			local isValid, validationMessage = false, serviceError
 
 			if serviceInstance then
-				-- Validasi Key sepenuhnya dilakukan oleh server.
-				isValid, validationMessage, validationData = serviceInstance.Verify(key)
+				-- Every submit goes to the remote API. The server decides whether
+				-- the key is active, expired, free, bound or mismatched.
+				isValid, validationMessage = serviceInstance.Verify(key)
 			end
 
 			if isValid then
-				-- Ambil informasi license dari response API.
-				local licenseInfo
-
-				if type(validationData) == "table" then
-					licenseInfo = validationData.license
-				end
-
-				local expireTimestamp
-				local keyType
-
-				if type(licenseInfo) == "table" then
-					expireTimestamp = tonumber(licenseInfo.expires_at)
-					keyType = tostring(licenseInfo.key_type or ""):lower()
-				end
-
-				-- Hentikan countdown sebelumnya.
-				if StopCountdown then
-					StopCountdown()
-					StopCountdown = nil
-				end
-
-				-- Hapus Tag expiry sebelumnya.
-				if ExpiryTag then
-					ExpiryTag:Destroy()
-					ExpiryTag = nil
-				end
-
-				-- =====================================================
-				-- DURATION KEY
-				-- =====================================================
-				if expireTimestamp and expireTimestamp > 0 then
-					ExpiryTag = Config.Window:Tag({
-						Title = FormatCountdown(expireTimestamp),
-						Icon = "clock-3",
-						Color = Color3.fromHex("#315dff"),
-					})
-
-					StopCountdown = StartCountdown(expireTimestamp, function(text)
-						if ExpiryTag then
-							ExpiryTag:SetTitle(text)
-						end
-					end)
-
-				-- =====================================================
-				-- LIFETIME KEY
-				-- =====================================================
-				elseif keyType == "lifetime" then
-					ExpiryTag = Config.Window:Tag({
-						Title = "Lifetime",
-						Icon = "infinity",
-						Color = Color3.fromHex("#315dff"),
-					})
-				end
-
-				-- Key berhasil.
 				if Config.KeySystem.SaveKey then
 					handleSuccess(key)
 				else
@@ -852,7 +738,6 @@ function KeySystem.new(Config, Filename, func, keyValidator)
 					Icon = "triangle-alert",
 				})
 			end
-
 			return
 		end
 
