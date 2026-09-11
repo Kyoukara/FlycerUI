@@ -81,15 +81,18 @@ local function CreateFlycerService(Config)
 	)
 end
 
-local function OpenFlycerServiceDialog(Config, Identifier, IdentifierType, KeyDialog, DropdownContainer, ChevronDown, IdentifierError)
+local function OpenFlycerServiceDialog(
+	Config,
+	Identifier,
+	IdentifierType,
+	KeyDialog,
+	DropdownContainer,
+	ChevronDown,
+	IdentifierError
+)
 	local DialogModule = require("./window/Dialog")
-	local Dialog = DialogModule.Create(
-		true,
-		"Popup",
-		Config.Window,
-		Config.FlycerUI,
-		Config.FlycerUI.ScreenGui.KeySystem
-	)
+	local Dialog =
+		DialogModule.Create(true, "Popup", Config.Window, Config.FlycerUI, Config.FlycerUI.ScreenGui.KeySystem)
 
 	-- Hide the original KeyValidator dialog while the Flycer service dialog is open.
 	-- This prevents both dialogs from occupying the same space.
@@ -195,7 +198,6 @@ local function OpenFlycerServiceDialog(Config, Identifier, IdentifierType, KeyDi
 		DiscordButton.Size = UDim2.new(0, 125, 0, 42)
 	end
 
-
 	New("Frame", {
 		BackgroundTransparency = 1,
 		Size = UDim2.new(1, 0, 0, 0),
@@ -222,7 +224,8 @@ end
 
 function KeySystem.new(Config, Filename, func, keyValidator)
 	local KeyDialogInit = require("./window/Dialog")
-	local KeyDialog = KeyDialogInit.Create(true, "Popup", Config.Window, Config.FlycerUI, Config.FlycerUI.ScreenGui.KeySystem)
+	local KeyDialog =
+		KeyDialogInit.Create(true, "Popup", Config.Window, Config.FlycerUI, Config.FlycerUI.ScreenGui.KeySystem)
 
 	local Services = {}
 
@@ -420,7 +423,7 @@ function KeySystem.new(Config, Filename, func, keyValidator)
 		end, "Secondary", ButtonsContainer.Frame)
 	end
 
-	if Config.KeySystem.API or Config.KeySystem.KeyValidator then
+	if Config.KeySystem.API or Config.KeySystem.KeyValidator or type(Config.KeySystem.Flycer) == "table" then
 		-- local Icons = {
 		--     platoboost = "rbxassetid://75920162824531",
 		--     pandadevelopment = "panda",
@@ -561,7 +564,15 @@ function KeySystem.new(Config, Filename, func, keyValidator)
 			end)
 			Creator.AddSignal(APIFrame.MouseButton1Click, function()
 				local Identifier, IdentifierType, IdentifierError = GetFlycerIdentifier(Config)
-				OpenFlycerServiceDialog(Config, Identifier, IdentifierType, KeyDialog, DropdownContainer, ChevronDown, IdentifierError)
+				OpenFlycerServiceDialog(
+					Config,
+					Identifier,
+					IdentifierType,
+					KeyDialog,
+					DropdownContainer,
+					ChevronDown,
+					IdentifierError
+				)
 			end)
 		end
 
@@ -573,97 +584,97 @@ function KeySystem.new(Config, Filename, func, keyValidator)
 			if i.Type ~= "flycer" then
 				local serviceDef = Config.FlycerUI.Services[i.Type]
 				if serviceDef then
-				local args = {}
-				for _, argName in next, serviceDef.Args do
-					table.insert(args, i[argName])
-				end
+					local args = {}
+					for _, argName in next, serviceDef.Args do
+						table.insert(args, i[argName])
+					end
 
-				local serviceInstance = serviceDef.New(table.unpack(args))
-				serviceInstance.Type = i.Type
-				table.insert(Services, serviceInstance)
+					local serviceInstance = serviceDef.New(table.unpack(args))
+					serviceInstance.Type = i.Type
+					table.insert(Services, serviceInstance)
 
-				local IconFrame = Creator.Image(
-					i.Icon or serviceDef.Icon or "user",
-					i.Icon or serviceDef.Icon or "user",
-					0,
-					"Temp",
-					"KeySystem",
-					true
-				)
-				IconFrame.Size = UDim2.new(0, 24, 0, 24)
+					local IconFrame = Creator.Image(
+						i.Icon or serviceDef.Icon or "user",
+						i.Icon or serviceDef.Icon or "user",
+						0,
+						"Temp",
+						"KeySystem",
+						true
+					)
+					IconFrame.Size = UDim2.new(0, 24, 0, 24)
 
-				local APIFrame = Creator.NewRoundFrame(10, "Squircle", {
-					Size = UDim2.new(1, 0, 0, 0),
-					ThemeTag = { ImageColor3 = "Text" },
-					ImageTransparency = 1,
-					Parent = DropdownFrame,
-					AutomaticSize = "Y",
-				}, {
-					New("UIListLayout", {
-						FillDirection = "Horizontal",
-						Padding = UDim.new(0, 10),
-						VerticalAlignment = "Center",
-					}),
-					IconFrame,
-					New("UIPadding", {
-						PaddingTop = UDim.new(0, 10),
-						PaddingLeft = UDim.new(0, 10),
-						PaddingRight = UDim.new(0, 10),
-						PaddingBottom = UDim.new(0, 10),
-					}),
-					New("Frame", {
-						BackgroundTransparency = 1,
-						Size = UDim2.new(1, -24 - 10, 0, 0),
+					local APIFrame = Creator.NewRoundFrame(10, "Squircle", {
+						Size = UDim2.new(1, 0, 0, 0),
+						ThemeTag = { ImageColor3 = "Text" },
+						ImageTransparency = 1,
+						Parent = DropdownFrame,
 						AutomaticSize = "Y",
 					}, {
 						New("UIListLayout", {
-							FillDirection = "Vertical",
-							Padding = UDim.new(0, 5),
-							HorizontalAlignment = "Center",
+							FillDirection = "Horizontal",
+							Padding = UDim.new(0, 10),
+							VerticalAlignment = "Center",
 						}),
-						New("TextLabel", {
-							Text = i.Title or serviceDef.Name,
+						IconFrame,
+						New("UIPadding", {
+							PaddingTop = UDim.new(0, 10),
+							PaddingLeft = UDim.new(0, 10),
+							PaddingRight = UDim.new(0, 10),
+							PaddingBottom = UDim.new(0, 10),
+						}),
+						New("Frame", {
 							BackgroundTransparency = 1,
-							FontFace = Font.new(Creator.Font, Enum.FontWeight.Medium),
-							ThemeTag = { TextColor3 = "Text" },
-							TextTransparency = 0.05,
-							TextSize = 18,
-							Size = UDim2.new(1, 0, 0, 0),
+							Size = UDim2.new(1, -24 - 10, 0, 0),
 							AutomaticSize = "Y",
-							TextWrapped = true,
-							TextXAlignment = "Left",
+						}, {
+							New("UIListLayout", {
+								FillDirection = "Vertical",
+								Padding = UDim.new(0, 5),
+								HorizontalAlignment = "Center",
+							}),
+							New("TextLabel", {
+								Text = i.Title or serviceDef.Name,
+								BackgroundTransparency = 1,
+								FontFace = Font.new(Creator.Font, Enum.FontWeight.Medium),
+								ThemeTag = { TextColor3 = "Text" },
+								TextTransparency = 0.05,
+								TextSize = 18,
+								Size = UDim2.new(1, 0, 0, 0),
+								AutomaticSize = "Y",
+								TextWrapped = true,
+								TextXAlignment = "Left",
+							}),
+							New("TextLabel", {
+								Text = i.Desc or "",
+								BackgroundTransparency = 1,
+								FontFace = Font.new(Creator.Font, Enum.FontWeight.Regular),
+								ThemeTag = { TextColor3 = "Text" },
+								TextTransparency = 0.2,
+								TextSize = 16,
+								Size = UDim2.new(1, 0, 0, 0),
+								AutomaticSize = "Y",
+								TextWrapped = true,
+								Visible = i.Desc and true or false,
+								TextXAlignment = "Left",
+							}),
 						}),
-						New("TextLabel", {
-							Text = i.Desc or "",
-							BackgroundTransparency = 1,
-							FontFace = Font.new(Creator.Font, Enum.FontWeight.Regular),
-							ThemeTag = { TextColor3 = "Text" },
-							TextTransparency = 0.2,
-							TextSize = 16,
-							Size = UDim2.new(1, 0, 0, 0),
-							AutomaticSize = "Y",
-							TextWrapped = true,
-							Visible = i.Desc and true or false,
-							TextXAlignment = "Left",
-						}),
-					}),
-				}, true)
+					}, true)
 
-				Creator.AddSignal(APIFrame.MouseEnter, function()
-					Tween(APIFrame, 0.08, { ImageTransparency = 0.95 }):Play()
-				end)
-				Creator.AddSignal(APIFrame.InputEnded, function()
-					Tween(APIFrame, 0.08, { ImageTransparency = 1 }):Play()
-				end)
-				Creator.AddSignal(APIFrame.MouseButton1Click, function()
-					serviceInstance.Copy()
-					Config.FlycerUI:Notify({
-						Title = "Key System",
-						Content = "Key link copied to clipboard.",
-						Image = "key",
-					})
-				end)
-			end
+					Creator.AddSignal(APIFrame.MouseEnter, function()
+						Tween(APIFrame, 0.08, { ImageTransparency = 0.95 }):Play()
+					end)
+					Creator.AddSignal(APIFrame.InputEnded, function()
+						Tween(APIFrame, 0.08, { ImageTransparency = 1 }):Play()
+					end)
+					Creator.AddSignal(APIFrame.MouseButton1Click, function()
+						serviceInstance.Copy()
+						Config.FlycerUI:Notify({
+							Title = "Key System",
+							Content = "Key link copied to clipboard.",
+							Image = "key",
+						})
+					end)
+				end
 			end
 		end
 
