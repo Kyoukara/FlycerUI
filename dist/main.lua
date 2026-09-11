@@ -1,6 +1,6 @@
 --[[
     
-    v1.6.67  |  2026-09-10  |  A Roblox UI Library based on WindUI with integrated Flycer license validation.
+    v1.6.67  |  2026-09-11  |  A Roblox UI Library based on WindUI with integrated Flycer license validation.
     
     To view the source code, see the `src/` folder on the official GitHub repository.
     
@@ -3180,15 +3180,18 @@ ah.Version or"1.0.0"
 )
 end
 
-local function OpenFlycerServiceDialog(ag,ah,ai,aj,ak,al,am)
-local an=a.load'p'
-local ao=an.Create(
-true,
-"Popup",
-ag.Window,
-ag.FlycerUI,
-ag.FlycerUI.ScreenGui.KeySystem
+local function OpenFlycerServiceDialog(
+ag,
+ah,
+ai,
+aj,
+ak,
+al,
+am
 )
+local an=a.load'p'
+local ao=
+an.Create(true,"Popup",ag.Window,ag.FlycerUI,ag.FlycerUI.ScreenGui.KeySystem)
 
 
 
@@ -3294,7 +3297,6 @@ if aw then
 aw.Size=UDim2.new(0,125,0,42)
 end
 
-
 ac("Frame",{
 BackgroundTransparency=1,
 Size=UDim2.new(1,0,0,0),
@@ -3321,7 +3323,8 @@ end
 
 function aa.new(ag,ah,ai,aj)
 local ak=a.load'p'
-local al=ak.Create(true,"Popup",ag.Window,ag.FlycerUI,ag.FlycerUI.ScreenGui.KeySystem)
+local al=
+ak.Create(true,"Popup",ag.Window,ag.FlycerUI,ag.FlycerUI.ScreenGui.KeySystem)
 
 local am={}
 
@@ -3519,7 +3522,7 @@ setclipboard(ag.KeySystem.URL)
 end,"Secondary",ax.Frame)
 end
 
-if ag.KeySystem.API or ag.KeySystem.KeyValidator then
+if ag.KeySystem.API or ag.KeySystem.KeyValidator or type(ag.KeySystem.Flycer)=="table"then
 
 
 
@@ -3660,7 +3663,15 @@ ad(l,0.08,{ImageTransparency=1}):Play()
 end)
 ab.AddSignal(l.MouseButton1Click,function()
 local m,p,r=GetFlycerIdentifier(ag)
-OpenFlycerServiceDialog(ag,m,p,al,h,f,r)
+OpenFlycerServiceDialog(
+ag,
+m,
+p,
+al,
+h,
+f,
+r
+)
 end)
 end
 
