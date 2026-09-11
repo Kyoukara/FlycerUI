@@ -2591,40 +2591,60 @@ return{
 flycer={
 Name="Flycer",
 Icon="key",
-Args={"Endpoint","Product","LockType","Client","Version"},
+Args={
+"Endpoint",
+"Product",
+"LockType",
+"Client",
+"Version"
+},
 
 New=a.load'g'.New
 },
+
 platoboost={
 Name="Platoboost",
 Icon="rbxassetid://75920162824531",
-Args={"ServiceId","Secret"},
+Args={
+"ServiceId",
+"Secret"
+},
 
 New=a.load'h'.New
 },
+
 pandadevelopment={
 Name="Panda Development",
 Icon="panda",
-Args={"ServiceId"},
+Args={
+"ServiceId"
+},
 
 New=a.load'i'.New
 },
+
 luarmor={
 Name="Luarmor",
 Icon="rbxassetid://130918283130165",
-Args={"ScriptId","Discord"},
+Args={
+"ScriptId",
+"Discord"
+},
 
 New=a.load'j'.New
 },
+
 junkiedevelopment={
 Name="Junkie Development",
 Icon="rbxassetid://106310347705078",
-Args={"ServiceId","ApiKey","Provider"},
+Args={
+"ServiceId",
+"ApiKey",
+"Provider"
+},
 
 New=a.load'k'.New
 },
-
-
 }end function a.m()
 
 
