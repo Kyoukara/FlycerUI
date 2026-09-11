@@ -628,6 +628,7 @@ function KeySystem.new(Config, Filename, func, keyValidator)
 
 				New("TextLabel", {
 					Text = "Flycer",
+					Icon = "rbxassetid://89557898457977",
 					BackgroundTransparency = 1,
 
 					FontFace = Font.new(Creator.Font, Enum.FontWeight.Medium),
