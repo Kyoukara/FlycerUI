@@ -1965,9 +1965,17 @@ local e=b(game:GetService"Players")
 
 local f={}
 
+local function NormalizeLockType(g)
+g=string.lower(tostring(g or"Device"))
+if g=="username"or g=="device"then
+return g
+end
+return nil
+end
+
 local function GetIdentifier(g)
 local h=e.LocalPlayer
-g=string.lower(tostring(g or"Device"))
+g=NormalizeLockType(g)
 
 if g=="username"then
 return tostring(h.UserId),"Username"
@@ -1997,10 +2005,25 @@ end
 
 function f.New(g,h,i,l,m)
 g=tostring(g or""):gsub("/$","")
-h=tostring(h or"default")
-i=tostring(i or"Device")
+h=tostring(h or"default"):gsub("^%s+",""):gsub("%s+$","")
+i=NormalizeLockType(i)
 l=tostring(l or"FlycerUI")
 m=tostring(m or"1.0.0")
+
+if not i then
+return{
+Type="flycer",
+Verify=function()
+return false,"LockType must be 'Device' or 'Username'."
+end,
+Copy=function()
+return false,"LockType must be 'Device' or 'Username'."
+end,
+GetIdentifier=function()
+return nil,"Invalid","LockType must be 'Device' or 'Username'."
+end,
+}
+end
 
 local function ValidateKey(p)
 if g==""then
@@ -2025,8 +2048,8 @@ end
 local z=d:JSONEncode{
 product=h,
 key=tostring(p),
-lock_type=string.lower(u),
-identifier=r,
+lock_type=string.lower(tostring(u or i)),
+identifier=tostring(r),
 client=l,
 client_version=m,
 }
