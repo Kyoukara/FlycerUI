@@ -3278,7 +3278,7 @@ ap.UIElements.Main.AutomaticSize="Y"
 ap.UIElements.Main.Size=UDim2.new(0,470,0,0)
 
 local ar=ac("TextLabel",{
-Text="Flycer Key System",
+Text="Flycer",
 BackgroundTransparency=1,
 AutomaticSize="XY",
 
