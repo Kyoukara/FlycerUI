@@ -2,38 +2,58 @@ return {
     flycer = {
         Name = "Flycer",
         Icon = "key",
-        Args = {"Endpoint", "Product", "LockType", "Client", "Version"},
+        Args = {
+            "Endpoint",
+            "Product",
+            "LockType",
+            "Client",
+            "Version"
+        },
 
         New = require("./Flycer").New
     },
+
     platoboost = {
         Name = "Platoboost",
         Icon = "rbxassetid://75920162824531",
-        Args = {"ServiceId", "Secret"},
-        
+        Args = {
+            "ServiceId",
+            "Secret"
+        },
+
         New = require("./Platoboost").New
     },
+
     pandadevelopment = {
         Name = "Panda Development",
         Icon = "panda",
-        Args = {"ServiceId"},
-        
+        Args = {
+            "ServiceId"
+        },
+
         New = require("./PandaDevelopment").New
     },
+
     luarmor = {
         Name = "Luarmor",
         Icon = "rbxassetid://130918283130165",
-        Args = {"ScriptId", "Discord"},
-        
+        Args = {
+            "ScriptId",
+            "Discord"
+        },
+
         New = require("./Luarmor").New
     },
+
     junkiedevelopment = {
         Name = "Junkie Development",
         Icon = "rbxassetid://106310347705078",
-        Args = {"ServiceId", "ApiKey", "Provider"},
+        Args = {
+            "ServiceId",
+            "ApiKey",
+            "Provider"
+        },
 
         New = require("./JunkieDevelopment").New
     },
-
-    -- other services soon...
 }
