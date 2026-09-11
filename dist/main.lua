@@ -3201,8 +3201,6 @@ end
 
 aa.GetFlycerIdentifier=GetFlycerIdentifier
 
-
-
 ag=function(ah)
 local ai=ah.KeySystem and ah.KeySystem.Flycer
 
@@ -3278,7 +3276,7 @@ ap.UIElements.Main.AutomaticSize="Y"
 ap.UIElements.Main.Size=UDim2.new(0,470,0,0)
 
 local ar=ac("TextLabel",{
-Text="Flycer",
+Text="Flycer Key System",
 BackgroundTransparency=1,
 AutomaticSize="XY",
 
@@ -3770,7 +3768,6 @@ PaddingBottom=UDim.new(0,10),
 
 ac("TextLabel",{
 Text="Flycer",
-Icon="rbxassetid://89557898457977",
 BackgroundTransparency=1,
 
 FontFace=Font.new(ab.Font,Enum.FontWeight.Medium),
