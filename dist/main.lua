@@ -3309,7 +3309,7 @@ ap.UIElements.Main.Size=UDim2.new(0,470,0,0)
 local ar=ac("ImageLabel",{
 Image="rbxassetid://89557898457977",
 BackgroundTransparency=1,
-Size=UDim2.fromOffset(22,22),
+Size=UDim2.fromOffset(24,24),
 ScaleType=Enum.ScaleType.Fit,
 })
 
