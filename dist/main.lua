@@ -3770,6 +3770,7 @@ PaddingBottom=UDim.new(0,10),
 
 ac("TextLabel",{
 Text="Flycer",
+Icon="rbxassetid://89557898457977",
 BackgroundTransparency=1,
 
 FontFace=Font.new(ab.Font,Enum.FontWeight.Medium),
