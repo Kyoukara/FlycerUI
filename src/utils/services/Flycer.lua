@@ -7,9 +7,17 @@ local Players = cloneref(game:GetService("Players"))
 
 local Flycer = {}
 
+local function NormalizeLockType(lockType)
+	lockType = string.lower(tostring(lockType or "Device"))
+	if lockType == "username" or lockType == "device" then
+		return lockType
+	end
+	return nil
+end
+
 local function GetIdentifier(lockType)
 	local LocalPlayer = Players.LocalPlayer
-	lockType = string.lower(tostring(lockType or "Device"))
+	lockType = NormalizeLockType(lockType)
 
 	if lockType == "username" then
 		return tostring(LocalPlayer.UserId), "Username"
@@ -39,10 +47,25 @@ end
 
 function Flycer.New(endpoint, productId, lockType, clientName, clientVersion)
 	endpoint = tostring(endpoint or ""):gsub("/$", "")
-	productId = tostring(productId or "default")
-	lockType = tostring(lockType or "Device")
+	productId = tostring(productId or "default"):gsub("^%s+", ""):gsub("%s+$", "")
+	lockType = NormalizeLockType(lockType)
 	clientName = tostring(clientName or "FlycerUI")
 	clientVersion = tostring(clientVersion or "1.0.0")
+
+	if not lockType then
+		return {
+			Type = "flycer",
+			Verify = function()
+				return false, "LockType must be 'Device' or 'Username'."
+			end,
+			Copy = function()
+				return false, "LockType must be 'Device' or 'Username'."
+			end,
+			GetIdentifier = function()
+				return nil, "Invalid", "LockType must be 'Device' or 'Username'."
+			end,
+		}
+	end
 
 	local function ValidateKey(key)
 		if endpoint == "" then
@@ -67,8 +90,8 @@ function Flycer.New(endpoint, productId, lockType, clientName, clientVersion)
 		local body = HttpService:JSONEncode({
 			product = productId,
 			key = tostring(key),
-			lock_type = string.lower(identifierType),
-			identifier = identifier,
+			lock_type = string.lower(tostring(identifierType or lockType)),
+			identifier = tostring(identifier),
 			client = clientName,
 			client_version = clientVersion,
 		})
