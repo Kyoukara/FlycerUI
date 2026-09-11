@@ -333,7 +333,7 @@ local function OpenFlycerServiceDialog(
 			TextColor3 = "Text",
 		},
 
-		TextTransparency = 0.35,
+		TextTransparency = 0.1,
 
 		TextSize = 16,
 
@@ -363,9 +363,9 @@ local function OpenFlycerServiceDialog(
 			TextColor3 = "Text",
 		},
 
-		TextTransparency = 0.2,
+		TextTransparency = 0.6,
 
-		TextSize = 14,
+		TextSize = 10,
 
 		TextWrapped = true,
 
