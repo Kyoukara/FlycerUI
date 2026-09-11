@@ -3106,6 +3106,58 @@ local ad=ab.Tween
 local ae=a.load'n'.New
 local af=a.load'o'.New
 
+
+local function FormatCountdown(ag)
+ag=tonumber(ag)
+
+if not ag or ag<=0 then
+return"Lifetime"
+end
+
+local ah=math.max(0,ag-os.time())
+local ai=math.floor(ah/86400)
+local aj=math.floor((ah%86400)/3600)
+local ak=math.floor((ah%3600)/60)
+
+return string.format("%03dD : %02dH : %02dM",ai,aj,ak)
+end
+
+local function StartCountdown(ag,ah)
+ag=tonumber(ag)
+
+if not ag or ag<=0 then
+ah"Lifetime"
+return function()end
+end
+
+local ai=false
+
+task.spawn(function()
+local aj
+
+while not ai do
+local ak=ag-os.time()
+if ak<=0 then
+ah"000D : 00H : 00M"
+break
+end
+
+local al=FormatCountdown(ag)
+if al~=aj then
+aj=al
+ah(al)
+end
+
+local am=60-(os.time()%60)
+task.wait(math.max(1,am))
+end
+end)
+
+return function()
+ai=true
+end
+end
+
 local function CopyToClipboard(ag)
 if not ag or ag==""then
 return false
@@ -3180,18 +3232,15 @@ ah.Version or"1.0.0"
 )
 end
 
-local function OpenFlycerServiceDialog(
-ag,
-ah,
-ai,
-aj,
-ak,
-al,
-am
-)
+local function OpenFlycerServiceDialog(ag,ah,ai,aj,ak,al,am)
 local an=a.load'p'
-local ao=
-an.Create(true,"Popup",ag.Window,ag.FlycerUI,ag.FlycerUI.ScreenGui.KeySystem)
+local ao=an.Create(
+true,
+"Popup",
+ag.Window,
+ag.FlycerUI,
+ag.FlycerUI.ScreenGui.KeySystem
+)
 
 
 
@@ -3297,6 +3346,7 @@ if aw then
 aw.Size=UDim2.new(0,125,0,42)
 end
 
+
 ac("Frame",{
 BackgroundTransparency=1,
 Size=UDim2.new(1,0,0,0),
@@ -3323,33 +3373,34 @@ end
 
 function aa.new(ag,ah,ai,aj)
 local ak=a.load'p'
-local al=
-ak.Create(true,"Popup",ag.Window,ag.FlycerUI,ag.FlycerUI.ScreenGui.KeySystem)
+local al=ak.Create(true,"Popup",ag.Window,ag.FlycerUI,ag.FlycerUI.ScreenGui.KeySystem)
 
 local am={}
 
 local an
+local ao
+local ap
 
-local ao=(ag.KeySystem.Thumbnail and ag.KeySystem.Thumbnail.Width)or 200
+local aq=(ag.KeySystem.Thumbnail and ag.KeySystem.Thumbnail.Width)or 200
 
-local ap=430
+local ar=430
 if ag.KeySystem.Thumbnail and ag.KeySystem.Thumbnail.Image then
-ap=430+(ao/2)
+ar=430+(aq/2)
 end
 
 al.UIElements.Main.AutomaticSize="Y"
-al.UIElements.Main.Size=UDim2.new(0,ap,0,0)
+al.UIElements.Main.Size=UDim2.new(0,ar,0,0)
 
-local aq
+local as
 
 if ag.Icon then
-aq=
+as=
 ab.Image(ag.Icon,ag.Title..":"..ag.Icon,0,"Temp","KeySystem",ag.IconThemed)
-aq.Size=UDim2.new(0,24,0,24)
-aq.LayoutOrder=-1
+as.Size=UDim2.new(0,24,0,24)
+as.LayoutOrder=-1
 end
 
-local ar=ac("TextLabel",{
+local at=ac("TextLabel",{
 AutomaticSize="XY",
 BackgroundTransparency=1,
 Text=ag.KeySystem.Title or ag.Title,
@@ -3360,7 +3411,7 @@ TextColor3="Text",
 TextSize=20,
 })
 
-local as=ac("TextLabel",{
+local au=ac("TextLabel",{
 AutomaticSize="XY",
 BackgroundTransparency=1,
 Text="Key System",
@@ -3374,7 +3425,7 @@ TextColor3="Text",
 TextSize=16,
 })
 
-local at=ac("Frame",{
+local av=ac("Frame",{
 BackgroundTransparency=1,
 AutomaticSize="XY",
 },{
@@ -3383,11 +3434,11 @@ Padding=UDim.new(0,14),
 FillDirection="Horizontal",
 VerticalAlignment="Center",
 }),
-aq,
-ar,
+as,
+at,
 })
 
-local au=ac("Frame",{
+local aw=ac("Frame",{
 AutomaticSize="Y",
 Size=UDim2.new(1,0,0,0),
 BackgroundTransparency=1,
@@ -3397,17 +3448,17 @@ BackgroundTransparency=1,
 
 
 
-at,
-as,
+av,
+au,
 })
 
-local av=af("Enter Key","key",nil,"Input",function(av)
-an=av
+local ax=af("Enter Key","key",nil,"Input",function(ax)
+an=ax
 end)
 
-local aw
+local ay
 if ag.KeySystem.Note and ag.KeySystem.Note~=""then
-aw=ac("TextLabel",{
+ay=ac("TextLabel",{
 Size=UDim2.new(1,0,0,0),
 AutomaticSize="Y",
 FontFace=Font.new(ab.Font,Enum.FontWeight.Medium),
@@ -3424,7 +3475,7 @@ TextWrapped=true,
 })
 end
 
-local ax=ac("Frame",{
+local az=ac("Frame",{
 Size=UDim2.new(1,0,0,42),
 BackgroundTransparency=1,
 },{
@@ -3440,11 +3491,11 @@ FillDirection="Horizontal",
 }),
 })
 
-local ay
+local aA
 if ag.KeySystem.Thumbnail and ag.KeySystem.Thumbnail.Image then
-local az
+local aB
 if ag.KeySystem.Thumbnail.Title then
-az=ac("TextLabel",{
+aB=ac("TextLabel",{
 Text=ag.KeySystem.Thumbnail.Title,
 ThemeTag={
 TextColor3="Text",
@@ -3457,15 +3508,15 @@ AnchorPoint=Vector2.new(0.5,0.5),
 Position=UDim2.new(0.5,0,0.5,0),
 })
 end
-ay=ac("ImageLabel",{
+aA=ac("ImageLabel",{
 Image=ag.KeySystem.Thumbnail.Image,
 BackgroundTransparency=1,
-Size=UDim2.new(0,ao,1,-12),
+Size=UDim2.new(0,aq,1,-12),
 Position=UDim2.new(0,6,0,6),
 Parent=al.UIElements.Main,
 ScaleType="Crop",
 },{
-az,
+aB,
 ac("UICorner",{
 CornerRadius=UDim.new(0,20),
 }),
@@ -3474,8 +3525,8 @@ end
 
 ac("Frame",{
 
-Size=UDim2.new(1,ay and-ao or 0,1,0),
-Position=UDim2.new(0,ay and ao or 0,0,0),
+Size=UDim2.new(1,aA and-aq or 0,1,0),
+Position=UDim2.new(0,aA and aq or 0,0,0),
 BackgroundTransparency=1,
 Parent=al.UIElements.Main,
 },{
@@ -3488,10 +3539,10 @@ ac("UIListLayout",{
 Padding=UDim.new(0,18),
 FillDirection="Vertical",
 }),
-au,
 aw,
-av,
+ay,
 ax,
+az,
 ac("UIPadding",{
 PaddingTop=UDim.new(0,16),
 PaddingLeft=UDim.new(0,16),
@@ -3505,24 +3556,24 @@ PaddingBottom=UDim.new(0,16),
 
 
 
-local az=ae("Exit","log-out",function()
+local aB=ae("Exit","log-out",function()
 al:Close()()
-end,"Tertiary",ax.Frame)
+end,"Tertiary",az.Frame)
 
-if ay then
-az.Parent=ay
-az.Size=UDim2.new(0,0,0,42)
-az.Position=UDim2.new(0,10,1,-10)
-az.AnchorPoint=Vector2.new(0,1)
+if aA then
+aB.Parent=aA
+aB.Size=UDim2.new(0,0,0,42)
+aB.Position=UDim2.new(0,10,1,-10)
+aB.AnchorPoint=Vector2.new(0,1)
 end
 
 if ag.KeySystem.URL and not ag.KeySystem.KeyValidator then
 ae("Get key","key",function()
 setclipboard(ag.KeySystem.URL)
-end,"Secondary",ax.Frame)
+end,"Secondary",az.Frame)
 end
 
-if ag.KeySystem.API or ag.KeySystem.KeyValidator or type(ag.KeySystem.Flycer)=="table"then
+if ag.KeySystem.API or ag.KeySystem.KeyValidator then
 
 
 
@@ -3531,11 +3582,11 @@ if ag.KeySystem.API or ag.KeySystem.KeyValidator or type(ag.KeySystem.Flycer)=="
 
 
 
-local aA=240
-local aB=false
-local b=ae("Get key","key",nil,"Secondary",ax.Frame)
+local b=240
+local d=false
+local f=ae("Get key","key",nil,"Secondary",az.Frame)
 
-local d=ab.NewRoundFrame(99,"Squircle",{
+local g=ab.NewRoundFrame(99,"Squircle",{
 Size=UDim2.new(0,1,1,0),
 ThemeTag={
 ImageColor3="Text",
@@ -3547,28 +3598,28 @@ ac("Frame",{
 BackgroundTransparency=1,
 Size=UDim2.new(0,0,1,0),
 AutomaticSize="X",
-Parent=b.Frame,
+Parent=f.Frame,
 },{
-d,
+g,
 ac("UIPadding",{
 PaddingLeft=UDim.new(0,5),
 PaddingRight=UDim.new(0,5),
 }),
 })
 
-local f=ab.Image("chevron-down","chevron-down",0,"Temp","KeySystem",true)
+local h=ab.Image("chevron-down","chevron-down",0,"Temp","KeySystem",true)
 
-f.Size=UDim2.new(1,0,1,0)
+h.Size=UDim2.new(1,0,1,0)
 
 ac("Frame",{
 Size=UDim2.new(0,21,0,21),
-Parent=b.Frame,
+Parent=f.Frame,
 BackgroundTransparency=1,
 },{
-f,
+h,
 })
 
-local g=ab.NewRoundFrame(15,"Squircle",{
+local i=ab.NewRoundFrame(15,"Squircle",{
 Size=UDim2.new(1,0,0,0),
 AutomaticSize="Y",
 ThemeTag={
@@ -3587,15 +3638,15 @@ Padding=UDim.new(0,5),
 }),
 })
 
-local h=ac("Frame",{
+local l=ac("Frame",{
 BackgroundTransparency=1,
-Size=UDim2.new(0,aA,0,0),
+Size=UDim2.new(0,b,0,0),
 ClipsDescendants=true,
 AnchorPoint=Vector2.new(1,0),
-Parent=b,
+Parent=f,
 Position=UDim2.new(1,0,1,15),
 },{
-g,
+i,
 })
 
 ac("TextLabel",{
@@ -3609,7 +3660,7 @@ Size=UDim2.new(1,0,0,0),
 AutomaticSize="Y",
 TextWrapped=true,
 TextXAlignment="Left",
-Parent=g,
+Parent=i,
 },{
 ac("UIPadding",{
 PaddingTop=UDim.new(0,10),
@@ -3620,14 +3671,14 @@ PaddingBottom=UDim.new(0,10),
 })
 
 local function AddFlycerService()
-local i=ab.Image("key","key",0,"Temp","KeySystem",true)
-i.Size=UDim2.new(0,24,0,24)
+local m=ab.Image("key","key",0,"Temp","KeySystem",true)
+m.Size=UDim2.new(0,24,0,24)
 
-local l=ab.NewRoundFrame(10,"Squircle",{
+local p=ab.NewRoundFrame(10,"Squircle",{
 Size=UDim2.new(1,0,0,0),
 ThemeTag={ImageColor3="Text"},
 ImageTransparency=1,
-Parent=g,
+Parent=i,
 AutomaticSize="Y",
 },{
 ac("UIListLayout",{
@@ -3635,7 +3686,7 @@ FillDirection="Horizontal",
 Padding=UDim.new(0,10),
 VerticalAlignment="Center",
 }),
-i,
+m,
 ac("UIPadding",{
 PaddingTop=UDim.new(0,10),
 PaddingLeft=UDim.new(0,10),
@@ -3655,23 +3706,15 @@ TextXAlignment="Left",
 }),
 },true)
 
-ab.AddSignal(l.MouseEnter,function()
-ad(l,0.08,{ImageTransparency=0.95}):Play()
+ab.AddSignal(p.MouseEnter,function()
+ad(p,0.08,{ImageTransparency=0.95}):Play()
 end)
-ab.AddSignal(l.InputEnded,function()
-ad(l,0.08,{ImageTransparency=1}):Play()
+ab.AddSignal(p.InputEnded,function()
+ad(p,0.08,{ImageTransparency=1}):Play()
 end)
-ab.AddSignal(l.MouseButton1Click,function()
-local m,p,r=GetFlycerIdentifier(ag)
-OpenFlycerServiceDialog(
-ag,
-m,
-p,
-al,
-h,
-f,
-r
-)
+ab.AddSignal(p.MouseButton1Click,function()
+local r,u,v=GetFlycerIdentifier(ag)
+OpenFlycerServiceDialog(ag,r,u,al,l,h,v)
 end)
 end
 
@@ -3679,34 +3722,34 @@ if ag.KeySystem.KeyValidator or type(ag.KeySystem.Flycer)=="table"then
 AddFlycerService()
 end
 
-for i,l in next,(ag.KeySystem.API or{})do
-if l.Type~="flycer"then
-local m=ag.FlycerUI.Services[l.Type]
-if m then
-local p={}
-for r,u in next,m.Args do
-table.insert(p,l[u])
+for m,p in next,(ag.KeySystem.API or{})do
+if p.Type~="flycer"then
+local r=ag.FlycerUI.Services[p.Type]
+if r then
+local u={}
+for v,x in next,r.Args do
+table.insert(u,p[x])
 end
 
-local r=m.New(table.unpack(p))
-r.Type=l.Type
-table.insert(am,r)
+local v=r.New(table.unpack(u))
+v.Type=p.Type
+table.insert(am,v)
 
-local u=ab.Image(
-l.Icon or m.Icon or"user",
-l.Icon or m.Icon or"user",
+local x=ab.Image(
+p.Icon or r.Icon or"user",
+p.Icon or r.Icon or"user",
 0,
 "Temp",
 "KeySystem",
 true
 )
-u.Size=UDim2.new(0,24,0,24)
+x.Size=UDim2.new(0,24,0,24)
 
-local v=ab.NewRoundFrame(10,"Squircle",{
+local z=ab.NewRoundFrame(10,"Squircle",{
 Size=UDim2.new(1,0,0,0),
 ThemeTag={ImageColor3="Text"},
 ImageTransparency=1,
-Parent=g,
+Parent=i,
 AutomaticSize="Y",
 },{
 ac("UIListLayout",{
@@ -3714,7 +3757,7 @@ FillDirection="Horizontal",
 Padding=UDim.new(0,10),
 VerticalAlignment="Center",
 }),
-u,
+x,
 ac("UIPadding",{
 PaddingTop=UDim.new(0,10),
 PaddingLeft=UDim.new(0,10),
@@ -3732,7 +3775,7 @@ Padding=UDim.new(0,5),
 HorizontalAlignment="Center",
 }),
 ac("TextLabel",{
-Text=l.Title or m.Name,
+Text=p.Title or r.Name,
 BackgroundTransparency=1,
 FontFace=Font.new(ab.Font,Enum.FontWeight.Medium),
 ThemeTag={TextColor3="Text"},
@@ -3744,7 +3787,7 @@ TextWrapped=true,
 TextXAlignment="Left",
 }),
 ac("TextLabel",{
-Text=l.Desc or"",
+Text=p.Desc or"",
 BackgroundTransparency=1,
 FontFace=Font.new(ab.Font,Enum.FontWeight.Regular),
 ThemeTag={TextColor3="Text"},
@@ -3753,20 +3796,20 @@ TextSize=16,
 Size=UDim2.new(1,0,0,0),
 AutomaticSize="Y",
 TextWrapped=true,
-Visible=l.Desc and true or false,
+Visible=p.Desc and true or false,
 TextXAlignment="Left",
 }),
 }),
 },true)
 
-ab.AddSignal(v.MouseEnter,function()
-ad(v,0.08,{ImageTransparency=0.95}):Play()
+ab.AddSignal(z.MouseEnter,function()
+ad(z,0.08,{ImageTransparency=0.95}):Play()
 end)
-ab.AddSignal(v.InputEnded,function()
-ad(v,0.08,{ImageTransparency=1}):Play()
+ab.AddSignal(z.InputEnded,function()
+ad(z,0.08,{ImageTransparency=1}):Play()
 end)
-ab.AddSignal(v.MouseButton1Click,function()
-r.Copy()
+ab.AddSignal(z.MouseButton1Click,function()
+v.Copy()
 ag.FlycerUI:Notify{
 Title="Key System",
 Content="Key link copied to clipboard.",
@@ -3777,54 +3820,109 @@ end
 end
 end
 
-ab.AddSignal(b.MouseButton1Click,function()
-if not aB then
+ab.AddSignal(f.MouseButton1Click,function()
+if not d then
 ad(
-h,
+l,
 0.3,
-{Size=UDim2.new(0,aA,0,g.AbsoluteSize.Y+1)},
+{Size=UDim2.new(0,b,0,i.AbsoluteSize.Y+1)},
 Enum.EasingStyle.Quint,
 Enum.EasingDirection.Out
 ):Play()
-ad(f,0.3,{Rotation=180},Enum.EasingStyle.Quint,Enum.EasingDirection.Out):Play()
+ad(h,0.3,{Rotation=180},Enum.EasingStyle.Quint,Enum.EasingDirection.Out):Play()
 else
 ad(
-h,
+l,
 0.25,
-{Size=UDim2.new(0,aA,0,0)},
+{Size=UDim2.new(0,b,0,0)},
 Enum.EasingStyle.Quint,
 Enum.EasingDirection.Out
 ):Play()
-ad(f,0.25,{Rotation=0},Enum.EasingStyle.Quint,Enum.EasingDirection.Out):Play()
+ad(h,0.25,{Rotation=0},Enum.EasingStyle.Quint,Enum.EasingDirection.Out):Play()
 end
-aB=not aB
+d=not d
 end)
 end
 
-local function handleSuccess(aA)
+local function handleSuccess(b)
 al:Close()()
-writefile((ag.Folder or"Temp").."/"..ah..".key",tostring(aA))
+writefile((ag.Folder or"Temp").."/"..ah..".key",tostring(b))
 task.wait(0.4)
 ai(true)
 end
 
-local aA=ae("Submit","arrow-right",function()
-local aA=tostring(an or"empty")local aB=
+local b=ae("Submit","arrow-right",function()
+local b=tostring(an or"empty")local d=
 ag.Folder or ag.Title
 
 if type(ag.KeySystem.Flycer)=="table"then
-local b,d=CreateFlycerService(ag)
-local f,g=false,d
+local f,g=CreateFlycerService(ag)
+local h,i,l=false,g
 
-if b then
+if f then
 
 
-f,g=b.Verify(aA)
+h,i,l=f.Verify(b)
 end
+
+if h then
+local m=type(l)=="table"and l.license
+local p=type(m)=="table"and m.expires_at
+local r=type(m)=="table"and tostring(m.key_type or""):lower()or""
+
+
+if ap then
+ap()
+ap=nil
+end
+
+if ao then
+ao:Destroy()
+ao=nil
+end
+
+if tonumber(p)and tonumber(p)>0 then
+ao=ag.Window:Tag{
+Title=FormatCountdown(p),
+Icon="clock-3",
+Color=Color3.fromHex"#315dff",
+}
+
+ap=StartCountdown(p,function(u)
+if ao then
+ao:SetTitle(u)
+end
+end)
+elseif r=="lifetime"then
+ao=ag.Window:Tag{
+Title="Lifetime",
+Icon="infinity",
+Color=Color3.fromHex"#315dff",
+}
+end
+if ag.KeySystem.SaveKey then
+handleSuccess(b)
+else
+al:Close()()
+task.wait(0.4)
+ai(true)
+end
+else
+ag.FlycerUI:Notify{
+Title="Key System. Error",
+Content=i or"Invalid key.",
+Icon="triangle-alert",
+}
+end
+return
+end
+
+if ag.KeySystem.KeyValidator then
+local f,g=ag.KeySystem.KeyValidator(b)
 
 if f then
 if ag.KeySystem.SaveKey then
-handleSuccess(aA)
+handleSuccess(b)
 else
 al:Close()()
 task.wait(0.4)
@@ -3837,34 +3935,13 @@ Content=g or"Invalid key.",
 Icon="triangle-alert",
 }
 end
-return
-end
-
-if ag.KeySystem.KeyValidator then
-local b,d=ag.KeySystem.KeyValidator(aA)
-
-if b then
-if ag.KeySystem.SaveKey then
-handleSuccess(aA)
-else
-al:Close()()
-task.wait(0.4)
-ai(true)
-end
-else
-ag.FlycerUI:Notify{
-Title="Key System. Error",
-Content=d or"Invalid key.",
-Icon="triangle-alert",
-}
-end
 elseif not ag.KeySystem.API then
-local b=type(ag.KeySystem.Key)=="table"and table.find(ag.KeySystem.Key,aA)
-or ag.KeySystem.Key==aA
+local f=type(ag.KeySystem.Key)=="table"and table.find(ag.KeySystem.Key,b)
+or ag.KeySystem.Key==b
 
-if b then
+if f then
 if ag.KeySystem.SaveKey then
-handleSuccess(aA)
+handleSuccess(b)
 else
 al:Close()()
 task.wait(0.4)
@@ -3872,30 +3949,30 @@ ai(true)
 end
 end
 else
-local b,d
-for f,g in next,am do
-local h,i=g.Verify(aA)
-if h then
-b,d=true,i
+local f,g
+for h,i in next,am do
+local l,m=i.Verify(b)
+if l then
+f,g=true,m
 break
 end
-d=i
+g=m
 end
 
-if b then
-handleSuccess(aA)
+if f then
+handleSuccess(b)
 else
 ag.FlycerUI:Notify{
 Title="Key System. Error",
-Content=d,
+Content=g,
 Icon="triangle-alert",
 }
 end
 end
-end,"Primary",ax)
+end,"Primary",az)
 
-aA.AnchorPoint=Vector2.new(1,0.5)
-aA.Position=UDim2.new(1,0,0.5,0)
+b.AnchorPoint=Vector2.new(1,0.5)
+b.Position=UDim2.new(1,0,0.5,0)
 
 
 
