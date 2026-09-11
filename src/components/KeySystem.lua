@@ -136,7 +136,7 @@ local function OpenFlycerServiceDialog(
 	Dialog.UIElements.Main.Size = UDim2.new(0, 470, 0, 0)
 
 	local Title = New("TextLabel", {
-		Text = "Flycer",
+		Text = "Flycer Key System",
 		BackgroundTransparency = 1,
 		AutomaticSize = "XY",
 
