@@ -167,7 +167,7 @@ local function OpenFlycerServiceDialog(
 	local TitleIcon = New("ImageLabel", {
 		Image = "rbxassetid://89557898457977",
 		BackgroundTransparency = 1,
-		Size = UDim2.fromOffset(35, 35),
+		Size = UDim2.fromOffset(22, 22),
 		ScaleType = Enum.ScaleType.Fit,
 	})
 
