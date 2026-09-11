@@ -3162,11 +3162,17 @@ if not ag or ag==""then
 return false
 end
 
-local ah=pcall(function()
-setclipboard(tostring(ag))
+local ah=setclipboard or toclipboard
+
+if type(ah)~="function"then
+return false
+end
+
+local ai=pcall(function()
+ah(tostring(ag))
 end)
 
-return ah
+return ai
 end
 
 
@@ -3575,7 +3581,7 @@ setclipboard(ag.KeySystem.URL)
 end,"Secondary",az.Frame)
 end
 
-if ag.KeySystem.API or ag.KeySystem.KeyValidator then
+if ag.KeySystem.API or ag.KeySystem.KeyValidator or type(ag.KeySystem.Flycer)=="table"then
 
 
 
