@@ -63,8 +63,14 @@ local function CopyToClipboard(value)
 		return false
 	end
 
+	local copy = setclipboard or toclipboard
+
+	if type(copy) ~= "function" then
+		return false
+	end
+
 	local ok = pcall(function()
-		setclipboard(tostring(value))
+		copy(tostring(value))
 	end)
 
 	return ok
@@ -476,7 +482,7 @@ function KeySystem.new(Config, Filename, func, keyValidator)
 		end, "Secondary", ButtonsContainer.Frame)
 	end
 
-	if Config.KeySystem.API or Config.KeySystem.KeyValidator then
+	if Config.KeySystem.API or Config.KeySystem.KeyValidator or type(Config.KeySystem.Flycer) == "table" then
 		-- local Icons = {
 		--     platoboost = "rbxassetid://75920162824531",
 		--     pandadevelopment = "panda",
