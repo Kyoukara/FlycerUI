@@ -59,8 +59,6 @@ end
 
 KeySystem.GetFlycerIdentifier = GetFlycerIdentifier
 
--- Build the Flycer validator from the same configuration
--- used by Init.lua.
 CreateFlycerService = function(Config)
 	local flycerConfig = Config.KeySystem and Config.KeySystem.Flycer
 
@@ -136,7 +134,7 @@ local function OpenFlycerServiceDialog(
 	Dialog.UIElements.Main.Size = UDim2.new(0, 470, 0, 0)
 
 	local Title = New("TextLabel", {
-		Text = "Flycer",
+		Text = "Flycer Key System",
 		BackgroundTransparency = 1,
 		AutomaticSize = "XY",
 
@@ -628,7 +626,6 @@ function KeySystem.new(Config, Filename, func, keyValidator)
 
 				New("TextLabel", {
 					Text = "Flycer",
-					Icon = "rbxassetid://89557898457977",
 					BackgroundTransparency = 1,
 
 					FontFace = Font.new(Creator.Font, Enum.FontWeight.Medium),
