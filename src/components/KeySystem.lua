@@ -76,45 +76,46 @@ local function CopyToClipboard(value)
 	return ok
 end
 
--- Returns the identifier used by Flycer's selected lock mode.
--- Username -> Roblox UserId (account-bound).
--- Device -> executor HWID, then Roblox client ID.
+-- Forward declaration so GetFlycerIdentifier and the UI use the same service instance.
+local CreateFlycerService
+
+-- Returns exactly the same identifier that Flycer.lua uses for validation.
+-- This avoids having two independent HWID/username implementations that can
+-- disagree between the Copy HWID dialog and the actual license request.
 local function GetFlycerIdentifier(Config)
-	local LocalPlayer = game:GetService("Players").LocalPlayer
-	local FlycerConfig = type(Config.KeySystem.Flycer) == "table" and Config.KeySystem.Flycer or {}
-	local LockType = tostring(FlycerConfig.LockType or Config.KeySystem.LockType or "Device"):lower()
-
-	if LockType == "username" then
-		return tostring(LocalPlayer.UserId), "Username"
+	if type(Config) ~= "table" or type(Config.KeySystem) ~= "table" then
+		return nil, "Invalid", "Flycer configuration is missing."
 	end
 
-	if LockType ~= "device" then
-		return nil, "Invalid", "LockType must be 'Device' or 'Username'."
+	local serviceInstance, serviceError = CreateFlycerService(Config)
+	if not serviceInstance then
+		return nil, "Invalid", serviceError or "Flycer service is not available."
 	end
 
-	local gethwidFn = gethwid
-	if type(gethwidFn) == "function" then
-		local ok, hwid = pcall(gethwidFn)
-		if ok and hwid ~= nil and tostring(hwid) ~= "" then
-			return tostring(hwid), "Device"
-		end
+	if type(serviceInstance.GetIdentifier) ~= "function" then
+		return nil, "Invalid", "Flycer service does not expose an identifier provider."
 	end
 
-	local ok, clientId = pcall(function()
-		return game:GetService("RbxAnalyticsService"):GetClientId()
+	local ok, identifier, identifierType, identifierError = pcall(function()
+		return serviceInstance.GetIdentifier()
 	end)
-	if ok and clientId ~= nil and tostring(clientId) ~= "" then
-		return tostring(clientId), "Device"
+
+	if not ok then
+		return nil, "Invalid", "Unable to determine Flycer identifier."
 	end
 
-	return nil, "Device", "No device identifier is available in this executor."
+	if not identifier or tostring(identifier) == "" then
+		return nil, identifierType or "Invalid", identifierError or "Unable to determine Flycer identifier."
+	end
+
+	return tostring(identifier), identifierType, identifierError
 end
 
 KeySystem.GetFlycerIdentifier = GetFlycerIdentifier
 
 -- Build the Flycer validator from the same configuration used by Init.lua.
 -- Flycer is intentionally authoritative when Config.KeySystem.Flycer exists.
-local function CreateFlycerService(Config)
+CreateFlycerService = function(Config)
 	local flycerConfig = Config.KeySystem and Config.KeySystem.Flycer
 	if type(flycerConfig) ~= "table" then
 		return nil, "Flycer configuration is missing."
