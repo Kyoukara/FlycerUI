@@ -4128,19 +4128,28 @@ local function handleSuccess(d)
 SafeCloseDialog(am)
 
 if ah.KeySystem.SaveKey then
-local f=(ah.Folder or"Temp").."/"..tostring(ai)..".key"
-local g,h=pcall(function()
+local f=ah.Folder or"Temp"
+local g=f.."/"..tostring(ai)..".key"
+
+local h,i=pcall(function()
 if type(writefile)~="function"then
 error"writefile is not available in this executor."
 end
-writefile(f,tostring(d))
+
+
+if type(makefolder)=="function"and type(isfolder)=="function"then
+if not isfolder(f)then
+makefolder(f)
+end
+end
+
+writefile(g,tostring(d))
 end)
 
-if not g then
-Notify(ah,"Key System","Key verified but unable to save: "..tostring(h),"triangle-alert")
+if not h then
+Notify(ah,"Key System","Key verified but unable to save: "..tostring(i),"triangle-alert")
 end
 end
-
 
 task.delay(0.4,function()
 if type(aj)=="function"then
@@ -4155,13 +4164,7 @@ end
 
 
 local d=ae("Submit","arrow-right",function()
-
-
-
-
-
 task.spawn(function()
-
 local d=ao
 if not d or tostring(d):gsub("%s+","")==""then
 Notify(ah,"Key System","Please enter a license key.","triangle-alert")
@@ -4185,14 +4188,9 @@ Notify(ah,"Key System","Flycer service does not provide Verify().","triangle-ale
 return
 end
 
-
-
-
-
 local h,i,l=f.Verify(d)
 
 if h then
-
 local m
 if type(l)=="table"then
 m=l.license
@@ -4206,39 +4204,59 @@ p=tonumber(m.expires_at)
 r=tostring(m.key_type or""):lower()
 end
 
-
 if aq then
 aq()
 aq=nil
 end
 
-
 if ap then
-ap:Destroy()
+pcall(function()ap:Destroy()end)
 ap=nil
 end
 
 
+
+
+local u=ah.Window and type(ah.Window.Tag)=="function"
+
+
 if p and p>0 then
-ap=ah.Window:Tag{
+if u then
+local v,x=pcall(function()
+return ah.Window:Tag{
 Title=FormatCountdown(p),
 Icon="clock-3",
 Color=Color3.fromHex"#315dff",
 }
+end)
 
-aq=StartCountdown(p,function(u)
-if ap then
-ap:SetTitle(u)
+if v then
+ap=x
+aq=StartCountdown(p,function(z)
+if ap and type(ap.SetTitle)=="function"then
+pcall(function()
+ap:SetTitle(z)
+end)
 end
 end)
+end
+else
+warn"[FlycerUI KeySystem] Config.Window is not initialized yet. Skipping Expiry Tag creation."
+end
 
 
 elseif r=="lifetime"then
+if u then
+pcall(function()
 ap=ah.Window:Tag{
 Title="Lifetime",
 Icon="infinity",
 Color=Color3.fromHex"#315dff",
 }
+end)
+else
+warn"[FlycerUI KeySystem] Config.Window is not initialized yet. Skipping Lifetime Tag creation."
+end
 end
 
 handleSuccess(d)
@@ -4284,7 +4302,6 @@ end
 if f then
 handleSuccess(d)
 else
-
 Notify(ah,"Key System","Invalid key.","triangle-alert")
 end
 return
@@ -4294,7 +4311,6 @@ end
 
 
 if#an==0 then
-
 Notify(ah,"Key System","No key validation service is configured.","triangle-alert")
 return
 end
@@ -4302,7 +4318,6 @@ end
 local f,g=false
 for h,i in next,an do
 if type(i.Verify)=="function"then
-
 local l,m=i.Verify(d)
 if l then
 f=true
