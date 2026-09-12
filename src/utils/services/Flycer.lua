@@ -1,11 +1,49 @@
-local cloneref = (cloneref or clonereference or function(instance)
+local cloneref = cloneref or clonereference or function(instance)
 	return instance
-end)
+end
 
 local HttpService = cloneref(game:GetService("HttpService"))
 local Players = cloneref(game:GetService("Players"))
 
 local Flycer = {}
+
+-- ============================================================
+-- [FIX C3] Timeout wrapper untuk HTTP request.
+-- Mencegah hang selamanya jika server tidak merespons.
+-- Menggunakan task.spawn + polling agar kompatibel dengan
+-- semua executor (termasuk yang tidak support task.cancel).
+-- ============================================================
+local DEFAULT_TIMEOUT = 15 -- detik
+
+local function RequestWithTimeout(requestFn, timeout)
+	timeout = timeout or DEFAULT_TIMEOUT
+
+	local completed = false
+	local resultOk, resultData = false, "Request timed out."
+
+	task.spawn(function()
+		local ok, response = pcall(requestFn)
+		if not completed then
+			completed = true
+			resultOk = ok
+			resultData = response
+		end
+	end)
+
+	local elapsed = 0
+	while not completed and elapsed < timeout do
+		task.wait(0.25)
+		elapsed = elapsed + 0.25
+	end
+
+	if not completed then
+		-- [FIX C3] Request hang — return error alih-alih block selamanya.
+		completed = true
+		return false, "Flycer API request timed out after " .. tostring(timeout) .. "s."
+	end
+
+	return resultOk, resultData
+end
 
 local function NormalizeLockType(lockType)
 	lockType = string.lower(tostring(lockType or "Device"))
@@ -27,6 +65,7 @@ local function GetIdentifier(lockType)
 		return nil, "Invalid", "LockType must be 'Device' or 'Username'."
 	end
 
+	-- Priority 1: gethwid (executor-specific, paling reliable)
 	local gethwidFn = gethwid
 	if type(gethwidFn) == "function" then
 		local ok, hwid = pcall(gethwidFn)
@@ -35,6 +74,7 @@ local function GetIdentifier(lockType)
 		end
 	end
 
+	-- Priority 2: RbxAnalyticsService fallback
 	local ok, clientId = pcall(function()
 		return cloneref(game:GetService("RbxAnalyticsService")):GetClientId()
 	end)
@@ -89,7 +129,7 @@ function Flycer.New(endpoint, productId, lockType, clientName, clientVersion)
 
 		local body = HttpService:JSONEncode({
 			product = productId,
-			key = tostring(key),
+			key = key,
 			lock_type = string.lower(tostring(identifierType or lockType)),
 			identifier = tostring(identifier),
 			client = clientName,
@@ -98,7 +138,11 @@ function Flycer.New(endpoint, productId, lockType, clientName, clientVersion)
 
 		local url = endpoint .. "/api/license/validate"
 
-		local ok, response = pcall(function()
+		-- ============================================================
+		-- [FIX C3] Gunakan RequestWithTimeout alih-alih pcall langsung.
+		-- Ini mencegah hang selamanya jika server tidak merespons.
+		-- ============================================================
+		local reqOk, response = RequestWithTimeout(function()
 			return Request({
 				Url = url,
 				Method = "POST",
@@ -110,8 +154,12 @@ function Flycer.New(endpoint, productId, lockType, clientName, clientVersion)
 			})
 		end)
 
-		if not ok or not response then
-			return false, "Unable to contact Flycer API."
+		if not reqOk then
+			return false, tostring(response or "Unable to contact Flycer API.")
+		end
+
+		if not response then
+			return false, "Flycer API returned no response."
 		end
 
 		if not response.Success then
