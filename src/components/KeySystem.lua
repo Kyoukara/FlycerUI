@@ -8,95 +8,6 @@ local CreateButton = require("./ui/Button").New
 local CreateInput = require("./ui/Input").New
 
 -- ============================================================
--- HELPER: Resolve Storage Path & Sanitizer
--- ============================================================
-local function GetKeySavePath(Config, Filename)
-	local folder = Config.Folder or "Flycer Workspace"
-	local rawName = Filename or (Config.KeySystem and Config.KeySystem.FileName) or Config.Title or "Key"
-	local cleanName = tostring(rawName):gsub('[\\/:*?"<>|]', ""):gsub("%s+", "_")
-	if cleanName == "" then
-		cleanName = "SavedKey"
-	end
-
-	return folder, folder .. "/" .. cleanName .. ".key", cleanName .. ".key"
-end
-
--- ============================================================
--- HELPER: Save Key To Disk (Dual-Path Fallback)
--- ============================================================
-local function SaveKeyToDisk(Config, Filename, key)
-	if not (Config.KeySystem and Config.KeySystem.SaveKey) then
-		return
-	end
-	if type(writefile) ~= "function" then
-		return
-	end
-
-	local folder, fullPath, rootPath = GetKeySavePath(Config, Filename)
-
-	-- 1. Coba simpan ke folder khusus
-	local ok = pcall(function()
-		if type(makefolder) == "function" then
-			pcall(makefolder, folder)
-		end
-		writefile(fullPath, tostring(key))
-	end)
-
-	-- 2. Fallback ke root direktori jika folder gagal
-	if not ok then
-		pcall(function()
-			writefile(rootPath, tostring(key))
-		end)
-	end
-end
-
--- ============================================================
--- HELPER: Load Saved Key From Disk
--- ============================================================
-local function LoadSavedKeyFromDisk(Config, Filename)
-	if not (Config.KeySystem and Config.KeySystem.SaveKey) then
-		return nil
-	end
-	if type(readfile) ~= "function" then
-		return nil
-	end
-
-	local _, fullPath, rootPath = GetKeySavePath(Config, Filename)
-
-	-- 1. Coba baca dari folder khusus
-	local ok, content = pcall(function()
-		if type(isfile) == "function" and not isfile(fullPath) then
-			return nil
-		end
-		return readfile(fullPath)
-	end)
-
-	if ok and content and content ~= "" then
-		local trimmed = tostring(content):gsub("^%s+", ""):gsub("%s+$", "")
-		if trimmed ~= "" then
-			return trimmed
-		end
-	end
-
-	-- 2. Coba baca dari root direktori
-	local okRoot, contentRoot = pcall(function()
-		if type(isfile) == "function" and not isfile(rootPath) then
-			return nil
-		end
-		return readfile(rootPath)
-	end)
-
-	if okRoot and contentRoot and contentRoot ~= "" then
-		local trimmed = tostring(contentRoot):gsub("^%s+", ""):gsub("%s+$", "")
-		if trimmed ~= "" then
-			return trimmed
-		end
-	end
-
-	return nil
-end
-
--- ============================================================
 -- HELPER: Copy to Clipboard
 -- ============================================================
 local function CopyToClipboard(value)
@@ -449,9 +360,7 @@ function KeySystem.new(Config, Filename, func, keyValidator)
 
 	local Services = {}
 
-	-- Baca key yang tersimpan dari disk perangkat
-	local savedKeyOnDisk = LoadSavedKeyFromDisk(Config, Filename)
-	local EnteredKey = savedKeyOnDisk
+	local EnteredKey
 
 	local ThumbnailSize = (Config.KeySystem.Thumbnail and Config.KeySystem.Thumbnail.Width) or 200
 
@@ -524,9 +433,9 @@ function KeySystem.new(Config, Filename, func, keyValidator)
 	})
 
 	-- ========================================================
-	-- UI: Input (Pre-filled dengan Saved Key jika ada)
+	-- UI: Input
 	-- ========================================================
-	local InputFrame = CreateInput("Enter Key", "key", EnteredKey, "Input", function(k)
+	local InputFrame = CreateInput("Enter Key", "key", nil, "Input", function(k)
 		EnteredKey = k
 	end)
 
@@ -964,13 +873,33 @@ function KeySystem.new(Config, Filename, func, keyValidator)
 	end
 
 	-- ========================================================
-	-- HELPER: Handle Success & Auto Save
+	-- HELPER: Handle Success
 	-- ========================================================
 	local function handleSuccess(key)
 		SafeCloseDialog(KeyDialog)
 
-		-- Simpan key secara otomatis ke storage jika SaveKey = true
-		SaveKeyToDisk(Config, Filename, key)
+		if Config.KeySystem.SaveKey then
+			local folder = Config.Folder or "Temp"
+			local path = folder .. "/" .. tostring(Filename) .. ".key"
+
+			local writeOk, writeErr = pcall(function()
+				if type(writefile) ~= "function" then
+					error("writefile is not available in this executor.")
+				end
+
+				if type(makefolder) == "function" and type(isfolder) == "function" then
+					if not isfolder(folder) then
+						makefolder(folder)
+					end
+				end
+
+				writefile(path, tostring(key))
+			end)
+
+			if not writeOk then
+				Notify(Config, "Key System", "Key verified but unable to save: " .. tostring(writeErr), "triangle-alert")
+			end
+		end
 
 		task.delay(0.4, function()
 			if type(func) == "function" then
@@ -982,140 +911,118 @@ function KeySystem.new(Config, Filename, func, keyValidator)
 	end
 
 	-- ========================================================
-	-- CORE: Key Verification Handler (Reusable)
-	-- ========================================================
-	local function ValidateKey(rawKey, isAutoLogin)
-		local key = tostring(rawKey or ""):gsub("^%s+", ""):gsub("%s+$", "")
-		if key == "" then
-			if not isAutoLogin then
-				Notify(Config, "Key System", "Please enter a license key.", "triangle-alert")
-			end
-			return false
-		end
-
-		-- PATH 1: FLYCER SERVICE
-		if type(Config.KeySystem.Flycer) == "table" then
-			local serviceInstance, serviceError = CreateFlycerService(Config)
-
-			if not serviceInstance or type(serviceInstance.Verify) ~= "function" then
-				if not isAutoLogin then
-					Notify(Config, "Key System", serviceError or "Flycer service unavailable.", "triangle-alert")
-				end
-				return false
-			end
-
-			local verifyValid, verifyMessage, _ = serviceInstance.Verify(key)
-
-			if verifyValid then
-				handleSuccess(key)
-				return true
-			else
-				if not isAutoLogin then
-					Notify(Config, "Key System", verifyMessage or "Invalid key.", "triangle-alert")
-				end
-				return false
-			end
-		end
-
-		-- PATH 2: CUSTOM KEY VALIDATOR
-		if Config.KeySystem.KeyValidator then
-			local validatorOk, isValid, validationMessage = pcall(function()
-				return Config.KeySystem.KeyValidator(key)
-			end)
-
-			if validatorOk and isValid then
-				handleSuccess(key)
-				return true
-			else
-				if not isAutoLogin then
-					Notify(Config, "Key System", validationMessage or "Invalid key.", "triangle-alert")
-				end
-				return false
-			end
-		end
-
-		-- PATH 3: STATIC KEY
-		if not Config.KeySystem.API then
-			local isKey = false
-			if type(Config.KeySystem.Key) == "table" then
-				isKey = table.find(Config.KeySystem.Key, key) ~= nil
-			else
-				isKey = Config.KeySystem.Key == key
-			end
-
-			if isKey then
-				handleSuccess(key)
-				return true
-			else
-				if not isAutoLogin then
-					Notify(Config, "Key System", "Invalid key.", "triangle-alert")
-				end
-				return false
-			end
-		end
-
-		-- PATH 4: API SERVICES
-		if #Services == 0 then
-			if not isAutoLogin then
-				Notify(Config, "Key System", "No key validation service is configured.", "triangle-alert")
-			end
-			return false
-		end
-
-		local isSuccess, result = false, nil
-		for _, service in next, Services do
-			if type(service.Verify) == "function" then
-				local success, res = service.Verify(key)
-				if success then
-					isSuccess = true
-					result = res
-					break
-				end
-				result = res or "Verification failed."
-			end
-		end
-
-		if isSuccess then
-			handleSuccess(key)
-			return true
-		else
-			if not isAutoLogin then
-				Notify(Config, "Key System", result or "Invalid key.", "triangle-alert")
-			end
-			return false
-		end
-	end
-
-	-- ========================================================
 	-- SUBMIT BUTTON
 	-- ========================================================
 	local SubmitButton = CreateButton("Submit", "arrow-right", function()
 		task.spawn(function()
-			ValidateKey(EnteredKey, false)
+			local key = EnteredKey
+			if not key or tostring(key):gsub("%s+", "") == "" then
+				Notify(Config, "Key System", "Please enter a license key.", "triangle-alert")
+				return
+			end
+			key = tostring(key):gsub("^%s+", ""):gsub("%s+$", "")
+
+			-- ====================================================
+			-- PATH 1: FLYCER SERVICE
+			-- ====================================================
+			if type(Config.KeySystem.Flycer) == "table" then
+				local serviceInstance, serviceError = CreateFlycerService(Config)
+
+				if not serviceInstance then
+					Notify(Config, "Key System", serviceError or "Flycer service unavailable.", "triangle-alert")
+					return
+				end
+
+				if type(serviceInstance.Verify) ~= "function" then
+					Notify(Config, "Key System", "Flycer service does not provide Verify().", "triangle-alert")
+					return
+				end
+
+				local verifyValid, verifyMessage, _ = serviceInstance.Verify(key)
+
+				if verifyValid then
+					-- Tag Countdown/Lifetime dihandle oleh script user (bukan KeySystem).
+					handleSuccess(key)
+				else
+					Notify(Config, "Key System", verifyMessage or "Invalid key.", "triangle-alert")
+				end
+
+				return
+			end
+
+			-- ====================================================
+			-- PATH 2: CUSTOM KEY VALIDATOR
+			-- ====================================================
+			if Config.KeySystem.KeyValidator then
+				local validatorOk, isValid, validationMessage = pcall(function()
+					return Config.KeySystem.KeyValidator(key)
+				end)
+
+				if not validatorOk then
+					Notify(Config, "Key System", "Key validator error: " .. tostring(isValid), "triangle-alert")
+					return
+				end
+
+				if isValid then
+					handleSuccess(key)
+				else
+					Notify(Config, "Key System", validationMessage or "Invalid key.", "triangle-alert")
+				end
+				return
+			end
+
+			-- ====================================================
+			-- PATH 3: STATIC KEY
+			-- ====================================================
+			if not Config.KeySystem.API then
+				local isKey = false
+				if type(Config.KeySystem.Key) == "table" then
+					isKey = table.find(Config.KeySystem.Key, key) ~= nil
+				else
+					isKey = Config.KeySystem.Key == key
+				end
+
+				if isKey then
+					handleSuccess(key)
+				else
+					Notify(Config, "Key System", "Invalid key.", "triangle-alert")
+				end
+				return
+			end
+
+			-- ====================================================
+			-- PATH 4: API SERVICES
+			-- ====================================================
+			if #Services == 0 then
+				Notify(Config, "Key System", "No key validation service is configured.", "triangle-alert")
+				return
+			end
+
+			local isSuccess, result = false, nil
+			for _, service in next, Services do
+				if type(service.Verify) == "function" then
+					local success, res = service.Verify(key)
+					if success then
+						isSuccess = true
+						result = res
+						break
+					end
+					result = res or "Verification failed."
+				end
+			end
+
+			if isSuccess then
+				handleSuccess(key)
+			else
+				Notify(Config, "Key System", result or "Invalid key.", "triangle-alert")
+			end
 		end)
 	end, "Primary", ButtonsContainer)
 
 	SubmitButton.AnchorPoint = Vector2.new(1, 0.5)
 	SubmitButton.Position = UDim2.new(1, 0, 0.5, 0)
 
-	-- ========================================================
-	-- AUTO-LOGIN ENGINE (Background Silent Verification)
-	-- ========================================================
-	if Config.KeySystem and Config.KeySystem.SaveKey and savedKeyOnDisk then
-		task.spawn(function()
-			-- Coba verifikasi key yang tersimpan secara asinkronus di latar belakang
-			local verified = ValidateKey(savedKeyOnDisk, true)
-			if verified then
-				Notify(Config, "Key System", "Auto-logged in with saved key.", "check")
-			else
-				-- Jika key tersimpan sudah kadaluarsa atau tidak valid, buka dialog
-				KeyDialog:Open()
-			end
-		end)
-	else
-		-- Buka dialog normal jika tidak ada key tersimpan
-		KeyDialog:Open()
-	end
+	KeyDialog:Open()
 end
 
 return KeySystem
