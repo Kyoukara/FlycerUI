@@ -3197,6 +3197,9 @@ local ad=ab.Tween
 local ae=a.load'n'.New
 local af=a.load'o'.New
 
+
+
+
 local function FormatCountdown(ag)
 ag=tonumber(ag)
 
@@ -3211,6 +3214,9 @@ local ak=math.floor((ah%3600)/60)
 
 return string.format("%03dD : %02dH : %02dM",ai,aj,ak)
 end
+
+
+
 
 local function StartCountdown(ag,ah)
 ag=tonumber(ag)
@@ -3248,6 +3254,9 @@ ai=true
 end
 end
 
+
+
+
 local function CopyToClipboard(ag)
 if ag==nil then
 return false,"Clipboard value is empty."
@@ -3274,12 +3283,14 @@ end
 return true,ah
 end
 
+
+
+
 local function Notify(ag,ah,ai,aj)
 if not ag or not ag.FlycerUI or type(ag.FlycerUI.Notify)~="function"then
+warn("[FlycerUI KeySystem] "..tostring(ah)..": "..tostring(ai))
 return false
 end
-
-
 
 local ak=pcall(function()
 ag.FlycerUI:Notify{
@@ -3289,8 +3300,15 @@ Icon=aj or"triangle-alert",
 }
 end)
 
+if not ak then
+warn("[FlycerUI KeySystem] Notify failed: "..tostring(ah).." - "..tostring(ai))
+end
+
 return ak
 end
+
+
+
 
 local function NormalizeAssetId(ag)
 if type(ag)=="number"then
@@ -3311,6 +3329,7 @@ end
 
 return nil
 end
+
 
 
 
@@ -3359,6 +3378,9 @@ Size=ah,
 })
 end
 
+
+
+
 local function SafeCloseDialog(ag)
 if ag then
 pcall(function()
@@ -3366,6 +3388,8 @@ ag:Close()()
 end)
 end
 end
+
+
 
 
 local ag
@@ -3406,6 +3430,7 @@ aa.GetFlycerIdentifier=GetFlycerIdentifier
 
 
 
+
 ag=function(ah)
 local ai=ah.KeySystem and ah.KeySystem.Flycer
 if type(ai)~="table"then
@@ -3439,6 +3464,9 @@ end
 return am
 end
 
+
+
+
 local function OpenFlycerServiceDialog(
 ah,
 ai,
@@ -3451,8 +3479,6 @@ an
 local ao=a.load'p'
 local ap=
 ao.Create(true,"Popup",ah.Window,ah.FlycerUI,ah.FlycerUI.ScreenGui.KeySystem)
-
-
 
 if al then
 al.Size=UDim2.new(0,0,0,0)
@@ -3541,7 +3567,6 @@ end
 end,"Secondary",at)
 end
 
-
 au.Size=UDim2.new(0,105,0,42)
 av.Size=UDim2.new(0,145,0,42)
 if ax then
@@ -3572,6 +3597,9 @@ PaddingBottom=UDim.new(0,16),
 ap:Open()
 end
 
+
+
+
 function aa.new(ah,ai,aj,ak)
 local al=a.load'p'
 local am=
@@ -3593,12 +3621,18 @@ end
 am.UIElements.Main.AutomaticSize="Y"
 am.UIElements.Main.Size=UDim2.new(0,as,0,0)
 
+
+
+
 local at
 
 if ah.Icon then
 at=CreateServiceIcon(ah.Icon,UDim2.fromOffset(24,24),ah.IconThemed)
 at.LayoutOrder=-1
 end
+
+
+
 
 local au=ac("TextLabel",{
 AutomaticSize="XY",
@@ -3643,18 +3677,19 @@ AutomaticSize="Y",
 Size=UDim2.new(1,0,0,0),
 BackgroundTransparency=1,
 },{
-
-
-
-
-
 aw,
 av,
 })
 
+
+
+
 local ay=af("Enter Key","key",nil,"Input",function(ay)
 ao=ay
 end)
+
+
+
 
 local az
 if ah.KeySystem.Note and ah.KeySystem.Note~=""then
@@ -3675,6 +3710,9 @@ TextWrapped=true,
 })
 end
 
+
+
+
 local aA=ac("Frame",{
 Size=UDim2.new(1,0,0,42),
 BackgroundTransparency=1,
@@ -3690,6 +3728,9 @@ FillDirection="Horizontal",
 }),
 }),
 })
+
+
+
 
 local aB
 if ah.KeySystem.Thumbnail and ah.KeySystem.Thumbnail.Image then
@@ -3723,15 +3764,16 @@ CornerRadius=UDim.new(0,20),
 })
 end
 
-ac("Frame",{
 
+
+
+ac("Frame",{
 Size=UDim2.new(1,aB and-ar or 0,1,0),
 Position=UDim2.new(0,aB and ar or 0,0,0),
 BackgroundTransparency=1,
 Parent=am.UIElements.Main,
 },{
 ac("Frame",{
-
 Size=UDim2.new(1,0,1,0),
 BackgroundTransparency=1,
 },{
@@ -3755,7 +3797,6 @@ PaddingBottom=UDim.new(0,16),
 
 
 
-
 local b=ae("Exit","log-out",function()
 SafeCloseDialog(am)
 end,"Tertiary",aA.Frame)
@@ -3767,26 +3808,24 @@ b.Position=UDim2.new(0,10,1,-10)
 b.AnchorPoint=Vector2.new(0,1)
 end
 
+
+
+
 if ah.KeySystem.URL and not ah.KeySystem.KeyValidator then
 ae("Get key","key",function()
 local d,f=CopyToClipboard(ah.KeySystem.URL)
 if d then
 Notify(ah,"Key System","Key link copied to clipboard.","key")
 else
-Notify(ah,"Key System. Error",f or"Unable to copy key link.","triangle-alert")
+Notify(ah,"Key System",f or"Unable to copy key link.","triangle-alert")
 end
 end,"Secondary",aA.Frame)
 end
 
+
+
+
 if ah.KeySystem.API or ah.KeySystem.KeyValidator or type(ah.KeySystem.Flycer)=="table"then
-
-
-
-
-
-
-
-
 local d=240
 local f=false
 local g=ae("Get key","key",nil,"Secondary",aA.Frame)
@@ -3813,7 +3852,6 @@ PaddingRight=UDim.new(0,5),
 })
 
 local i=ab.Image("chevron-down","chevron-down",0,"Temp","KeySystem",true)
-
 i.Size=UDim2.new(1,0,1,0)
 
 ac("Frame",{
@@ -3874,6 +3912,9 @@ PaddingRight=UDim.new(0,10),
 PaddingBottom=UDim.new(0,10),
 }),
 })
+
+
+
 
 local function AddFlycerService()
 local p=ah.FlycerUI and ah.FlycerUI.Services
@@ -3945,6 +3986,9 @@ if ah.KeySystem.KeyValidator or type(ah.KeySystem.Flycer)=="table"then
 AddFlycerService()
 end
 
+
+
+
 for p,r in next,(ah.KeySystem.API or{})do
 if r.Type~="flycer"then
 local u=ah.FlycerUI.Services[r.Type]
@@ -3959,7 +4003,7 @@ return u.New(table.unpack(v))
 end)
 
 if not x or type(z)~="table"then
-Notify(ah,"Key System. Error","Unable to initialize service: "..tostring(r.Type),"triangle-alert")
+Notify(ah,"Key System","Unable to initialize service: "..tostring(r.Type),"triangle-alert")
 continue
 end
 
@@ -4043,12 +4087,15 @@ end)
 if F and G then
 Notify(ah,"Key System","Key link copied to clipboard.","key")
 else
-Notify(ah,"Key System. Error",H or"Unable to copy key link.","triangle-alert")
+Notify(ah,"Key System",H or"Unable to copy key link.","triangle-alert")
 end
 end)
 end
 end
 end
+
+
+
 
 ab.AddSignal(g.MouseButton1Click,function()
 if not f then
@@ -4074,9 +4121,13 @@ f=not f
 end)
 end
 
+
+
+
 local function handleSuccess(d)
 SafeCloseDialog(am)
 
+if ah.KeySystem.SaveKey then
 local f=(ah.Folder or"Temp").."/"..tostring(ai)..".key"
 local g,h=pcall(function()
 if type(writefile)~="function"then
@@ -4086,53 +4137,73 @@ writefile(f,tostring(d))
 end)
 
 if not g then
-Notify(ah,"Key System. Error","Unable to save key: "..tostring(h),"triangle-alert")
-return false
+Notify(ah,"Key System","Key verified but unable to save: "..tostring(h),"triangle-alert")
+end
 end
 
-task.wait(0.4)
+
+task.delay(0.4,function()
+if type(aj)=="function"then
 aj(true)
+end
+end)
+
 return true
 end
 
+
+
+
 local d=ae("Submit","arrow-right",function()
-local d=tostring(ao or"empty")local f=
-ah.Folder or ah.Title
+
+
+
+
+
+task.spawn(function()
+
+local d=ao
+if not d or tostring(d):gsub("%s+","")==""then
+Notify(ah,"Key System","Please enter a license key.","triangle-alert")
+return
+end
+d=tostring(d):gsub("^%s+",""):gsub("%s+$","")
+
+
+
 
 if type(ah.KeySystem.Flycer)=="table"then
-local g,h=ag(ah)
-local i,l,m=false,h
+local f,g=ag(ah)
 
-if g and type(g.Verify)=="function"then
-
-local p,r,u,v=pcall(function()
-return g.Verify(d)
-end)
-
-if p then
-i,l,m=r,u,v
-else
-i=false
-l="Flycer verification failed: "..tostring(r)
-end
-elseif g then
-l="Flycer service does not provide Verify()."
+if not f then
+Notify(ah,"Key System",g or"Flycer service unavailable.","triangle-alert")
+return
 end
 
-if i then
+if type(f.Verify)~="function"then
+Notify(ah,"Key System","Flycer service does not provide Verify().","triangle-alert")
+return
+end
+
+
+
+
+
+local h,i,l=f.Verify(d)
+
+if h then
+
+local m
+if type(l)=="table"then
+m=l.license
+end
 
 local p
+local r
 
 if type(m)=="table"then
-p=m.license
-end
-
-local r
-local u
-
-if type(p)=="table"then
-r=tonumber(p.expires_at)
-u=tostring(p.key_type or""):lower()
+p=tonumber(m.expires_at)
+r=tostring(m.key_type or""):lower()
 end
 
 
@@ -4148,25 +4219,21 @@ ap=nil
 end
 
 
-
-
-if r and r>0 then
+if p and p>0 then
 ap=ah.Window:Tag{
-Title=FormatCountdown(r),
+Title=FormatCountdown(p),
 Icon="clock-3",
 Color=Color3.fromHex"#315dff",
 }
 
-aq=StartCountdown(r,function(v)
+aq=StartCountdown(p,function(u)
 if ap then
-ap:SetTitle(v)
+ap:SetTitle(u)
 end
 end)
 
 
-
-
-elseif u=="lifetime"then
+elseif r=="lifetime"then
 ap=ah.Window:Tag{
 Title="Lifetime",
 Icon="infinity",
@@ -4174,91 +4241,88 @@ Color=Color3.fromHex"#315dff",
 }
 end
 
-
-if ah.KeySystem.SaveKey then
 handleSuccess(d)
 else
-SafeCloseDialog(am)
-task.wait(0.4)
-aj(true)
-end
-else
-Notify(ah,"Key System. Error",l or"Invalid key.","triangle-alert")
+Notify(ah,"Key System",i or"Invalid key.","triangle-alert")
 end
 
 return
 end
 
+
+
+
 if ah.KeySystem.KeyValidator then
-local g,h,i=pcall(function()
+local f,g,h=pcall(function()
 return ah.KeySystem.KeyValidator(d)
 end)
 
-if not g then
-i="Key validator failed: "..tostring(h)
-h=false
+if not f then
+Notify(ah,"Key System","Key validator error: "..tostring(g),"triangle-alert")
+return
 end
-
-if h then
-if ah.KeySystem.SaveKey then
-handleSuccess(d)
-else
-SafeCloseDialog(am)
-task.wait(0.4)
-aj(true)
-end
-else
-Notify(ah,"Key System. Error",i or"Invalid key.","triangle-alert")
-end
-elseif not ah.KeySystem.API then
-local g=type(ah.KeySystem.Key)=="table"and table.find(ah.KeySystem.Key,d)
-or ah.KeySystem.Key==d
 
 if g then
-if ah.KeySystem.SaveKey then
 handleSuccess(d)
 else
-SafeCloseDialog(am)
-task.wait(0.4)
-aj(true)
+Notify(ah,"Key System",h or"Invalid key.","triangle-alert")
 end
+return
 end
-else
-local g,h
-for i,l in next,an do
-if type(l.Verify)=="function"then
-local m,p,r=pcall(function()
-return l.Verify(d)
-end)
 
-if m and p then
-g,h=true,r
+
+
+
+if not ah.KeySystem.API then
+local f=false
+if type(ah.KeySystem.Key)=="table"then
+f=table.find(ah.KeySystem.Key,d)~=nil
+else
+f=ah.KeySystem.Key==d
+end
+
+if f then
+handleSuccess(d)
+else
+
+Notify(ah,"Key System","Invalid key.","triangle-alert")
+end
+return
+end
+
+
+
+
+if#an==0 then
+
+Notify(ah,"Key System","No key validation service is configured.","triangle-alert")
+return
+end
+
+local f,g=false
+for h,i in next,an do
+if type(i.Verify)=="function"then
+
+local l,m=i.Verify(d)
+if l then
+f=true
+g=m
 break
 end
-
-h=m and r or("Service verification failed: "..tostring(p))
+g=m or"Verification failed."
 end
 end
 
-if g then
+if f then
 handleSuccess(d)
 else
-Notify(ah,"Key System. Error",h or"Invalid key.","triangle-alert")
+Notify(ah,"Key System",g or"Invalid key.","triangle-alert")
 end
-end
+end)
 end,"Primary",aA)
 
 d.AnchorPoint=Vector2.new(1,0.5)
 d.Position=UDim2.new(1,0,0.5,0)
-
-
-
-
-
-
-
-
-
 
 am:Open()
 end
