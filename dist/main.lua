@@ -3200,95 +3200,6 @@ local af=a.load'o'.New
 
 
 
-local function GetKeySavePath(ag,ah)
-local ai=ag.Folder or"Flycer Workspace"
-local aj=ah or(ag.KeySystem and ag.KeySystem.FileName)or ag.Title or"Key"
-local ak=tostring(aj):gsub('[\\/:*?"<>|]',""):gsub("%s+","_")
-if ak==""then
-ak="SavedKey"
-end
-
-return ai,ai.."/"..ak..".key",ak..".key"
-end
-
-
-
-
-local function SaveKeyToDisk(ag,ah,ai)
-if not(ag.KeySystem and ag.KeySystem.SaveKey)then
-return
-end
-if type(writefile)~="function"then
-return
-end
-
-local aj,ak,al=GetKeySavePath(ag,ah)
-
-
-local am=pcall(function()
-if type(makefolder)=="function"then
-pcall(makefolder,aj)
-end
-writefile(ak,tostring(ai))
-end)
-
-
-if not am then
-pcall(function()
-writefile(al,tostring(ai))
-end)
-end
-end
-
-
-
-
-local function LoadSavedKeyFromDisk(ag,ah)
-if not(ag.KeySystem and ag.KeySystem.SaveKey)then
-return nil
-end
-if type(readfile)~="function"then
-return nil
-end local
-
-ai, aj, ak=GetKeySavePath(ag,ah)
-
-
-local al,am=pcall(function()
-if type(isfile)=="function"and not isfile(aj)then
-return nil
-end
-return readfile(aj)
-end)
-
-if al and am and am~=""then
-local an=tostring(am):gsub("^%s+",""):gsub("%s+$","")
-if an~=""then
-return an
-end
-end
-
-
-local an,ao=pcall(function()
-if type(isfile)=="function"and not isfile(ak)then
-return nil
-end
-return readfile(ak)
-end)
-
-if an and ao and ao~=""then
-local ap=tostring(ao):gsub("^%s+",""):gsub("%s+$","")
-if ap~=""then
-return ap
-end
-end
-
-return nil
-end
-
-
-
-
 local function CopyToClipboard(ag)
 if ag==nil then
 return false,"Clipboard value is empty."
@@ -3639,34 +3550,32 @@ al.Create(true,"Popup",ah.Window,ah.FlycerUI,ah.FlycerUI.ScreenGui.KeySystem)
 
 local an={}
 
+local ao
 
-local ao=LoadSavedKeyFromDisk(ah,ai)
-local ap=ao
+local ap=(ah.KeySystem.Thumbnail and ah.KeySystem.Thumbnail.Width)or 200
 
-local aq=(ah.KeySystem.Thumbnail and ah.KeySystem.Thumbnail.Width)or 200
-
-local ar=430
+local aq=430
 if ah.KeySystem.Thumbnail and ah.KeySystem.Thumbnail.Image then
-ar=430+(aq/2)
+aq=430+(ap/2)
 end
 
 am.UIElements.Main.AutomaticSize="Y"
-am.UIElements.Main.Size=UDim2.new(0,ar,0,0)
+am.UIElements.Main.Size=UDim2.new(0,aq,0,0)
 
 
 
 
-local as
+local ar
 
 if ah.Icon then
-as=CreateServiceIcon(ah.Icon,UDim2.fromOffset(24,24),ah.IconThemed)
-as.LayoutOrder=-1
+ar=CreateServiceIcon(ah.Icon,UDim2.fromOffset(24,24),ah.IconThemed)
+ar.LayoutOrder=-1
 end
 
 
 
 
-local at=ac("TextLabel",{
+local as=ac("TextLabel",{
 AutomaticSize="XY",
 BackgroundTransparency=1,
 Text=ah.KeySystem.Title or ah.Title,
@@ -3677,7 +3586,7 @@ TextColor3="Text",
 TextSize=20,
 })
 
-local au=ac("TextLabel",{
+local at=ac("TextLabel",{
 AutomaticSize="XY",
 BackgroundTransparency=1,
 Text="Key System",
@@ -3691,7 +3600,7 @@ TextColor3="Text",
 TextSize=16,
 })
 
-local av=ac("Frame",{
+local au=ac("Frame",{
 BackgroundTransparency=1,
 AutomaticSize="XY",
 },{
@@ -3700,32 +3609,32 @@ Padding=UDim.new(0,14),
 FillDirection="Horizontal",
 VerticalAlignment="Center",
 }),
+ar,
 as,
-at,
 })
 
-local aw=ac("Frame",{
+local av=ac("Frame",{
 AutomaticSize="Y",
 Size=UDim2.new(1,0,0,0),
 BackgroundTransparency=1,
 },{
-av,
 au,
+at,
 })
 
 
 
 
-local ax=af("Enter Key","key",ap,"Input",function(ax)
-ap=ax
+local aw=af("Enter Key","key",nil,"Input",function(aw)
+ao=aw
 end)
 
 
 
 
-local ay
+local ax
 if ah.KeySystem.Note and ah.KeySystem.Note~=""then
-ay=ac("TextLabel",{
+ax=ac("TextLabel",{
 Size=UDim2.new(1,0,0,0),
 AutomaticSize="Y",
 FontFace=Font.new(ab.Font,Enum.FontWeight.Medium),
@@ -3745,7 +3654,7 @@ end
 
 
 
-local az=ac("Frame",{
+local ay=ac("Frame",{
 Size=UDim2.new(1,0,0,42),
 BackgroundTransparency=1,
 },{
@@ -3764,11 +3673,11 @@ FillDirection="Horizontal",
 
 
 
-local aA
+local az
 if ah.KeySystem.Thumbnail and ah.KeySystem.Thumbnail.Image then
-local aB
+local aA
 if ah.KeySystem.Thumbnail.Title then
-aB=ac("TextLabel",{
+aA=ac("TextLabel",{
 Text=ah.KeySystem.Thumbnail.Title,
 ThemeTag={
 TextColor3="Text",
@@ -3781,15 +3690,15 @@ AnchorPoint=Vector2.new(0.5,0.5),
 Position=UDim2.new(0.5,0,0.5,0),
 })
 end
-aA=ac("ImageLabel",{
+az=ac("ImageLabel",{
 Image=ah.KeySystem.Thumbnail.Image,
 BackgroundTransparency=1,
-Size=UDim2.new(0,aq,1,-12),
+Size=UDim2.new(0,ap,1,-12),
 Position=UDim2.new(0,6,0,6),
 Parent=am.UIElements.Main,
 ScaleType="Crop",
 },{
-aB,
+aA,
 ac("UICorner",{
 CornerRadius=UDim.new(0,20),
 }),
@@ -3800,8 +3709,8 @@ end
 
 
 ac("Frame",{
-Size=UDim2.new(1,aA and-aq or 0,1,0),
-Position=UDim2.new(0,aA and aq or 0,0,0),
+Size=UDim2.new(1,az and-ap or 0,1,0),
+Position=UDim2.new(0,az and ap or 0,0,0),
 BackgroundTransparency=1,
 Parent=am.UIElements.Main,
 },{
@@ -3813,10 +3722,10 @@ ac("UIListLayout",{
 Padding=UDim.new(0,18),
 FillDirection="Vertical",
 }),
+av,
+ax,
 aw,
 ay,
-ax,
-az,
 ac("UIPadding",{
 PaddingTop=UDim.new(0,16),
 PaddingLeft=UDim.new(0,16),
@@ -3829,15 +3738,15 @@ PaddingBottom=UDim.new(0,16),
 
 
 
-local aB=ae("Exit","log-out",function()
+local aA=ae("Exit","log-out",function()
 SafeCloseDialog(am)
-end,"Tertiary",az.Frame)
+end,"Tertiary",ay.Frame)
 
-if aA then
-aB.Parent=aA
-aB.Size=UDim2.new(0,0,0,42)
-aB.Position=UDim2.new(0,10,1,-10)
-aB.AnchorPoint=Vector2.new(0,1)
+if az then
+aA.Parent=az
+aA.Size=UDim2.new(0,0,0,42)
+aA.Position=UDim2.new(0,10,1,-10)
+aA.AnchorPoint=Vector2.new(0,1)
 end
 
 
@@ -3845,24 +3754,24 @@ end
 
 if ah.KeySystem.URL and not ah.KeySystem.KeyValidator then
 ae("Get key","key",function()
-local b,d=CopyToClipboard(ah.KeySystem.URL)
-if b then
+local aB,b=CopyToClipboard(ah.KeySystem.URL)
+if aB then
 Notify(ah,"Key System","Key link copied to clipboard.","key")
 else
-Notify(ah,"Key System",d or"Unable to copy key link.","triangle-alert")
+Notify(ah,"Key System",b or"Unable to copy key link.","triangle-alert")
 end
-end,"Secondary",az.Frame)
+end,"Secondary",ay.Frame)
 end
 
 
 
 
 if ah.KeySystem.API or ah.KeySystem.KeyValidator or type(ah.KeySystem.Flycer)=="table"then
-local b=240
-local d=false
-local f=ae("Get key","key",nil,"Secondary",az.Frame)
+local aB=240
+local b=false
+local d=ae("Get key","key",nil,"Secondary",ay.Frame)
 
-local g=ab.NewRoundFrame(99,"Squircle",{
+local f=ab.NewRoundFrame(99,"Squircle",{
 Size=UDim2.new(0,1,1,0),
 ThemeTag={
 ImageColor3="Text",
@@ -3874,27 +3783,27 @@ ac("Frame",{
 BackgroundTransparency=1,
 Size=UDim2.new(0,0,1,0),
 AutomaticSize="X",
-Parent=f.Frame,
+Parent=d.Frame,
 },{
-g,
+f,
 ac("UIPadding",{
 PaddingLeft=UDim.new(0,5),
 PaddingRight=UDim.new(0,5),
 }),
 })
 
-local h=ab.Image("chevron-down","chevron-down",0,"Temp","KeySystem",true)
-h.Size=UDim2.new(1,0,1,0)
+local g=ab.Image("chevron-down","chevron-down",0,"Temp","KeySystem",true)
+g.Size=UDim2.new(1,0,1,0)
 
 ac("Frame",{
 Size=UDim2.new(0,21,0,21),
-Parent=f.Frame,
+Parent=d.Frame,
 BackgroundTransparency=1,
 },{
-h,
+g,
 })
 
-local i=ab.NewRoundFrame(15,"Squircle",{
+local h=ab.NewRoundFrame(15,"Squircle",{
 Size=UDim2.new(1,0,0,0),
 AutomaticSize="Y",
 ThemeTag={
@@ -3913,15 +3822,15 @@ Padding=UDim.new(0,5),
 }),
 })
 
-local l=ac("Frame",{
+local i=ac("Frame",{
 BackgroundTransparency=1,
-Size=UDim2.new(0,b,0,0),
+Size=UDim2.new(0,aB,0,0),
 ClipsDescendants=true,
 AnchorPoint=Vector2.new(1,0),
-Parent=f,
+Parent=d,
 Position=UDim2.new(1,0,1,15),
 },{
-i,
+h,
 })
 
 ac("TextLabel",{
@@ -3935,7 +3844,7 @@ Size=UDim2.new(1,0,0,0),
 AutomaticSize="Y",
 TextWrapped=true,
 TextXAlignment="Left",
-Parent=i,
+Parent=h,
 },{
 ac("UIPadding",{
 PaddingTop=UDim.new(0,10),
@@ -3949,18 +3858,18 @@ PaddingBottom=UDim.new(0,10),
 
 
 local function AddFlycerService()
-local m=ah.FlycerUI and ah.FlycerUI.Services
-local p=m and m.flycer
-local r=p and p.Icon or"key"
-local u=p and p.Name or"Flycer"
+local l=ah.FlycerUI and ah.FlycerUI.Services
+local m=l and l.flycer
+local p=m and m.Icon or"key"
+local r=m and m.Name or"Flycer"
 
-local v=CreateServiceIcon(r,UDim2.fromOffset(24,24),true)
+local u=CreateServiceIcon(p,UDim2.fromOffset(24,24),true)
 
-local x=ab.NewRoundFrame(10,"Squircle",{
+local v=ab.NewRoundFrame(10,"Squircle",{
 Size=UDim2.new(1,0,0,0),
 ThemeTag={ImageColor3="Text"},
 ImageTransparency=1,
-Parent=i,
+Parent=h,
 AutomaticSize="Y",
 },{
 ac("UIListLayout",{
@@ -3968,7 +3877,7 @@ FillDirection="Horizontal",
 Padding=UDim.new(0,10),
 VerticalAlignment="Center",
 }),
-v,
+u,
 ac("UIPadding",{
 PaddingTop=UDim.new(0,10),
 PaddingLeft=UDim.new(0,10),
@@ -3976,7 +3885,7 @@ PaddingRight=UDim.new(0,10),
 PaddingBottom=UDim.new(0,10),
 }),
 ac("TextLabel",{
-Text=u,
+Text=r,
 BackgroundTransparency=1,
 FontFace=Font.new(ab.Font,Enum.FontWeight.Medium),
 ThemeTag={TextColor3="Text"},
@@ -3988,28 +3897,28 @@ TextXAlignment="Left",
 }),
 },true)
 
-ab.AddSignal(x.MouseEnter,function()
-ad(x,0.08,{ImageTransparency=0.95}):Play()
+ab.AddSignal(v.MouseEnter,function()
+ad(v,0.08,{ImageTransparency=0.95}):Play()
 end)
-ab.AddSignal(x.InputEnded,function()
-ad(x,0.08,{ImageTransparency=1}):Play()
+ab.AddSignal(v.InputEnded,function()
+ad(v,0.08,{ImageTransparency=1}):Play()
 end)
-ab.AddSignal(x.MouseButton1Click,function()
-local z,A=pcall(function()
-local z,A,B=GetFlycerIdentifier(ah)
+ab.AddSignal(v.MouseButton1Click,function()
+local x,z=pcall(function()
+local x,z,A=GetFlycerIdentifier(ah)
 OpenFlycerServiceDialog(
 ah,
+x,
 z,
-A,
 am,
-l,
-h,
-B
+i,
+g,
+A
 )
 end)
 
-if not z then
-Notify(ah,"Flycer","Unable to open Flycer dialog: "..tostring(A),"triangle-alert")
+if not x then
+Notify(ah,"Flycer","Unable to open Flycer dialog: "..tostring(z),"triangle-alert")
 end
 end)
 end
@@ -4021,35 +3930,35 @@ end
 
 
 
-for m,p in next,(ah.KeySystem.API or{})do
-if p.Type~="flycer"then
-local r=ah.FlycerUI.Services[p.Type]
-if r then
-local u={}
-for v,x in next,r.Args do
-table.insert(u,p[x])
+for l,m in next,(ah.KeySystem.API or{})do
+if m.Type~="flycer"then
+local p=ah.FlycerUI.Services[m.Type]
+if p then
+local r={}
+for u,v in next,p.Args do
+table.insert(r,m[v])
 end
 
-local v,x=pcall(function()
-return r.New(table.unpack(u))
+local u,v=pcall(function()
+return p.New(table.unpack(r))
 end)
 
-if not v or type(x)~="table"then
-Notify(ah,"Key System","Unable to initialize service: "..tostring(p.Type),"triangle-alert")
+if not u or type(v)~="table"then
+Notify(ah,"Key System","Unable to initialize service: "..tostring(m.Type),"triangle-alert")
 continue
 end
 
-x.Type=p.Type
-table.insert(an,x)
+v.Type=m.Type
+table.insert(an,v)
 
-local z=p.Icon or r.Icon or"user"
-local A=CreateServiceIcon(z,UDim2.fromOffset(24,24),true)
+local x=m.Icon or p.Icon or"user"
+local z=CreateServiceIcon(x,UDim2.fromOffset(24,24),true)
 
-local B=ab.NewRoundFrame(10,"Squircle",{
+local A=ab.NewRoundFrame(10,"Squircle",{
 Size=UDim2.new(1,0,0,0),
 ThemeTag={ImageColor3="Text"},
 ImageTransparency=1,
-Parent=i,
+Parent=h,
 AutomaticSize="Y",
 },{
 ac("UIListLayout",{
@@ -4057,7 +3966,7 @@ FillDirection="Horizontal",
 Padding=UDim.new(0,10),
 VerticalAlignment="Center",
 }),
-A,
+z,
 ac("UIPadding",{
 PaddingTop=UDim.new(0,10),
 PaddingLeft=UDim.new(0,10),
@@ -4075,7 +3984,7 @@ Padding=UDim.new(0,5),
 HorizontalAlignment="Center",
 }),
 ac("TextLabel",{
-Text=p.Title or r.Name,
+Text=m.Title or p.Name,
 BackgroundTransparency=1,
 FontFace=Font.new(ab.Font,Enum.FontWeight.Medium),
 ThemeTag={TextColor3="Text"},
@@ -4087,7 +3996,7 @@ TextWrapped=true,
 TextXAlignment="Left",
 }),
 ac("TextLabel",{
-Text=p.Desc or"",
+Text=m.Desc or"",
 BackgroundTransparency=1,
 FontFace=Font.new(ab.Font,Enum.FontWeight.Regular),
 ThemeTag={TextColor3="Text"},
@@ -4096,30 +4005,30 @@ TextSize=16,
 Size=UDim2.new(1,0,0,0),
 AutomaticSize="Y",
 TextWrapped=true,
-Visible=p.Desc and true or false,
+Visible=m.Desc and true or false,
 TextXAlignment="Left",
 }),
 }),
 },true)
 
-ab.AddSignal(B.MouseEnter,function()
-ad(B,0.08,{ImageTransparency=0.95}):Play()
+ab.AddSignal(A.MouseEnter,function()
+ad(A,0.08,{ImageTransparency=0.95}):Play()
 end)
-ab.AddSignal(B.InputEnded,function()
-ad(B,0.08,{ImageTransparency=1}):Play()
+ab.AddSignal(A.InputEnded,function()
+ad(A,0.08,{ImageTransparency=1}):Play()
 end)
-ab.AddSignal(B.MouseButton1Click,function()
-local C,F,G=pcall(function()
-if type(x.Copy)~="function"then
+ab.AddSignal(A.MouseButton1Click,function()
+local B,C,F=pcall(function()
+if type(v.Copy)~="function"then
 return false,"Copy is not supported by this service."
 end
-return x.Copy()
+return v.Copy()
 end)
 
-if C and F then
+if B and C then
 Notify(ah,"Key System","Key link copied to clipboard.","key")
 else
-Notify(ah,"Key System",G or"Unable to copy key link.","triangle-alert")
+Notify(ah,"Key System",F or"Unable to copy key link.","triangle-alert")
 end
 end)
 end
@@ -4129,38 +4038,58 @@ end
 
 
 
-ab.AddSignal(f.MouseButton1Click,function()
-if not d then
+ab.AddSignal(d.MouseButton1Click,function()
+if not b then
 ad(
-l,
+i,
 0.3,
-{Size=UDim2.new(0,b,0,i.AbsoluteSize.Y+1)},
+{Size=UDim2.new(0,aB,0,h.AbsoluteSize.Y+1)},
 Enum.EasingStyle.Quint,
 Enum.EasingDirection.Out
 ):Play()
-ad(h,0.3,{Rotation=180},Enum.EasingStyle.Quint,Enum.EasingDirection.Out):Play()
+ad(g,0.3,{Rotation=180},Enum.EasingStyle.Quint,Enum.EasingDirection.Out):Play()
 else
 ad(
-l,
+i,
 0.25,
-{Size=UDim2.new(0,b,0,0)},
+{Size=UDim2.new(0,aB,0,0)},
 Enum.EasingStyle.Quint,
 Enum.EasingDirection.Out
 ):Play()
-ad(h,0.25,{Rotation=0},Enum.EasingStyle.Quint,Enum.EasingDirection.Out):Play()
+ad(g,0.25,{Rotation=0},Enum.EasingStyle.Quint,Enum.EasingDirection.Out):Play()
 end
-d=not d
+b=not b
 end)
 end
 
 
 
 
-local function handleSuccess(b)
+local function handleSuccess(aB)
 SafeCloseDialog(am)
 
+if ah.KeySystem.SaveKey then
+local b=ah.Folder or"Temp"
+local d=b.."/"..tostring(ai)..".key"
 
-SaveKeyToDisk(ah,ai,b)
+local f,g=pcall(function()
+if type(writefile)~="function"then
+error"writefile is not available in this executor."
+end
+
+if type(makefolder)=="function"and type(isfolder)=="function"then
+if not isfolder(b)then
+makefolder(b)
+end
+end
+
+writefile(d,tostring(aB))
+end)
+
+if not f then
+Notify(ah,"Key System","Key verified but unable to save: "..tostring(g),"triangle-alert")
+end
+end
 
 task.delay(0.4,function()
 if type(aj)=="function"then
@@ -4174,138 +4103,116 @@ end
 
 
 
-local function ValidateKey(b,d)
-local f=tostring(b or""):gsub("^%s+",""):gsub("%s+$","")
-if f==""then
-if not d then
+local aB=ae("Submit","arrow-right",function()
+task.spawn(function()
+local aB=ao
+if not aB or tostring(aB):gsub("%s+","")==""then
 Notify(ah,"Key System","Please enter a license key.","triangle-alert")
+return
 end
-return false
-end
+aB=tostring(aB):gsub("^%s+",""):gsub("%s+$","")
+
+
 
 
 if type(ah.KeySystem.Flycer)=="table"then
-local g,h=ag(ah)
+local b,d=ag(ah)
 
-if not g or type(g.Verify)~="function"then
-if not d then
-Notify(ah,"Key System",h or"Flycer service unavailable.","triangle-alert")
+if not b then
+Notify(ah,"Key System",d or"Flycer service unavailable.","triangle-alert")
+return
 end
-return false
+
+if type(b.Verify)~="function"then
+Notify(ah,"Key System","Flycer service does not provide Verify().","triangle-alert")
+return
 end local
 
-i, l=g.Verify(f)
+f, g=b.Verify(aB)
 
-if i then
-handleSuccess(f)
-return true
+if f then
+
+handleSuccess(aB)
 else
-if not d then
-Notify(ah,"Key System",l or"Invalid key.","triangle-alert")
+Notify(ah,"Key System",g or"Invalid key.","triangle-alert")
 end
-return false
+
+return
 end
-end
+
+
 
 
 if ah.KeySystem.KeyValidator then
-local g,h,i=pcall(function()
-return ah.KeySystem.KeyValidator(f)
+local b,d,f=pcall(function()
+return ah.KeySystem.KeyValidator(aB)
 end)
 
-if g and h then
-handleSuccess(f)
-return true
+if not b then
+Notify(ah,"Key System","Key validator error: "..tostring(d),"triangle-alert")
+return
+end
+
+if d then
+handleSuccess(aB)
 else
-if not d then
-Notify(ah,"Key System",i or"Invalid key.","triangle-alert")
+Notify(ah,"Key System",f or"Invalid key.","triangle-alert")
 end
-return false
+return
 end
-end
+
+
 
 
 if not ah.KeySystem.API then
-local g=false
+local b=false
 if type(ah.KeySystem.Key)=="table"then
-g=table.find(ah.KeySystem.Key,f)~=nil
+b=table.find(ah.KeySystem.Key,aB)~=nil
 else
-g=ah.KeySystem.Key==f
+b=ah.KeySystem.Key==aB
 end
 
-if g then
-handleSuccess(f)
-return true
+if b then
+handleSuccess(aB)
 else
-if not d then
 Notify(ah,"Key System","Invalid key.","triangle-alert")
 end
-return false
+return
 end
-end
+
+
 
 
 if#an==0 then
-if not d then
 Notify(ah,"Key System","No key validation service is configured.","triangle-alert")
-end
-return false
+return
 end
 
-local g,h=false
-for i,l in next,an do
-if type(l.Verify)=="function"then
-local m,p=l.Verify(f)
-if m then
-g=true
-h=p
+local b,d=false
+for f,g in next,an do
+if type(g.Verify)=="function"then
+local h,i=g.Verify(aB)
+if h then
+b=true
+d=i
 break
 end
-h=p or"Verification failed."
+d=i or"Verification failed."
 end
 end
 
-if g then
-handleSuccess(f)
-return true
+if b then
+handleSuccess(aB)
 else
-if not d then
-Notify(ah,"Key System",h or"Invalid key.","triangle-alert")
-end
-return false
-end
-end
-
-
-
-
-local b=ae("Submit","arrow-right",function()
-task.spawn(function()
-ValidateKey(ap,false)
-end)
-end,"Primary",az)
-
-b.AnchorPoint=Vector2.new(1,0.5)
-b.Position=UDim2.new(1,0,0.5,0)
-
-
-
-
-if ah.KeySystem and ah.KeySystem.SaveKey and ao then
-task.spawn(function()
-
-local d=ValidateKey(ao,true)
-if d then
-Notify(ah,"Key System","Auto-logged in with saved key.","check")
-else
-
-am:Open()
+Notify(ah,"Key System",d or"Invalid key.","triangle-alert")
 end
 end)
-else
+end,"Primary",ay)
+
+aB.AnchorPoint=Vector2.new(1,0.5)
+aB.Position=UDim2.new(1,0,0.5,0)
 
 am:Open()
-end
 end
 
 return aa end function a.r()
