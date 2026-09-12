@@ -906,8 +906,7 @@ function KeySystem.new(Config, Filename, func, keyValidator)
 	end
 
 	local SubmitButton = CreateButton("Submit", "arrow-right", function()
-		local submitOk, submitError = pcall(function()
-			local key = tostring(EnteredKey or "empty")
+		local key = tostring(EnteredKey or "empty")
 		local folder = Config.Folder or Config.Title
 
 		if type(Config.KeySystem.Flycer) == "table" then
@@ -1056,10 +1055,6 @@ function KeySystem.new(Config, Filename, func, keyValidator)
 			else
 				Notify(Config, "Key System. Error", result or "Invalid key.", "triangle-alert")
 			end
-		end)
-
-		if not submitOk then
-			Notify(Config, "Key System. Error", "Submit failed: " .. tostring(submitError), "triangle-alert")
 		end
 	end, "Primary", ButtonsContainer)
 
