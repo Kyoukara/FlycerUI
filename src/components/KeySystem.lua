@@ -94,7 +94,7 @@ local function CopyToClipboard(value)
 end
 
 -- ============================================================
--- HELPER: Notify (FIX M3 — tambah warn fallback)
+-- HELPER: Notify
 -- ============================================================
 local function Notify(Config, title, content, icon)
 	if not Config or not Config.FlycerUI or type(Config.FlycerUI.Notify) ~= "function" then
@@ -932,17 +932,27 @@ function KeySystem.new(Config, Filename, func, keyValidator)
 	end
 
 	-- ========================================================
-	-- HELPER: Handle Success (FIX M2 — non-blocking)
+	-- HELPER: Handle Success
 	-- ========================================================
 	local function handleSuccess(key)
 		SafeCloseDialog(KeyDialog)
 
 		if Config.KeySystem.SaveKey then
-			local path = (Config.Folder or "Temp") .. "/" .. tostring(Filename) .. ".key"
+			local folder = Config.Folder or "Temp"
+			local path = folder .. "/" .. tostring(Filename) .. ".key"
+
 			local writeOk, writeErr = pcall(function()
 				if type(writefile) ~= "function" then
 					error("writefile is not available in this executor.")
 				end
+
+				-- [FIX] Pastikan folder ada sebelum writefile
+				if type(makefolder) == "function" and type(isfolder) == "function" then
+					if not isfolder(folder) then
+						makefolder(folder)
+					end
+				end
+
 				writefile(path, tostring(key))
 			end)
 
@@ -951,7 +961,6 @@ function KeySystem.new(Config, Filename, func, keyValidator)
 			end
 		end
 
-		-- [FIX M2] task.delay alih-alih task.wait — non-blocking.
 		task.delay(0.4, function()
 			if type(func) == "function" then
 				func(true)
@@ -962,16 +971,10 @@ function KeySystem.new(Config, Filename, func, keyValidator)
 	end
 
 	-- ========================================================
-	-- SUBMIT BUTTON (FIX C1, C2, C4 — task.spawn wrapper)
+	-- SUBMIT BUTTON
 	-- ========================================================
 	local SubmitButton = CreateButton("Submit", "arrow-right", function()
-		-- [FIX C1, C4] Wrap SELURUH logic dalam task.spawn.
-		-- Mencegah:
-		--   1. UI thread blocking saat HTTP request yielding
-		--   2. pcall + yield crash di executor mobile
-		--   3. Button terasa "mati" / tidak responsif
 		task.spawn(function()
-			-- [FIX M1] Validasi input awal
 			local key = EnteredKey
 			if not key or tostring(key):gsub("%s+", "") == "" then
 				Notify(Config, "Key System", "Please enter a license key.", "triangle-alert")
@@ -995,14 +998,9 @@ function KeySystem.new(Config, Filename, func, keyValidator)
 					return
 				end
 
-				-- [FIX C4] Panggil Verify() LANGSUNG tanpa pcall.
-				-- Verify() memanggil Request() yang yielding.
-				-- pcall + yielding = undefined behavior di banyak executor.
-				-- task.spawn sudah mengisolasi error dari UI thread.
 				local verifyValid, verifyMessage, verifyData = serviceInstance.Verify(key)
 
 				if verifyValid then
-					-- Ambil informasi license dari response API.
 					local licenseInfo
 					if type(verifyData) == "table" then
 						licenseInfo = verifyData.license
@@ -1016,39 +1014,59 @@ function KeySystem.new(Config, Filename, func, keyValidator)
 						keyType = tostring(licenseInfo.key_type or ""):lower()
 					end
 
-					-- Hentikan countdown sebelumnya.
 					if StopCountdown then
 						StopCountdown()
 						StopCountdown = nil
 					end
 
-					-- Hapus Tag expiry sebelumnya.
 					if ExpiryTag then
-						ExpiryTag:Destroy()
+						pcall(function() ExpiryTag:Destroy() end)
 						ExpiryTag = nil
 					end
 
+					-- ====================================================
+					-- [FIX RUNTIME ERROR] Safe Check untuk Config.Window
+					-- ====================================================
+					local windowExists = Config.Window and type(Config.Window.Tag) == "function"
+
 					-- DURATION KEY
 					if expireTimestamp and expireTimestamp > 0 then
-						ExpiryTag = Config.Window:Tag({
-							Title = FormatCountdown(expireTimestamp),
-							Icon = "clock-3",
-							Color = Color3.fromHex("#315dff"),
-						})
+						if windowExists then
+							local tagOk, tagResult = pcall(function()
+								return Config.Window:Tag({
+									Title = FormatCountdown(expireTimestamp),
+									Icon = "clock-3",
+									Color = Color3.fromHex("#315dff"),
+								})
+							end)
 
-						StopCountdown = StartCountdown(expireTimestamp, function(text)
-							if ExpiryTag then
-								ExpiryTag:SetTitle(text)
+							if tagOk then
+								ExpiryTag = tagResult
+								StopCountdown = StartCountdown(expireTimestamp, function(text)
+									if ExpiryTag and type(ExpiryTag.SetTitle) == "function" then
+										pcall(function()
+											ExpiryTag:SetTitle(text)
+										end)
+									end
+								end)
 							end
-						end)
+						else
+							warn("[FlycerUI KeySystem] Config.Window is not initialized yet. Skipping Expiry Tag creation.")
+						end
 
 					-- LIFETIME KEY
 					elseif keyType == "lifetime" then
-						ExpiryTag = Config.Window:Tag({
-							Title = "Lifetime",
-							Icon = "infinity",
-							Color = Color3.fromHex("#315dff"),
-						})
+						if windowExists then
+							pcall(function()
+								ExpiryTag = Config.Window:Tag({
+									Title = "Lifetime",
+									Icon = "infinity",
+									Color = Color3.fromHex("#315dff"),
+								})
+							end)
+						else
+							warn("[FlycerUI KeySystem] Config.Window is not initialized yet. Skipping Lifetime Tag creation.")
+						end
 					end
 
 					handleSuccess(key)
@@ -1094,17 +1112,15 @@ function KeySystem.new(Config, Filename, func, keyValidator)
 				if isKey then
 					handleSuccess(key)
 				else
-					-- [FIX C2] Fallback notification — sebelumnya TIDAK ADA.
 					Notify(Config, "Key System", "Invalid key.", "triangle-alert")
 				end
 				return
 			end
 
 			-- ====================================================
-			-- PATH 4: API SERVICES (Platoboost, Panda, dll.)
+			-- PATH 4: API SERVICES
 			-- ====================================================
 			if #Services == 0 then
-				-- [FIX C2] Fallback — tidak ada service yang terdaftar.
 				Notify(Config, "Key System", "No key validation service is configured.", "triangle-alert")
 				return
 			end
@@ -1112,7 +1128,6 @@ function KeySystem.new(Config, Filename, func, keyValidator)
 			local isSuccess, result = false, nil
 			for _, service in next, Services do
 				if type(service.Verify) == "function" then
-					-- [FIX C4] Panggil langsung tanpa pcall (yielding).
 					local success, res = service.Verify(key)
 					if success then
 						isSuccess = true
