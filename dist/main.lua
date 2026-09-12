@@ -3181,13 +3181,26 @@ end
 
 
 
-local function Notify(ag,ah)
+local function Notify(ag,ah,ai,aj,ak)
 if not ag or not ag.FlycerUI or type(ag.FlycerUI.Notify)~="function"then
 return
 end
 
+local al={
+Title=ah or"Key System",
+Content=tostring(ai or""),
+}
+
+if aj then
+al.Icon=aj
+end
+
+if ak then
+al.Image=ak
+end
+
 pcall(function()
-ag.FlycerUI:Notify(ah)
+ag.FlycerUI:Notify(al)
 end)
 end
 
@@ -3476,7 +3489,8 @@ TextXAlignment="Left",
 
 
 local ay=ac("TextLabel",{
-Text=ai and(tostring(aj or"Identifier")..": "..tostring(ai))
+Text=ai
+and(tostring(aj or"Identifier")..": "..tostring(ai))
 or"Identifier unavailable.",
 
 BackgroundTransparency=1,
@@ -3534,30 +3548,15 @@ end,"Tertiary",az)
 
 local aB=ae("Copy HWID","copy",function()
 if not ai then
-Notify(ah,{
-Title="Flycer",
-Content=an or"Identifier is not available.",
-Duration=3,
-Icon="triangle-alert",
-})
+Notify(ah,"Flycer",an or"Identifier is not available.","triangle-alert")
 
 return
 end
 
 if CopyToClipboard(ai)then
-Notify(ah,{
-Title="Flycer",
-Content=tostring(aj or"Identifier").." copied to clipboard.",
-Duration=3,
-Icon="copy",
-})
+Notify(ah,"Flycer",tostring(aj or"Identifier").." copied to clipboard.",nil,"copy")
 else
-Notify(ah,{
-Title="Flycer",
-Content="Clipboard is not available in this executor.",
-Duration=3,
-Icon="triangle-alert",
-})
+Notify(ah,"Flycer","Clipboard is not available in this executor.","triangle-alert")
 end
 end,"Primary",az)
 
@@ -3572,19 +3571,9 @@ local d
 if b and Trim(b)~=""then
 d=ae("Discord","discord",function()
 if CopyToClipboard(b)then
-Notify(ah,{
-Title="Flycer",
-Content="Discord link copied to clipboard.",
-Duration=3,
-Icon="discord",
-})
+Notify(ah,"Flycer","Discord link copied to clipboard.",nil,"discord")
 else
-Notify(ah,{
-Title="Flycer",
-Content="Clipboard is not available in this executor.",
-Duration=3,
-Icon="triangle-alert",
-})
+Notify(ah,"Flycer","Clipboard is not available in this executor.","triangle-alert")
 end
 end,"Secondary",az)
 end
@@ -3989,19 +3978,9 @@ end
 if ap.URL and not ap.KeyValidator and not ap.Flycer then
 ae("Get key","key",function()
 if CopyToClipboard(ap.URL)then
-Notify(ah,{
-Title="Key System",
-Content="Key link copied to clipboard.",
-Duration=3,
-Icon="key",
-})
+Notify(ah,"Key System","Key link copied to clipboard.",nil,"key")
 else
-Notify(ah,{
-Title="Key System",
-Content="Clipboard is not available.",
-Duration=3,
-Icon="triangle-alert",
-})
+Notify(ah,"Key System","Clipboard is not available.","triangle-alert")
 end
 end,"Secondary",az.Frame)
 end
@@ -4458,19 +4437,9 @@ x.Copy()
 end)
 
 if C then
-Notify(ah,{
-Title="Key System",
-Content="Key link copied to clipboard.",
-Duration=3,
-Icon="key",
-})
+Notify(ah,"Key System","Key link copied to clipboard.",nil,"key")
 else
-Notify(ah,{
-Title="Key System",
-Content="Unable to copy key link.",
-Duration=3,
-Icon="triangle-alert",
-})
+Notify(ah,"Key System","Unable to copy key link.","triangle-alert")
 end
 end)
 end
@@ -4513,12 +4482,7 @@ local function handleSuccess(b)
 b=Trim(b)
 
 if b==""then
-Notify(ah,{
-Title="Key System - Error",
-Content="Key is empty.",
-Duration=3,
-Icon="triangle-alert",
-})
+Notify(ah,"Key System. Error","Key is empty.","triangle-alert")
 
 return false
 end
@@ -4537,12 +4501,7 @@ writefile(f,tostring(b))
 end)
 
 if not g then
-Notify(ah,{
-Title="Key System - Error",
-Content="Failed to save key: "..tostring(h),
-Duration=5,
-Icon="triangle-alert",
-})
+Notify(ah,"Key System. Error","Failed to save key: "..tostring(h),"triangle-alert")
 
 return false
 end
@@ -4579,12 +4538,7 @@ local b=Trim(ao)
 
 
 if b==""then
-Notify(ah,{
-Title="Key System - Error",
-Content="Please enter a license key.",
-Duration=3,
-Icon="triangle-alert",
-})
+Notify(ah,"Key System. Error","Please enter a license key.","triangle-alert")
 
 return
 end
@@ -4603,23 +4557,23 @@ return ag(ah)
 end)
 
 if not d then
-Notify(ah,{
-Title="Key System - Error",
-Content="Flycer service error: "..tostring(f),
-Duration=5,
-Icon="triangle-alert",
-})
+Notify(
+ah,
+"Key System. Error",
+"Flycer service error: "..tostring(f),
+"triangle-alert"
+)
 
 return
 end
 
 if not f then
-Notify(ah,{
-Title="Key System - Error",
-Content=tostring(g or"Unable to create Flycer service."),
-Duration=5,
-Icon="triangle-alert",
-})
+Notify(
+ah,
+"Key System. Error",
+tostring(g or"Unable to create Flycer service."),
+"triangle-alert"
+)
 
 return
 end
@@ -4629,12 +4583,12 @@ end
 
 
 if type(f.Verify)~="function"then
-Notify(ah,{
-Title="Key System - Error",
-Content="Flycer service does not support key verification.",
-Duration=5,
-Icon="triangle-alert",
-})
+Notify(
+ah,
+"Key System. Error",
+"Flycer service does not support key verification.",
+"triangle-alert"
+)
 
 return
 end local
@@ -4644,12 +4598,7 @@ return f.Verify(b)
 end)
 
 if not h then
-Notify(ah,{
-Title="Key System - Error",
-Content="Flycer Verify error: "..tostring(i),
-Duration=5,
-Icon="triangle-alert",
-})
+Notify(ah,"Key System. Error","Flycer Verify error: "..tostring(i),"triangle-alert")
 
 return
 end
@@ -4659,25 +4608,18 @@ end
 
 
 if i==true then
-Notify(ah,{
-Title="Key System",
-Content="License verified successfully!",
-Duration=3,
-Icon="check",
-})
-
 local m=handleSuccess(b)
 
 if not m then
 return
 end
 else
-Notify(ah,{
-Title="Key System - Error",
-Content=tostring(l or"License validation failed."),
-Duration=5,
-Icon="triangle-alert",
-})
+Notify(
+ah,
+"Key System. Error",
+tostring(l or"License validation failed."),
+"triangle-alert"
+)
 end
 
 return
@@ -4693,31 +4635,15 @@ return ap.KeyValidator(b)
 end)
 
 if not d then
-Notify(ah,{
-Title="Key System - Error",
-Content="KeyValidator error: "..tostring(f),
-Duration=5,
-Icon="triangle-alert",
-})
+Notify(ah,"Key System. Error","KeyValidator error: "..tostring(f),"triangle-alert")
 
 return
 end
 
 if f then
-Notify(ah,{
-Title="Key System",
-Content="Key validated successfully!",
-Duration=3,
-Icon="check",
-})
 handleSuccess(b)
 else
-Notify(ah,{
-Title="Key System - Error",
-Content=g or"Invalid key.",
-Duration=3,
-Icon="triangle-alert",
-})
+Notify(ah,"Key System. Error",g or"Invalid key.","triangle-alert")
 end
 
 return
@@ -4737,20 +4663,9 @@ d=ap.Key==b
 end
 
 if d then
-Notify(ah,{
-Title="Key System",
-Content="Key accepted!",
-Duration=3,
-Icon="check",
-})
 handleSuccess(b)
 else
-Notify(ah,{
-Title="Key System - Error",
-Content="Invalid key.",
-Duration=3,
-Icon="triangle-alert",
-})
+Notify(ah,"Key System. Error","Invalid key.","triangle-alert")
 end
 
 return
@@ -4783,20 +4698,9 @@ end
 end
 
 if d then
-Notify(ah,{
-Title="Key System",
-Content=f,
-Duration=3,
-Icon="check",
-})
 handleSuccess(b)
 else
-Notify(ah,{
-Title="Key System - Error",
-Content=f,
-Duration=3,
-Icon="triangle-alert",
-})
+Notify(ah,"Key System. Error",f,"triangle-alert")
 end
 end,"Primary",az.Frame)
 
