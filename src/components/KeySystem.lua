@@ -8,63 +8,6 @@ local CreateButton = require("./ui/Button").New
 local CreateInput = require("./ui/Input").New
 
 -- ============================================================
--- HELPER: Format Countdown
--- ============================================================
-local function FormatCountdown(expireTimestamp)
-	expireTimestamp = tonumber(expireTimestamp)
-
-	if not expireTimestamp or expireTimestamp <= 0 then
-		return "Lifetime"
-	end
-
-	local remaining = math.max(0, expireTimestamp - os.time())
-	local days = math.floor(remaining / 86400)
-	local hours = math.floor((remaining % 86400) / 3600)
-	local minutes = math.floor((remaining % 3600) / 60)
-
-	return string.format("%03dD : %02dH : %02dM", days, hours, minutes)
-end
-
--- ============================================================
--- HELPER: Start Countdown
--- ============================================================
-local function StartCountdown(expireTimestamp, updateCallback)
-	expireTimestamp = tonumber(expireTimestamp)
-
-	if not expireTimestamp or expireTimestamp <= 0 then
-		updateCallback("Lifetime")
-		return function() end
-	end
-
-	local stopped = false
-
-	task.spawn(function()
-		local lastText
-
-		while not stopped do
-			local remaining = expireTimestamp - os.time()
-			if remaining <= 0 then
-				updateCallback("000D : 00H : 00M")
-				break
-			end
-
-			local text = FormatCountdown(expireTimestamp)
-			if text ~= lastText then
-				lastText = text
-				updateCallback(text)
-			end
-
-			local waitTime = 60 - (os.time() % 60)
-			task.wait(math.max(1, waitTime))
-		end
-	end)
-
-	return function()
-		stopped = true
-	end
-end
-
--- ============================================================
 -- HELPER: Copy to Clipboard
 -- ============================================================
 local function CopyToClipboard(value)
@@ -418,8 +361,6 @@ function KeySystem.new(Config, Filename, func, keyValidator)
 	local Services = {}
 
 	local EnteredKey
-	local ExpiryTag
-	local StopCountdown
 
 	local ThumbnailSize = (Config.KeySystem.Thumbnail and Config.KeySystem.Thumbnail.Width) or 200
 
@@ -946,7 +887,6 @@ function KeySystem.new(Config, Filename, func, keyValidator)
 					error("writefile is not available in this executor.")
 				end
 
-				-- [FIX] Pastikan folder ada sebelum writefile
 				if type(makefolder) == "function" and type(isfolder) == "function" then
 					if not isfolder(folder) then
 						makefolder(folder)
@@ -985,7 +925,6 @@ function KeySystem.new(Config, Filename, func, keyValidator)
 			-- ====================================================
 			-- PATH 1: FLYCER SERVICE
 			-- ====================================================
-						
 			if type(Config.KeySystem.Flycer) == "table" then
 				local serviceInstance, serviceError = CreateFlycerService(Config)
 
@@ -1003,59 +942,6 @@ function KeySystem.new(Config, Filename, func, keyValidator)
 
 				if verifyValid then
 					-- Tag Countdown/Lifetime dihandle oleh script user (bukan KeySystem).
-					handleSuccess(key)
-				else
-					Notify(Config, "Key System", verifyMessage or "Invalid key.", "triangle-alert")
-				end
-
-				return
-			end
-
-					-- ====================================================
-					-- [FIX RUNTIME ERROR] Safe Check untuk Config.Window
-					-- ====================================================
-					local windowExists = Config.Window and type(Config.Window.Tag) == "function"
-
-					-- DURATION KEY
-					if expireTimestamp and expireTimestamp > 0 then
-						if windowExists then
-							local tagOk, tagResult = pcall(function()
-								return Config.Window:Tag({
-									Title = FormatCountdown(expireTimestamp),
-									Icon = "clock-3",
-									Color = Color3.fromHex("#315dff"),
-								})
-							end)
-
-							if tagOk then
-								ExpiryTag = tagResult
-								StopCountdown = StartCountdown(expireTimestamp, function(text)
-									if ExpiryTag and type(ExpiryTag.SetTitle) == "function" then
-										pcall(function()
-											ExpiryTag:SetTitle(text)
-										end)
-									end
-								end)
-							end
-						else
-							warn("[FlycerUI KeySystem] Config.Window is not initialized yet. Skipping Expiry Tag creation.")
-						end
-
-					-- LIFETIME KEY
-					elseif keyType == "lifetime" then
-						if windowExists then
-							pcall(function()
-								ExpiryTag = Config.Window:Tag({
-									Title = "Lifetime",
-									Icon = "infinity",
-									Color = Color3.fromHex("#315dff"),
-								})
-							end)
-						else
-							warn("[FlycerUI KeySystem] Config.Window is not initialized yet. Skipping Lifetime Tag creation.")
-						end
-					end
-
 					handleSuccess(key)
 				else
 					Notify(Config, "Key System", verifyMessage or "Invalid key.", "triangle-alert")
