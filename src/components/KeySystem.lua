@@ -39,9 +39,22 @@ end
 -- HELPERS
 ----------------------------------------------------------------
 
-local function Notify(Config, data)
+local function Notify(Config, title, content, icon, image)
 	if not Config or not Config.FlycerUI or type(Config.FlycerUI.Notify) ~= "function" then
 		return
+	end
+
+	local data = {
+		Title = title or "Key System",
+		Content = tostring(content or ""),
+	}
+
+	if icon then
+		data.Icon = icon
+	end
+
+	if image then
+		data.Image = image
 	end
 
 	pcall(function()
@@ -334,7 +347,8 @@ local function OpenFlycerServiceDialog(
 	----------------------------------------------------------------
 
 	local IdentifierLabel = New("TextLabel", {
-		Text = Identifier and (tostring(IdentifierType or "Identifier") .. ": " .. tostring(Identifier))
+		Text = Identifier
+				and (tostring(IdentifierType or "Identifier") .. ": " .. tostring(Identifier))
 			or "Identifier unavailable.",
 
 		BackgroundTransparency = 1,
@@ -392,30 +406,15 @@ local function OpenFlycerServiceDialog(
 
 	local CopyButton = CreateButton("Copy HWID", "copy", function()
 		if not Identifier then
-			Notify(Config, {
-				Title = "Flycer",
-				Content = IdentifierError or "Identifier is not available.",
-				Duration = 3,
-				Icon = "triangle-alert",
-			})
+			Notify(Config, "Flycer", IdentifierError or "Identifier is not available.", "triangle-alert")
 
 			return
 		end
 
 		if CopyToClipboard(Identifier) then
-			Notify(Config, {
-				Title = "Flycer",
-				Content = tostring(IdentifierType or "Identifier") .. " copied to clipboard.",
-				Duration = 3,
-				Icon = "copy",
-			})
+			Notify(Config, "Flycer", tostring(IdentifierType or "Identifier") .. " copied to clipboard.", nil, "copy")
 		else
-			Notify(Config, {
-				Title = "Flycer",
-				Content = "Clipboard is not available in this executor.",
-				Duration = 3,
-				Icon = "triangle-alert",
-			})
+			Notify(Config, "Flycer", "Clipboard is not available in this executor.", "triangle-alert")
 		end
 	end, "Primary", Buttons)
 
@@ -430,19 +429,9 @@ local function OpenFlycerServiceDialog(
 	if Discord and Trim(Discord) ~= "" then
 		DiscordButton = CreateButton("Discord", "discord", function()
 			if CopyToClipboard(Discord) then
-				Notify(Config, {
-					Title = "Flycer",
-					Content = "Discord link copied to clipboard.",
-					Duration = 3,
-					Icon = "discord",
-				})
+				Notify(Config, "Flycer", "Discord link copied to clipboard.", nil, "discord")
 			else
-				Notify(Config, {
-					Title = "Flycer",
-					Content = "Clipboard is not available in this executor.",
-					Duration = 3,
-					Icon = "triangle-alert",
-				})
+				Notify(Config, "Flycer", "Clipboard is not available in this executor.", "triangle-alert")
 			end
 		end, "Secondary", Buttons)
 	end
@@ -847,19 +836,9 @@ function KeySystem.new(Config, Filename, func, keyValidator)
 	if KeyConfig.URL and not KeyConfig.KeyValidator and not KeyConfig.Flycer then
 		CreateButton("Get key", "key", function()
 			if CopyToClipboard(KeyConfig.URL) then
-				Notify(Config, {
-					Title = "Key System",
-					Content = "Key link copied to clipboard.",
-					Duration = 3,
-					Icon = "key",
-				})
+				Notify(Config, "Key System", "Key link copied to clipboard.", nil, "key")
 			else
-				Notify(Config, {
-					Title = "Key System",
-					Content = "Clipboard is not available.",
-					Duration = 3,
-					Icon = "triangle-alert",
-				})
+				Notify(Config, "Key System", "Clipboard is not available.", "triangle-alert")
 			end
 		end, "Secondary", ButtonsContainer.Frame)
 	end
@@ -1316,19 +1295,9 @@ function KeySystem.new(Config, Filename, func, keyValidator)
 							end)
 
 							if copyOk then
-								Notify(Config, {
-									Title = "Key System",
-									Content = "Key link copied to clipboard.",
-									Duration = 3,
-									Icon = "key",
-								})
+								Notify(Config, "Key System", "Key link copied to clipboard.", nil, "key")
 							else
-								Notify(Config, {
-									Title = "Key System",
-									Content = "Unable to copy key link.",
-									Duration = 3,
-									Icon = "triangle-alert",
-								})
+								Notify(Config, "Key System", "Unable to copy key link.", "triangle-alert")
 							end
 						end)
 					end
@@ -1371,12 +1340,7 @@ function KeySystem.new(Config, Filename, func, keyValidator)
 		key = Trim(key)
 
 		if key == "" then
-			Notify(Config, {
-				Title = "Key System - Error",
-				Content = "Key is empty.",
-				Duration = 3,
-				Icon = "triangle-alert",
-			})
+			Notify(Config, "Key System. Error", "Key is empty.", "triangle-alert")
 
 			return false
 		end
@@ -1395,12 +1359,7 @@ function KeySystem.new(Config, Filename, func, keyValidator)
 			end)
 
 			if not writeOk then
-				Notify(Config, {
-					Title = "Key System - Error",
-					Content = "Failed to save key: " .. tostring(writeError),
-					Duration = 5,
-					Icon = "triangle-alert",
-				})
+				Notify(Config, "Key System. Error", "Failed to save key: " .. tostring(writeError), "triangle-alert")
 
 				return false
 			end
@@ -1437,12 +1396,7 @@ function KeySystem.new(Config, Filename, func, keyValidator)
 		----------------------------------------------------------------
 
 		if key == "" then
-			Notify(Config, {
-				Title = "Key System - Error",
-				Content = "Please enter a license key.",
-				Duration = 3,
-				Icon = "triangle-alert",
-			})
+			Notify(Config, "Key System. Error", "Please enter a license key.", "triangle-alert")
 
 			return
 		end
@@ -1461,23 +1415,23 @@ function KeySystem.new(Config, Filename, func, keyValidator)
 			end)
 
 			if not createOk then
-				Notify(Config, {
-					Title = "Key System - Error",
-					Content = "Flycer service error: " .. tostring(serviceInstance),
-					Duration = 5,
-					Icon = "triangle-alert",
-				})
+				Notify(
+					Config,
+					"Key System. Error",
+					"Flycer service error: " .. tostring(serviceInstance),
+					"triangle-alert"
+				)
 
 				return
 			end
 
 			if not serviceInstance then
-				Notify(Config, {
-					Title = "Key System - Error",
-					Content = tostring(serviceError or "Unable to create Flycer service."),
-					Duration = 5,
-					Icon = "triangle-alert",
-				})
+				Notify(
+					Config,
+					"Key System. Error",
+					tostring(serviceError or "Unable to create Flycer service."),
+					"triangle-alert"
+				)
 
 				return
 			end
@@ -1487,12 +1441,12 @@ function KeySystem.new(Config, Filename, func, keyValidator)
 			--------------------------------------------------------
 
 			if type(serviceInstance.Verify) ~= "function" then
-				Notify(Config, {
-					Title = "Key System - Error",
-					Content = "Flycer service does not support key verification.",
-					Duration = 5,
-					Icon = "triangle-alert",
-				})
+				Notify(
+					Config,
+					"Key System. Error",
+					"Flycer service does not support key verification.",
+					"triangle-alert"
+				)
 
 				return
 			end
@@ -1502,12 +1456,7 @@ function KeySystem.new(Config, Filename, func, keyValidator)
 			end)
 
 			if not verifyOk then
-				Notify(Config, {
-					Title = "Key System - Error",
-					Content = "Flycer Verify error: " .. tostring(verifyResult),
-					Duration = 5,
-					Icon = "triangle-alert",
-				})
+				Notify(Config, "Key System. Error", "Flycer Verify error: " .. tostring(verifyResult), "triangle-alert")
 
 				return
 			end
@@ -1517,25 +1466,18 @@ function KeySystem.new(Config, Filename, func, keyValidator)
 			--------------------------------------------------------
 
 			if verifyResult == true then
-				Notify(Config, {
-					Title = "Key System",
-					Content = "License verified successfully!",
-					Duration = 3,
-					Icon = "check",
-				})
-
 				local success = handleSuccess(key)
 
 				if not success then
 					return
 				end
 			else
-				Notify(Config, {
-					Title = "Key System - Error",
-					Content = tostring(verifyMessage or "License validation failed."),
-					Duration = 5,
-					Icon = "triangle-alert",
-				})
+				Notify(
+					Config,
+					"Key System. Error",
+					tostring(verifyMessage or "License validation failed."),
+					"triangle-alert"
+				)
 			end
 
 			return
@@ -1551,31 +1493,15 @@ function KeySystem.new(Config, Filename, func, keyValidator)
 			end)
 
 			if not validatorOk then
-				Notify(Config, {
-					Title = "Key System - Error",
-					Content = "KeyValidator error: " .. tostring(isValid),
-					Duration = 5,
-					Icon = "triangle-alert",
-				})
+				Notify(Config, "Key System. Error", "KeyValidator error: " .. tostring(isValid), "triangle-alert")
 
 				return
 			end
 
 			if isValid then
-				Notify(Config, {
-					Title = "Key System",
-					Content = "Key validated successfully!",
-					Duration = 3,
-					Icon = "check",
-				})
 				handleSuccess(key)
 			else
-				Notify(Config, {
-					Title = "Key System - Error",
-					Content = validationMessage or "Invalid key.",
-					Duration = 3,
-					Icon = "triangle-alert",
-				})
+				Notify(Config, "Key System. Error", validationMessage or "Invalid key.", "triangle-alert")
 			end
 
 			return
@@ -1595,20 +1521,9 @@ function KeySystem.new(Config, Filename, func, keyValidator)
 			end
 
 			if isKey then
-				Notify(Config, {
-					Title = "Key System",
-					Content = "Key accepted!",
-					Duration = 3,
-					Icon = "check",
-				})
 				handleSuccess(key)
 			else
-				Notify(Config, {
-					Title = "Key System - Error",
-					Content = "Invalid key.",
-					Duration = 3,
-					Icon = "triangle-alert",
-				})
+				Notify(Config, "Key System. Error", "Invalid key.", "triangle-alert")
 			end
 
 			return
@@ -1641,20 +1556,9 @@ function KeySystem.new(Config, Filename, func, keyValidator)
 		end
 
 		if isSuccess then
-			Notify(Config, {
-				Title = "Key System",
-				Content = result,
-				Duration = 3,
-				Icon = "check",
-			})
 			handleSuccess(key)
 		else
-			Notify(Config, {
-				Title = "Key System - Error",
-				Content = result,
-				Duration = 3,
-				Icon = "triangle-alert",
-			})
+			Notify(Config, "Key System. Error", result, "triangle-alert")
 		end
 	end, "Primary", ButtonsContainer.Frame)
 
