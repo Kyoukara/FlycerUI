@@ -985,6 +985,9 @@ function KeySystem.new(Config, Filename, func, keyValidator)
 			-- ====================================================
 			-- PATH 1: FLYCER SERVICE
 			-- ====================================================
+						-- ====================================================
+			-- PATH 1: FLYCER SERVICE
+			-- ====================================================
 			if type(Config.KeySystem.Flycer) == "table" then
 				local serviceInstance, serviceError = CreateFlycerService(Config)
 
@@ -998,9 +1001,11 @@ function KeySystem.new(Config, Filename, func, keyValidator)
 					return
 				end
 
+				-- Validasi key langsung (aman di dalam task.spawn)
 				local verifyValid, verifyMessage, verifyData = serviceInstance.Verify(key)
 
 				if verifyValid then
+					-- Ambil informasi license dari response API
 					local licenseInfo
 					if type(verifyData) == "table" then
 						licenseInfo = verifyData.license
@@ -1014,15 +1019,80 @@ function KeySystem.new(Config, Filename, func, keyValidator)
 						keyType = tostring(licenseInfo.key_type or ""):lower()
 					end
 
+					-- Hentikan countdown sebelumnya
 					if StopCountdown then
 						StopCountdown()
 						StopCountdown = nil
 					end
 
+					-- Hapus Tag expiry sebelumnya
 					if ExpiryTag then
 						pcall(function() ExpiryTag:Destroy() end)
 						ExpiryTag = nil
 					end
+
+					-- ====================================================
+					-- [FIX RACE CONDITION] Smart Deferred Tag Creation
+					-- Menunggu Config.Window terinisialisasi secara asinkronus
+					-- ====================================================
+					task.spawn(function()
+						local timeout = 5 -- Maksimal menunggu 5 detik
+						local elapsed = 0
+
+						-- Lakukan polling non-blocking setiap 0.1 detik
+						while not (Config.Window and type(Config.Window.Tag) == "function") and elapsed < timeout do
+							task.wait(0.1)
+							elapsed = elapsed + 0.1
+						end
+
+						local windowExists = Config.Window and type(Config.Window.Tag) == "function"
+
+						if windowExists then
+							-- DURATION KEY
+							if expireTimestamp and expireTimestamp > 0 then
+								local tagOk, tagResult = pcall(function()
+									return Config.Window:Tag({
+										Title = FormatCountdown(expireTimestamp),
+										Icon = "clock-3",
+										Color = Color3.fromHex("#315dff"),
+									})
+								end)
+
+								if tagOk then
+									ExpiryTag = tagResult
+									StopCountdown = StartCountdown(expireTimestamp, function(text)
+										if ExpiryTag and type(ExpiryTag.SetTitle) == "function" then
+											pcall(function()
+												ExpiryTag:SetTitle(text)
+											end)
+										end
+									end)
+								end
+
+							-- LIFETIME KEY
+							elseif keyType == "lifetime" then
+								pcall(function()
+									ExpiryTag = Config.Window:Tag({
+										Title = "Lifetime",
+										Icon = "infinity",
+										Color = Color3.fromHex("#315dff"),
+									})
+								end)
+							end
+						else
+							-- Muncul hanya jika inisialisasi Window gagal total melewati batas 5 detik
+							warn("[FlycerUI KeySystem] Timeout reached. Config.Window was not initialized within " .. tostring(timeout) .. "s.")
+						end
+					end)
+
+					-- Alur penutupan dialog & pemuatan script cheat berjalan seketika (Instant UX)
+					handleSuccess(key)
+				else
+					Notify(Config, "Key System", verifyMessage or "Invalid key.", "triangle-alert")
+				end
+
+				return
+			end
 
 					-- ====================================================
 					-- [FIX RUNTIME ERROR] Safe Check untuk Config.Window
