@@ -1956,61 +1956,101 @@ end
 
 return f end function a.g()
 
-local b=(cloneref or clonereference or function(b)
+local b=cloneref or clonereference or function(b)
 return b
-end)
+end
 
 local d=b(game:GetService"HttpService")
 local e=b(game:GetService"Players")
 
 local f={}
 
-local function NormalizeLockType(g)
-g=string.lower(tostring(g or"Device"))
-if g=="username"or g=="device"then
-return g
+
+
+
+
+
+
+local g=15
+
+local function RequestWithTimeout(h,i)
+i=i or g
+
+local l=false
+local m,p=false,"Request timed out."
+
+task.spawn(function()
+local r,u=pcall(h)
+if not l then
+l=true
+m=r
+p=u
+end
+end)
+
+local r=0
+while not l and r<i do
+task.wait(0.25)
+r=r+0.25
+end
+
+if not l then
+
+l=true
+return false,"Flycer API request timed out after "..tostring(i).."s."
+end
+
+return m,p
+end
+
+local function NormalizeLockType(h)
+h=string.lower(tostring(h or"Device"))
+if h=="username"or h=="device"then
+return h
 end
 return nil
 end
 
-local function GetIdentifier(g)
-local h=e.LocalPlayer
-g=NormalizeLockType(g)
+local function GetIdentifier(h)
+local i=e.LocalPlayer
+h=NormalizeLockType(h)
 
-if g=="username"then
-return tostring(h.UserId),"Username"
+if h=="username"then
+return tostring(i.UserId),"Username"
 end
 
-if g~="device"then
+if h~="device"then
 return nil,"Invalid","LockType must be 'Device' or 'Username'."
 end
 
-local i=gethwid
-if type(i)=="function"then
-local l,m=pcall(i)
-if l and m~=nil and tostring(m)~=""then
-return tostring(m),"Device"
+
+local l=gethwid
+if type(l)=="function"then
+local m,p=pcall(l)
+if m and p~=nil and tostring(p)~=""then
+return tostring(p),"Device"
 end
 end
 
-local l,m=pcall(function()
+
+local m,p=pcall(function()
 return b(game:GetService"RbxAnalyticsService"):GetClientId()
 end)
-if l and m~=nil and tostring(m)~=""then
-return tostring(m),"Device"
+if m and p~=nil and tostring(p)~=""then
+return tostring(p),"Device"
 end
 
 return nil,"Device","No device identifier is available in this executor."
 end
 
-function f.New(g,h,i,l,m)
-g=tostring(g or""):gsub("/$","")
-h=tostring(h or"default"):gsub("^%s+",""):gsub("%s+$","")
-i=NormalizeLockType(i)
-l=tostring(l or"FlycerUI")
-m=tostring(m or"1.0.0")
+function f.New(h,i,l,m,p)
+h=tostring(h or""):gsub("/$","")
+i=tostring(i or"default"):gsub("^%s+",""):gsub("%s+$","")
+l=NormalizeLockType(l)
+m=tostring(m or"FlycerUI")
+p=tostring(p or"1.0.0")
 
-if not i then
+if not l then
 return{
 Type="flycer",
 Verify=function()
@@ -2025,101 +2065,109 @@ end,
 }
 end
 
-local function ValidateKey(p)
-if g==""then
+local function ValidateKey(r)
+if h==""then
 return false,"Flycer API endpoint is not configured."
 end
 
-local r,u,v=GetIdentifier(i)
-if not r then
-return false,v or"Unable to determine identifier."
+local u,v,x=GetIdentifier(l)
+if not u then
+return false,x or"Unable to determine identifier."
 end
 
-local x=request or http_request or(syn and syn.request)
-if type(x)~="function"then
+local z=request or http_request or(syn and syn.request)
+if type(z)~="function"then
 return false,"HTTP request is not available in this executor."
 end
 
-p=tostring(p or""):gsub("^%s+",""):gsub("%s+$","")
-if p==""then
+r=tostring(r or""):gsub("^%s+",""):gsub("%s+$","")
+if r==""then
 return false,"Please enter a license key."
 end
 
-local z=d:JSONEncode{
-product=h,
-key=tostring(p),
-lock_type=string.lower(tostring(u or i)),
-identifier=tostring(r),
-client=l,
-client_version=m,
+local A=d:JSONEncode{
+product=i,
+key=r,
+lock_type=string.lower(tostring(v or l)),
+identifier=tostring(u),
+client=m,
+client_version=p,
 }
 
-local A=g.."/api/license/validate"
+local B=h.."/api/license/validate"
 
-local B,C=pcall(function()
-return x{
-Url=A,
+
+
+
+
+local C,F=RequestWithTimeout(function()
+return z{
+Url=B,
 Method="POST",
 Headers={
 ["Content-Type"]="application/json",
-["User-Agent"]="FlycerUI/"..m,
+["User-Agent"]="FlycerUI/"..p,
 },
-Body=z,
+Body=A,
 }
 end)
 
-if not B or not C then
-return false,"Unable to contact Flycer API."
+if not C then
+return false,tostring(F or"Unable to contact Flycer API.")
 end
 
-if not C.Success then
-local F=tonumber(C.StatusCode)
-local G=tostring(C.Body or"")
-local H="Flycer API request failed"
-if F then
-H=H.." ("..tostring(F)..")"
+if not F then
+return false,"Flycer API returned no response."
 end
-if G~=""then
-local J,L=pcall(function()
-return d:JSONDecode(G)
+
+if not F.Success then
+local G=tonumber(F.StatusCode)
+local H=tostring(F.Body or"")
+local J="Flycer API request failed"
+if G then
+J=J.." ("..tostring(G)..")"
+end
+if H~=""then
+local L,M=pcall(function()
+return d:JSONDecode(H)
 end)
-if J and type(L)=="table"and L.message then
-H=tostring(L.message)
+if L and type(M)=="table"and M.message then
+J=tostring(M.message)
 end
 end
-return false,H
+return false,J
 end
 
-local F,G=pcall(function()
-return d:JSONDecode(C.Body or"")
+local G,H=pcall(function()
+return d:JSONDecode(F.Body or"")
 end)
 
-if not F or type(G)~="table"then
+if not G or type(H)~="table"then
 return false,"Flycer API returned an invalid response."
 end
 
-if G.success==true then
-return true,G.message or G.code or"Authenticated",G
+if H.success==true then
+return true,H.message or H.code or"Authenticated",H
 end
 
-return false,G.message or G.code or"License validation failed.",G
+return false,H.message or H.code or"License validation failed.",H
 end
 
 local function Copy()local
-p, r, u=GetIdentifier(i)
-if not p then
-return false,u or"Identifier unavailable."
+r, u, v=GetIdentifier(l)
+if not r then
+return false,v or"Identifier unavailable."
 end
 
-local v=setclipboard or toclipboard
-if type(v)~="function"then
+local x=setclipboard or toclipboard
+if type(x)~="function"then
 return false,"Clipboard is not available in this executor."
 end
 
-local x=pcall(function()
-v(p)
+local z=pcall(function()
+x(r)
 end)
-return x,x and p or"Unable to copy identifier."
+return z,z and r or"Unable to copy identifier."
 end
 
 return{
@@ -2127,7 +2175,7 @@ Type="flycer",
 Verify=ValidateKey,
 Copy=Copy,
 GetIdentifier=function()
-return GetIdentifier(i)
+return GetIdentifier(l)
 end,
 }
 end
