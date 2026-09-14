@@ -8,8 +8,10 @@ local Players = cloneref(game:GetService("Players"))
 local Flycer = {}
 
 -- ============================================================
--- [ADVANCED] Timeout wrapper dengan support kompatibilitas
--- semua executor (task.spawn + polling).
+-- [FIX C3] Timeout wrapper untuk HTTP request.
+-- Mencegah hang selamanya jika server tidak merespons.
+-- Menggunakan task.spawn + polling agar kompatibel dengan
+-- semua executor (termasuk yang tidak support task.cancel).
 -- ============================================================
 local DEFAULT_TIMEOUT = 15 -- detik
 
@@ -35,36 +37,12 @@ local function RequestWithTimeout(requestFn, timeout)
 	end
 
 	if not completed then
+		-- [FIX C3] Request hang — return error alih-alih block selamanya.
 		completed = true
 		return false, "Flycer API request timed out after " .. tostring(timeout) .. "s."
 	end
 
 	return resultOk, resultData
-end
-
--- ============================================================
--- [NEW] Universal HTTP Request Handler Detection
--- Support: Synapse X, Fluxus, KRNL, Delta, Wave, Solara,
--- Codex, Hydrogen, Xeno, PC/Mobile executors.
--- ============================================================
-local function GetHttpRequestHandler()
-	local handlers = {
-		function() return syn and syn.request end,
-		function() return http and http.request end,
-		function() return http_request end,
-		function() return fluxus and fluxus.request end,
-		function() return request end,
-		function() return httprequest end,
-		function() return krnl_request end,
-	}
-
-	for _, getHandler in ipairs(handlers) do
-		local ok, handler = pcall(getHandler)
-		if ok and type(handler) == "function" then
-			return handler
-		end
-	end
-	return nil
 end
 
 local function NormalizeLockType(lockType)
@@ -87,6 +65,7 @@ local function GetIdentifier(lockType)
 		return nil, "Invalid", "LockType must be 'Device' or 'Username'."
 	end
 
+	-- Priority 1: gethwid (executor-specific, paling reliable)
 	local gethwidFn = gethwid
 	if type(gethwidFn) == "function" then
 		local ok, hwid = pcall(gethwidFn)
@@ -95,6 +74,7 @@ local function GetIdentifier(lockType)
 		end
 	end
 
+	-- Priority 2: RbxAnalyticsService fallback
 	local ok, clientId = pcall(function()
 		return cloneref(game:GetService("RbxAnalyticsService")):GetClientId()
 	end)
@@ -127,63 +107,6 @@ function Flycer.New(endpoint, productId, lockType, clientName, clientVersion)
 		}
 	end
 
-	-- ============================================================
-	-- [NEW] Attempt Single HTTP Request (helper)
-	-- ============================================================
-	local function AttemptSingleRequest(Request, url, body, userAgent)
-		local reqOk, response = RequestWithTimeout(function()
-			return Request({
-				Url = url,
-				Method = "POST",
-				Headers = {
-					["Content-Type"] = "application/json",
-					["Accept"] = "application/json",
-					["User-Agent"] = userAgent or ("FlycerUI/" .. clientVersion),
-				},
-				Body = body,
-			})
-		end, DEFAULT_TIMEOUT)
-
-		if not reqOk or not response then
-			return nil, tostring(response or "No response from server.")
-		end
-
-		if not response.Success then
-			local status = tonumber(response.StatusCode)
-			local responseBody = tostring(response.Body or "")
-			if status and status == 200 then
-				-- Beberapa executor tidak set Success=true untuk 200 OK
-				response.Success = true
-			else
-				local message = "Server returned HTTP " .. tostring(status or "?")
-				if responseBody ~= "" then
-					local decodeOk, errorData = pcall(function()
-						return HttpService:JSONDecode(responseBody)
-					end)
-					if decodeOk and type(errorData) == "table" and errorData.message then
-						message = tostring(errorData.message)
-					end
-				end
-				return nil, message
-			end
-		end
-
-		local decodeOk, data = pcall(function()
-			return HttpService:JSONDecode(response.Body or "")
-		end)
-
-		if not decodeOk or type(data) ~= "table" then
-			return nil, "Server returned invalid JSON response."
-		end
-
-		return data, nil
-	end
-
-	-- ============================================================
-	-- [NEW] Multi-Retry Validate dengan Adaptive Backoff
-	-- Strategi: 3x retry dengan delay 0s → 0.5s → 1.5s
-	-- 2 endpoint variant × 3 UserAgent
-	-- ============================================================
 	local function ValidateKey(key)
 		if endpoint == "" then
 			return false, "Flycer API endpoint is not configured."
@@ -194,7 +117,7 @@ function Flycer.New(endpoint, productId, lockType, clientName, clientVersion)
 			return false, identifierError or "Unable to determine identifier."
 		end
 
-		local Request = GetHttpRequestHandler()
+		local Request = request or http_request or (syn and syn.request)
 		if type(Request) ~= "function" then
 			return false, "HTTP request is not available in this executor."
 		end
@@ -213,50 +136,63 @@ function Flycer.New(endpoint, productId, lockType, clientName, clientVersion)
 			client_version = clientVersion,
 		})
 
-		local endpoints = {
-			endpoint .. "/api/license/validate",
-			endpoint .. "/api/license/validate/",
-		}
+		local url = endpoint .. "/api/license/validate"
 
-		local userAgents = {
-			"FlycerUI/" .. clientVersion,
-			"Roblox/Linux",
-			"Roblox/WinInet",
-		}
+		-- ============================================================
+		-- [FIX C3] Gunakan RequestWithTimeout alih-alih pcall langsung.
+		-- Ini mencegah hang selamanya jika server tidak merespons.
+		-- ============================================================
+		local reqOk, response = RequestWithTimeout(function()
+			return Request({
+				Url = url,
+				Method = "POST",
+				Headers = {
+					["Content-Type"] = "application/json",
+					["User-Agent"] = "FlycerUI/" .. clientVersion,
+				},
+				Body = body,
+			})
+		end)
 
-		-- Adaptive Backoff: retry ke-1 langsung, retry ke-2 delay 500ms, retry ke-3 delay 1500ms
-		local backoffDelays = { 0, 0.5, 1.5 }
-
-		local lastError = "Unable to reach Flycer API after multiple retries."
-		local businessLogicError = nil -- Untuk error non-network (key invalid, expired, dll)
-
-		for attempt = 1, #backoffDelays do
-			if attempt > 1 then
-				task.wait(backoffDelays[attempt])
-			end
-
-			for _, url in ipairs(endpoints) do
-				for _, ua in ipairs(userAgents) do
-					local data, err = AttemptSingleRequest(Request, url, body, ua)
-
-					if data then
-						-- Cek business logic response
-						if data.success == true then
-							return true, data.message or data.code or "Authenticated", data
-						else
-							-- Response valid tapi key ditolak (INVALID/EXPIRED/BANNED)
-							-- Ini bukan network error, langsung return
-							businessLogicError = data.message or data.code or "License validation failed."
-							return false, businessLogicError, data
-						end
-					else
-						lastError = err or lastError
-					end
-				end
-			end
+		if not reqOk then
+			return false, tostring(response or "Unable to contact Flycer API.")
 		end
 
-		return false, lastError
+		if not response then
+			return false, "Flycer API returned no response."
+		end
+
+		if not response.Success then
+			local status = tonumber(response.StatusCode)
+			local responseBody = tostring(response.Body or "")
+			local message = "Flycer API request failed"
+			if status then
+				message = message .. " (" .. tostring(status) .. ")"
+			end
+			if responseBody ~= "" then
+				local decodeOk, errorData = pcall(function()
+					return HttpService:JSONDecode(responseBody)
+				end)
+				if decodeOk and type(errorData) == "table" and errorData.message then
+					message = tostring(errorData.message)
+				end
+			end
+			return false, message
+		end
+
+		local decodeOk, data = pcall(function()
+			return HttpService:JSONDecode(response.Body or "")
+		end)
+
+		if not decodeOk or type(data) ~= "table" then
+			return false, "Flycer API returned an invalid response."
+		end
+
+		if data.success == true then
+			return true, data.message or data.code or "Authenticated", data
+		end
+
+		return false, data.message or data.code or "License validation failed.", data
 	end
 
 	local function Copy()
