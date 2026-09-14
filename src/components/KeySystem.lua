@@ -260,7 +260,6 @@ local function OpenFlycerServiceDialog(
 	Dialog.UIElements.Main.AutomaticSize = "Y"
 	Dialog.UIElements.Main.Size = UDim2.new(0, 470, 0, 0)
 
-	-- DIALOUGE ICON (Menyelaraskan dengan icon utama KeySystem)
 	local DialogIconFrame
 	if Config.Icon then
 		DialogIconFrame = CreateServiceIcon(Config.Icon, UDim2.fromOffset(24, 24), Config.IconThemed)
@@ -276,7 +275,6 @@ local function OpenFlycerServiceDialog(
 		TextSize = 20,
 	})
 
-	-- Container Icon dan Judul untuk Dialog Pop-up
 	local DialogTitleContainer = New("Frame", {
 		BackgroundTransparency = 1,
 		AutomaticSize = "XY",
@@ -357,7 +355,7 @@ local function OpenFlycerServiceDialog(
 			FillDirection = "Vertical",
 			Padding = UDim.new(0, 14),
 		}),
-		DialogTitleContainer, -- Menerapkan Container Ikon dan Judul baru
+		DialogTitleContainer,
 		Description,
 		Buttons,
 		New("UIPadding", {
@@ -380,8 +378,8 @@ function KeySystem.new(Config, Filename, func, keyValidator)
 		KeyDialogInit.Create(true, "Popup", Config.Window, Config.FlycerUI, Config.FlycerUI.ScreenGui.KeySystem)
 
 	local Services = {}
-
 	local EnteredKey
+	local IsSubmitting = false -- [NEW] Debounce state
 
 	local ThumbnailSize = (Config.KeySystem.Thumbnail and Config.KeySystem.Thumbnail.Width) or 200
 
@@ -393,9 +391,6 @@ function KeySystem.new(Config, Filename, func, keyValidator)
 	KeyDialog.UIElements.Main.AutomaticSize = "Y"
 	KeyDialog.UIElements.Main.Size = UDim2.new(0, UISize, 0, 0)
 
-	-- ========================================================
-	-- UI: Icon
-	-- ========================================================
 	local IconFrame
 
 	if Config.Icon then
@@ -403,9 +398,6 @@ function KeySystem.new(Config, Filename, func, keyValidator)
 		IconFrame.LayoutOrder = -1
 	end
 
-	-- ========================================================
-	-- UI: Title
-	-- ========================================================
 	local Title = New("TextLabel", {
 		AutomaticSize = "XY",
 		BackgroundTransparency = 1,
@@ -453,16 +445,10 @@ function KeySystem.new(Config, Filename, func, keyValidator)
 		KeySystemTitle,
 	})
 
-	-- ========================================================
-	-- UI: Input
-	-- ========================================================
 	local InputFrame = CreateInput("Enter Key", "key", nil, "Input", function(k)
 		EnteredKey = k
 	end)
 
-	-- ========================================================
-	-- UI: Note
-	-- ========================================================
 	local NoteText
 	if Config.KeySystem.Note and Config.KeySystem.Note ~= "" then
 		NoteText = New("TextLabel", {
@@ -482,9 +468,6 @@ function KeySystem.new(Config, Filename, func, keyValidator)
 		})
 	end
 
-	-- ========================================================
-	-- UI: Buttons Container
-	-- ========================================================
 	local ButtonsContainer = New("Frame", {
 		Size = UDim2.new(1, 0, 0, 42),
 		BackgroundTransparency = 1,
@@ -501,9 +484,6 @@ function KeySystem.new(Config, Filename, func, keyValidator)
 		}),
 	})
 
-	-- ========================================================
-	-- UI: Thumbnail
-	-- ========================================================
 	local ThumbnailFrame
 	if Config.KeySystem.Thumbnail and Config.KeySystem.Thumbnail.Image then
 		local ThumbnailTitle
@@ -536,9 +516,6 @@ function KeySystem.new(Config, Filename, func, keyValidator)
 		})
 	end
 
-	-- ========================================================
-	-- UI: Main Frame
-	-- ========================================================
 	local MainFrame = New("Frame", {
 		Size = UDim2.new(1, ThumbnailFrame and -ThumbnailSize or 0, 1, 0),
 		Position = UDim2.new(0, ThumbnailFrame and ThumbnailSize or 0, 0, 0),
@@ -566,9 +543,6 @@ function KeySystem.new(Config, Filename, func, keyValidator)
 		}),
 	})
 
-	-- ========================================================
-	-- UI: Exit Button
-	-- ========================================================
 	local ExitButton = CreateButton("Exit", "log-out", function()
 		SafeCloseDialog(KeyDialog)
 	end, "Tertiary", ButtonsContainer.Frame)
@@ -580,9 +554,6 @@ function KeySystem.new(Config, Filename, func, keyValidator)
 		ExitButton.AnchorPoint = Vector2.new(0, 1)
 	end
 
-	-- ========================================================
-	-- UI: Get Key Button (URL only, no validator)
-	-- ========================================================
 	if Config.KeySystem.URL and not Config.KeySystem.KeyValidator then
 		CreateButton("Get key", "key", function()
 			local copied, copyError = CopyToClipboard(Config.KeySystem.URL)
@@ -594,9 +565,6 @@ function KeySystem.new(Config, Filename, func, keyValidator)
 		end, "Secondary", ButtonsContainer.Frame)
 	end
 
-	-- ========================================================
-	-- UI: Get Key Dropdown (API / KeyValidator / Flycer)
-	-- ========================================================
 	if Config.KeySystem.API or Config.KeySystem.KeyValidator or type(Config.KeySystem.Flycer) == "table" then
 		local Width = 240
 		local Opened = false
@@ -685,9 +653,6 @@ function KeySystem.new(Config, Filename, func, keyValidator)
 			}),
 		})
 
-		-- ====================================================
-		-- Dropdown: Add Flycer Service
-		-- ====================================================
 		local function AddFlycerService()
 			local services = Config.FlycerUI and Config.FlycerUI.Services
 			local serviceDef = services and services.flycer
@@ -758,9 +723,6 @@ function KeySystem.new(Config, Filename, func, keyValidator)
 			AddFlycerService()
 		end
 
-		-- ====================================================
-		-- Dropdown: Add External API Services
-		-- ====================================================
 		for _, i in next, (Config.KeySystem.API or {}) do
 			if i.Type ~= "flycer" then
 				local serviceDef = Config.FlycerUI.Services[i.Type]
@@ -866,9 +828,6 @@ function KeySystem.new(Config, Filename, func, keyValidator)
 			end
 		end
 
-		-- ====================================================
-		-- Dropdown: Toggle Animation
-		-- ====================================================
 		Creator.AddSignal(ButtonFrame.MouseButton1Click, function()
 			if not Opened then
 				Tween(
@@ -893,9 +852,6 @@ function KeySystem.new(Config, Filename, func, keyValidator)
 		end)
 	end
 
-	-- ========================================================
-	-- HELPER: Handle Success
-	-- ========================================================
 	local function handleSuccess(key)
 		SafeCloseDialog(KeyDialog)
 
@@ -931,17 +887,25 @@ function KeySystem.new(Config, Filename, func, keyValidator)
 		return true
 	end
 
-	-- ========================================================
-	-- SUBMIT BUTTON
-	-- ========================================================
+	-- ============================================================
+	-- [NEW] SUBMIT BUTTON dengan verifikasi feedback
+	-- ============================================================
 	local SubmitButton = CreateButton("Submit", "arrow-right", function()
+		if IsSubmitting then return end -- Debounce
+
 		task.spawn(function()
+			IsSubmitting = true
+
 			local key = EnteredKey
 			if not key or tostring(key):gsub("%s+", "") == "" then
 				Notify(Config, "Key System", "Please enter a license key.", "triangle-alert")
+				IsSubmitting = false
 				return
 			end
 			key = tostring(key):gsub("^%s+", ""):gsub("%s+$", "")
+
+			-- [NEW] Notify: sedang verifikasi
+			Notify(Config, "Key System", "Verifying license with database...", "loader")
 
 			-- ====================================================
 			-- PATH 1: FLYCER SERVICE
@@ -951,11 +915,13 @@ function KeySystem.new(Config, Filename, func, keyValidator)
 
 				if not serviceInstance then
 					Notify(Config, "Key System", serviceError or "Flycer service unavailable.", "triangle-alert")
+					IsSubmitting = false
 					return
 				end
 
 				if type(serviceInstance.Verify) ~= "function" then
 					Notify(Config, "Key System", "Flycer service does not provide Verify().", "triangle-alert")
+					IsSubmitting = false
 					return
 				end
 
@@ -967,12 +933,10 @@ function KeySystem.new(Config, Filename, func, keyValidator)
 					Notify(Config, "Key System", verifyMessage or "Invalid key.", "triangle-alert")
 				end
 
+				IsSubmitting = false
 				return
 			end
 
-			-- ====================================================
-			-- PATH 2: CUSTOM KEY VALIDATOR
-			-- ====================================================
 			if Config.KeySystem.KeyValidator then
 				local validatorOk, isValid, validationMessage = pcall(function()
 					return Config.KeySystem.KeyValidator(key)
@@ -980,6 +944,7 @@ function KeySystem.new(Config, Filename, func, keyValidator)
 
 				if not validatorOk then
 					Notify(Config, "Key System", "Key validator error: " .. tostring(isValid), "triangle-alert")
+					IsSubmitting = false
 					return
 				end
 
@@ -988,12 +953,10 @@ function KeySystem.new(Config, Filename, func, keyValidator)
 				else
 					Notify(Config, "Key System", validationMessage or "Invalid key.", "triangle-alert")
 				end
+				IsSubmitting = false
 				return
 			end
 
-			-- ====================================================
-			-- PATH 3: STATIC KEY
-			-- ====================================================
 			if not Config.KeySystem.API then
 				local isKey = false
 				if type(Config.KeySystem.Key) == "table" then
@@ -1007,14 +970,13 @@ function KeySystem.new(Config, Filename, func, keyValidator)
 				else
 					Notify(Config, "Key System", "Invalid key.", "triangle-alert")
 				end
+				IsSubmitting = false
 				return
 			end
 
-			-- ====================================================
-			-- PATH 4: API SERVICES
-			-- ====================================================
 			if #Services == 0 then
 				Notify(Config, "Key System", "No key validation service is configured.", "triangle-alert")
+				IsSubmitting = false
 				return
 			end
 
@@ -1036,6 +998,8 @@ function KeySystem.new(Config, Filename, func, keyValidator)
 			else
 				Notify(Config, "Key System", result or "Invalid key.", "triangle-alert")
 			end
+
+			IsSubmitting = false
 		end)
 	end, "Primary", ButtonsContainer)
 
