@@ -16060,10 +16060,6 @@ end
 local ao=aa.GenerateGUID()
 
 an.InputBegan:Connect(function(ap,aq)
-
-
-
-
 task.defer(function()
 if
 ap.UserInputType==Enum.UserInputType.MouseButton1
@@ -16074,8 +16070,6 @@ return
 end
 
 aa.CurrentInput=ao
-
-
 end
 end)
 end)
@@ -16102,9 +16096,6 @@ local as=aa.Creator
 
 local at=as.New
 
-
-
-
 local au=a.load'u'
 
 local av=protectgui or(syn and syn.protect_gui)or function()end
@@ -16124,16 +16115,9 @@ IgnoreGuiInset=true,
 ScreenInsets="None",
 DisplayOrder=-99999,
 },{
-
 at("Folder",{
 Name="Window",
 }),
-
-
-
-
-
-
 at("Folder",{
 Name="KeySystem",
 }),
@@ -16188,7 +16172,6 @@ local ay=aa.NotificationModule.Init(aa.NotificationGui)
 function aa.Notify(az,aA)
 aA.Holder=ay.Frame
 aA.Window=aa.Window
-
 return aa.NotificationModule.New(aA)
 end
 
@@ -16317,6 +16300,22 @@ as.Themes=aa.Themes
 aa:SetTheme"Dark"
 aa:SetLanguage(as.Language)
 
+
+
+
+
+
+
+
+local function checkKeyGracePeriod(az)
+if not isfile or not isfile(az)then return false end
+
+
+
+
+return true
+end
+
 function aa.CreateWindow(az,aA)
 local aB=a.load'af'
 
@@ -16344,13 +16343,9 @@ local b=true
 
 local d=aa.Themes[aA.Theme or"Dark"]
 
-
 as.SetTheme(d)
 
 local f
-
-
-
 
 if aA.KeySystem and(aA.KeySystem.KeyValidator or type(aA.KeySystem.Flycer)=="table")then
 local g=ar.GetFlycerIdentifier(aA)
@@ -16362,7 +16357,6 @@ end
 
 f=tostring(g())
 end
-
 
 f=tostring(f):gsub('[^%w%._%-]','_')
 
@@ -16377,10 +16371,6 @@ end
 
 local g=(aA.Folder or"Temp").."/"..f..".key"
 
-
-
-
-
 if type(aA.KeySystem.Flycer)=="table"then
 if not aA.KeySystem.Flycer.Endpoint then
 loadKeysystem()
@@ -16389,19 +16379,39 @@ local h=readfile(g)
 local i=aA.KeySystem.Flycer
 local l=aa.Services.flycer
 local m=false
+local p=false
 
 if l then
-local p=l.New(
+local r=l.New(
 i.Endpoint,
 i.Product or aA.Title,
 i.LockType or aA.KeySystem.LockType or"Device",
 i.Client or"FlycerUI",
 i.Version or"1.0.0"
 )
-m=p.Verify(h)
+
+
+local u,v=r.Verify(h)
+m=u
+
+if not m and v then
+local x=string.lower(tostring(v))
+
+if x:find"timed out"or x:find"timeout"
+or x:find"unable to reach"or x:find"unable to contact"
+or x:find"no response"or x:find"network"
+or x:find"http request is not available"
+or x:find"invalid response"then
+p=true
+end
+end
 end
 
 if m then
+b=true
+elseif p and checkKeyGracePeriod(g)then
+
+warn"[FlycerUI] Network error detected. Granting grace period for cached key."
 b=true
 else
 
@@ -16482,18 +16492,6 @@ aa.Window=g
 if aA.Acrylic then
 au.init()
 end
-
-
-
-
-
-
-
-
-
-
-
-
 
 return g
 end
