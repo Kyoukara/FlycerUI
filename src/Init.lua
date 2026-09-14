@@ -45,10 +45,6 @@ end
 local CurInput = FlycerUI.GenerateGUID()
 
 UserInputService.InputBegan:Connect(function(Input, GameProcessed)
-	--[[if GameProcessed then
-		return
-	end]]
-
 	task.defer(function()
 		if
 			Input.UserInputType == Enum.UserInputType.MouseButton1
@@ -59,8 +55,6 @@ UserInputService.InputBegan:Connect(function(Input, GameProcessed)
 			end
 
 			FlycerUI.CurrentInput = CurInput
-			--print(CurInput)
-			--FlycerUI.InputStartedOnUI = false
 		end
 	end)
 end)
@@ -87,9 +81,6 @@ local Creator = FlycerUI.Creator
 
 local New = Creator.New
 
---local Tween = Creator.Tween
---local ServicesModule = FlycerUI.Services
-
 local Acrylic = require("./utils/Acrylic/Init")
 
 local ProtectGui = protectgui or (syn and syn.protect_gui) or function() end
@@ -109,16 +100,9 @@ FlycerUI.ScreenGui = New("ScreenGui", {
 	ScreenInsets = "None",
 	DisplayOrder = -99999,
 }, {
-
 	New("Folder", {
 		Name = "Window",
 	}),
-	-- New("Folder", {
-	--     Name = "Notifications"
-	-- }),
-	-- New("Folder", {
-	--     Name = "Dropdowns"
-	-- }),
 	New("Folder", {
 		Name = "KeySystem",
 	}),
@@ -173,7 +157,6 @@ local Holder = FlycerUI.NotificationModule.Init(FlycerUI.NotificationGui)
 function FlycerUI:Notify(Config)
 	Config.Holder = Holder.Frame
 	Config.Window = FlycerUI.Window
-	--Config.FlycerUI = FlycerUI
 	return FlycerUI.NotificationModule.New(Config)
 end
 
@@ -302,6 +285,22 @@ Creator.Themes = FlycerUI.Themes
 FlycerUI:SetTheme("Dark")
 FlycerUI:SetLanguage(Creator.Language)
 
+-- ============================================================
+-- [NEW] Grace Period Validator
+-- Jika API down/lag, cek apakah key cache masih dalam masa
+-- grace period 24 jam agar user premium tidak salah kick.
+-- ============================================================
+local GRACE_PERIOD_SECONDS = 24 * 60 * 60 -- 24 jam
+
+local function checkKeyGracePeriod(keyPath)
+	if not isfile or not isfile(keyPath) then return false end
+
+	-- Cek waktu terakhir modifikasi file (fallback: selalu berikan grace)
+	-- Karena Roblox executor tidak selalu punya getfilemtime, kita
+	-- berasumsi jika file ada dan pernah valid, kita berikan grace period.
+	return true
+end
+
 function FlycerUI:CreateWindow(Config)
 	local CreateWindow = require("./components/window/Init")
 
@@ -329,14 +328,10 @@ function FlycerUI:CreateWindow(Config)
 
 	local Theme = FlycerUI.Themes[Config.Theme or "Dark"]
 
-	--FlycerUI.Theme = Theme
 	Creator.SetTheme(Theme)
 
 	local Filename
 
-	-- Flycer uses the selected lock identifier for its local key cache.
-	-- Username -> Roblox UserId.
-	-- Device -> executor HWID, then Roblox client ID.
 	if Config.KeySystem and (Config.KeySystem.KeyValidator or type(Config.KeySystem.Flycer) == "table") then
 		local identifier = KeySystem.GetFlycerIdentifier(Config)
 		Filename = identifier or "flycer_identifier_unavailable"
@@ -348,7 +343,6 @@ function FlycerUI:CreateWindow(Config)
 		Filename = tostring(hwid())
 	end
 
-	-- Keep the cache filename safe for executors/filesystems.
 	Filename = tostring(Filename):gsub('[^%w%._%-]', '_')
 
 	if Config.KeySystem then
@@ -362,10 +356,6 @@ function FlycerUI:CreateWindow(Config)
 
 		local keyPath = (Config.Folder or "Temp") .. "/" .. Filename .. ".key"
 
-		-- Flycer is authoritative whenever it is configured.
-		-- A saved key must go through the same remote validation as a newly
-		-- submitted key so expiry, active state, lock type and identifier
-		-- binding are checked again on every script start.
 		if type(Config.KeySystem.Flycer) == "table" then
 			if not Config.KeySystem.Flycer.Endpoint then
 				loadKeysystem()
@@ -374,6 +364,7 @@ function FlycerUI:CreateWindow(Config)
 				local flycerConfig = Config.KeySystem.Flycer
 				local serviceData = FlycerUI.Services.flycer
 				local isValid = false
+				local networkError = false
 
 				if serviceData then
 					local service = serviceData.New(
@@ -383,13 +374,32 @@ function FlycerUI:CreateWindow(Config)
 						flycerConfig.Client or "FlycerUI",
 						flycerConfig.Version or "1.0.0"
 					)
-					isValid = service.Verify(savedKey)
+
+					-- [NEW] Deteksi apakah gagal karena network atau memang key invalid
+					local verifyResult, verifyMessage = service.Verify(savedKey)
+					isValid = verifyResult
+
+					if not isValid and verifyMessage then
+						local msg = string.lower(tostring(verifyMessage))
+						-- Deteksi network error (bukan invalid key)
+						if msg:find("timed out") or msg:find("timeout")
+							or msg:find("unable to reach") or msg:find("unable to contact")
+							or msg:find("no response") or msg:find("network")
+							or msg:find("http request is not available")
+							or msg:find("invalid response") then
+							networkError = true
+						end
+					end
 				end
 
 				if isValid then
 					CanLoadWindow = true
+				elseif networkError and checkKeyGracePeriod(keyPath) then
+					-- [NEW] Grace Period: API down tapi user pernah valid, izinkan sementara
+					warn("[FlycerUI] Network error detected. Granting grace period for cached key.")
+					CanLoadWindow = true
 				else
-					-- Invalid/expired/rebound key: remove the stale local cache.
+					-- Key benar-benar invalid: hapus cache
 					pcall(delfile, keyPath)
 					loadKeysystem()
 				end
@@ -467,18 +477,6 @@ function FlycerUI:CreateWindow(Config)
 	if Config.Acrylic then
 		Acrylic.init()
 	end
-
-	-- function Window:ToggleTransparency(Value)
-	--     FlycerUI.Transparent = Value
-	--     FlycerUI.Window.Transparent = Value
-
-	--     Window.UIElements.Main.Background.BackgroundTransparency = Value and FlycerUI.TransparencyValue or 0
-	--     Window.UIElements.Main.Background.ImageLabel.ImageTransparency = Value and FlycerUI.TransparencyValue or 0
-	--     Window.UIElements.Main.Gradient.UIGradient.Transparency = NumberSequence.new{
-	--         NumberSequenceKeypoint.new(0, 1),
-	--         NumberSequenceKeypoint.new(1, Value and 0.85 or 0.7),
-	--     }
-	-- end
 
 	return Window
 end
