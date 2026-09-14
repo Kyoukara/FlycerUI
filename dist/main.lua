@@ -1969,6 +1969,8 @@ local f={}
 
 
 
+
+
 local g=15
 
 local function RequestWithTimeout(h,i)
@@ -1993,36 +1995,12 @@ r=r+0.25
 end
 
 if not l then
+
 l=true
 return false,"Flycer API request timed out after "..tostring(i).."s."
 end
 
 return m,p
-end
-
-
-
-
-
-
-local function GetHttpRequestHandler()
-local h={
-function()return syn and syn.request end,
-function()return http and http.request end,
-function()return http_request end,
-function()return fluxus and fluxus.request end,
-function()return request end,
-function()return httprequest end,
-function()return krnl_request end,
-}
-
-for i,l in ipairs(h)do
-local m,p=pcall(l)
-if m and type(p)=="function"then
-return p
-end
-end
-return nil
 end
 
 local function NormalizeLockType(h)
@@ -2045,6 +2023,7 @@ if h~="device"then
 return nil,"Invalid","LockType must be 'Device' or 'Username'."
 end
 
+
 local l=gethwid
 if type(l)=="function"then
 local m,p=pcall(l)
@@ -2052,6 +2031,7 @@ if m and p~=nil and tostring(p)~=""then
 return tostring(p),"Device"
 end
 end
+
 
 local m,p=pcall(function()
 return b(game:GetService"RbxAnalyticsService"):GetClientId()
@@ -2085,63 +2065,6 @@ end,
 }
 end
 
-
-
-
-local function AttemptSingleRequest(r,u,v,x)
-local z,A=RequestWithTimeout(function()
-return r{
-Url=u,
-Method="POST",
-Headers={
-["Content-Type"]="application/json",Accept=
-"application/json",
-["User-Agent"]=x or("FlycerUI/"..p),
-},
-Body=v,
-}
-end,g)
-
-if not z or not A then
-return nil,tostring(A or"No response from server.")
-end
-
-if not A.Success then
-local B=tonumber(A.StatusCode)
-local C=tostring(A.Body or"")
-if B and B==200 then
-
-A.Success=true
-else
-local F="Server returned HTTP "..tostring(B or"?")
-if C~=""then
-local G,H=pcall(function()
-return d:JSONDecode(C)
-end)
-if G and type(H)=="table"and H.message then
-F=tostring(H.message)
-end
-end
-return nil,F
-end
-end
-
-local B,C=pcall(function()
-return d:JSONDecode(A.Body or"")
-end)
-
-if not B or type(C)~="table"then
-return nil,"Server returned invalid JSON response."
-end
-
-return C,nil
-end
-
-
-
-
-
-
 local function ValidateKey(r)
 if h==""then
 return false,"Flycer API endpoint is not configured."
@@ -2152,7 +2075,7 @@ if not u then
 return false,x or"Unable to determine identifier."
 end
 
-local z=GetHttpRequestHandler()
+local z=request or http_request or(syn and syn.request)
 if type(z)~="function"then
 return false,"HTTP request is not available in this executor."
 end
@@ -2171,50 +2094,63 @@ client=m,
 client_version=p,
 }
 
-local B={
-h.."/api/license/validate",
-h.."/api/license/validate/",
+local B=h.."/api/license/validate"
+
+
+
+
+
+local C,F=RequestWithTimeout(function()
+return z{
+Url=B,
+Method="POST",
+Headers={
+["Content-Type"]="application/json",
+["User-Agent"]="FlycerUI/"..p,
+},
+Body=A,
 }
+end)
 
-local C={
-"FlycerUI/"..p,
-"Roblox/Linux",
-"Roblox/WinInet",
-}
-
-
-local F={0,0.5,1.5}
-
-local G="Unable to reach Flycer API after multiple retries."
-local H
-
-for J=1,#F do
-if J>1 then
-task.wait(F[J])
+if not C then
+return false,tostring(F or"Unable to contact Flycer API.")
 end
 
-for L,M in ipairs(B)do
-for N,O in ipairs(C)do
-local P,Q=AttemptSingleRequest(z,M,A,O)
-
-if P then
-
-if P.success==true then
-return true,P.message or P.code or"Authenticated",P
-else
-
-
-H=P.message or P.code or"License validation failed."
-return false,H,P
-end
-else
-G=Q or G
-end
-end
-end
+if not F then
+return false,"Flycer API returned no response."
 end
 
-return false,G
+if not F.Success then
+local G=tonumber(F.StatusCode)
+local H=tostring(F.Body or"")
+local J="Flycer API request failed"
+if G then
+J=J.." ("..tostring(G)..")"
+end
+if H~=""then
+local L,M=pcall(function()
+return d:JSONDecode(H)
+end)
+if L and type(M)=="table"and M.message then
+J=tostring(M.message)
+end
+end
+return false,J
+end
+
+local G,H=pcall(function()
+return d:JSONDecode(F.Body or"")
+end)
+
+if not G or type(H)~="table"then
+return false,"Flycer API returned an invalid response."
+end
+
+if H.success==true then
+return true,H.message or H.code or"Authenticated",H
+end
+
+return false,H.message or H.code or"License validation failed.",H
 end
 
 local function Copy()local
