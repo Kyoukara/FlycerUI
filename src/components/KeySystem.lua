@@ -7,379 +7,13 @@ local Tween = Creator.Tween
 local CreateButton = require("./ui/Button").New
 local CreateInput = require("./ui/Input").New
 
--- ============================================================
--- HELPER: Copy to Clipboard
--- ============================================================
-local function CopyToClipboard(value)
-	if value == nil then
-		return false, "Clipboard value is empty."
-	end
-
-	local text = tostring(value)
-	if text == "" then
-		return false, "Clipboard value is empty."
-	end
-
-	local copy = setclipboard or toclipboard
-	if type(copy) ~= "function" then
-		return false, "Clipboard is not available in this executor."
-	end
-
-	local ok, err = pcall(function()
-		copy(text)
-	end)
-
-	if not ok then
-		return false, tostring(err or "Unable to copy to clipboard.")
-	end
-
-	return true, text
-end
-
--- ============================================================
--- HELPER: Notify
--- ============================================================
-local function Notify(Config, title, content, icon)
-	if not Config or not Config.FlycerUI or type(Config.FlycerUI.Notify) ~= "function" then
-		warn("[FlycerUI KeySystem] " .. tostring(title) .. ": " .. tostring(content))
-		return false
-	end
-
-	local ok = pcall(function()
-		Config.FlycerUI:Notify({
-			Title = tostring(title or "Key System"),
-			Content = tostring(content or ""),
-			Icon = icon or "triangle-alert",
-		})
-	end)
-
-	if not ok then
-		warn("[FlycerUI KeySystem] Notify failed: " .. tostring(title) .. " - " .. tostring(content))
-	end
-
-	return ok
-end
-
--- ============================================================
--- HELPER: Normalize Asset ID
--- ============================================================
-local function NormalizeAssetId(icon)
-	if type(icon) == "number" then
-		return "rbxassetid://" .. tostring(math.floor(icon))
-	end
-
-	if type(icon) ~= "string" then
-		return nil
-	end
-
-	if icon:match("^rbxassetid://%d+$") then
-		return icon
-	end
-
-	if icon:match("^%d+$") then
-		return "rbxassetid://" .. icon
-	end
-
-	return nil
-end
-
--- ============================================================
--- HELPER: Create Service Icon
--- ============================================================
-local function CreateServiceIcon(icon, size, themed)
-	icon = icon or "user"
-	size = size or UDim2.fromOffset(24, 24)
-
-	local assetId = NormalizeAssetId(icon)
-	if assetId then
-		return New("ImageLabel", {
-			Image = assetId,
-			BackgroundTransparency = 1,
-			Size = size,
-			ScaleType = Enum.ScaleType.Fit,
-		})
-	end
-
-	local ok, frame = pcall(function()
-		return Creator.Image(
-			tostring(icon),
-			tostring(icon),
-			0,
-			"Temp",
-			"KeySystem",
-			themed == true
-		)
-	end)
-
-	if ok and frame then
-		frame.Size = size
-		return frame
-	end
-
-	local fallbackOk, fallback = pcall(function()
-		return Creator.Image("key", "key", 0, "Temp", "KeySystem", true)
-	end)
-
-	if fallbackOk and fallback then
-		fallback.Size = size
-		return fallback
-	end
-
-	return New("Frame", {
-		BackgroundTransparency = 1,
-		Size = size,
-	})
-end
-
--- ============================================================
--- HELPER: Safe Close Dialog
--- ============================================================
-local function SafeCloseDialog(dialog)
-	if dialog then
-		pcall(function()
-			dialog:Close()()
-		end)
-	end
-end
-
--- ============================================================
--- Forward declaration
--- ============================================================
-local CreateFlycerService
-
--- ============================================================
--- HELPER: Get Flycer Identifier
--- ============================================================
-local function GetFlycerIdentifier(Config)
-	if type(Config) ~= "table" or type(Config.KeySystem) ~= "table" then
-		return nil, "Invalid", "Flycer configuration is missing."
-	end
-
-	local serviceInstance, serviceError = CreateFlycerService(Config)
-	if not serviceInstance then
-		return nil, "Invalid", serviceError or "Flycer service is not available."
-	end
-
-	if type(serviceInstance.GetIdentifier) ~= "function" then
-		return nil, "Invalid", "Flycer service does not expose an identifier provider."
-	end
-
-	local ok, identifier, identifierType, identifierError = pcall(function()
-		return serviceInstance.GetIdentifier()
-	end)
-
-	if not ok then
-		return nil, "Invalid", "Unable to determine Flycer identifier."
-	end
-
-	if not identifier or tostring(identifier) == "" then
-		return nil, identifierType or "Invalid", identifierError or "Unable to determine Flycer identifier."
-	end
-
-	return tostring(identifier), identifierType, identifierError
-end
-
-KeySystem.GetFlycerIdentifier = GetFlycerIdentifier
-
--- ============================================================
--- HELPER: Create Flycer Service
--- ============================================================
-CreateFlycerService = function(Config)
-	local flycerConfig = Config.KeySystem and Config.KeySystem.Flycer
-	if type(flycerConfig) ~= "table" then
-		return nil, "Flycer configuration is missing."
-	end
-
-	if not flycerConfig.Endpoint or tostring(flycerConfig.Endpoint) == "" then
-		return nil, "Flycer API Endpoint is not configured."
-	end
-
-	local services = Config.FlycerUI and Config.FlycerUI.Services
-	local serviceData = services and services.flycer
-	if not serviceData or type(serviceData.New) ~= "function" then
-		return nil, "Flycer service is not available in this FlycerUI build."
-	end
-
-	local ok, serviceOrError = pcall(function()
-		return serviceData.New(
-			flycerConfig.Endpoint,
-			flycerConfig.Product or Config.Title,
-			flycerConfig.LockType or "Device",
-			flycerConfig.Client or "FlycerUI",
-			flycerConfig.Version or "1.0.0"
-		)
-	end)
-
-	if not ok or type(serviceOrError) ~= "table" then
-		return nil, "Unable to initialize Flycer service."
-	end
-
-	return serviceOrError
-end
-
--- ============================================================
--- HELPER: Open Flycer Service Dialog
--- ============================================================
-local function OpenFlycerServiceDialog(
-	Config,
-	Identifier,
-	IdentifierType,
-	KeyDialog,
-	DropdownContainer,
-	ChevronDown,
-	IdentifierError
-)
-	local DialogModule = require("./window/Dialog")
-	local Dialog =
-		DialogModule.Create(true, "Popup", Config.Window, Config.FlycerUI, Config.FlycerUI.ScreenGui.KeySystem)
-
-	if DropdownContainer then
-		DropdownContainer.Size = UDim2.new(0, 0, 0, 0)
-	end
-	if ChevronDown then
-		ChevronDown.Rotation = 0
-	end
-	if KeyDialog and KeyDialog.UIElements.MainContainer then
-		KeyDialog.UIElements.MainContainer.Visible = false
-	end
-
-	local Closed = false
-	local function CloseFlycerDialog()
-		if Closed then
-			return
-		end
-		Closed = true
-		SafeCloseDialog(Dialog)
-		task.delay(0.12, function()
-			if KeyDialog and KeyDialog.UIElements.MainContainer then
-				KeyDialog.UIElements.MainContainer.Visible = true
-			end
-		end)
-	end
-
-	Dialog.UIElements.Main.AutomaticSize = "Y"
-	Dialog.UIElements.Main.Size = UDim2.new(0, 470, 0, 0)
-
-	local DialogIconFrame
-	if Config.Icon then
-		DialogIconFrame = CreateServiceIcon(Config.Icon, UDim2.fromOffset(24, 24), Config.IconThemed)
-		DialogIconFrame.LayoutOrder = -1
-	end
-
-	local Title = New("TextLabel", {
-		Text = "Flycer Service",
-		BackgroundTransparency = 1,
-		AutomaticSize = "XY",
-		FontFace = Font.new(Creator.Font, Enum.FontWeight.SemiBold),
-		ThemeTag = { TextColor3 = "Text" },
-		TextSize = 20,
-	})
-
-	local DialogTitleContainer = New("Frame", {
-		BackgroundTransparency = 1,
-		AutomaticSize = "XY",
-	}, {
-		New("UIListLayout", {
-			Padding = UDim.new(0, 10),
-			FillDirection = "Horizontal",
-			VerticalAlignment = "Center",
-		}),
-		DialogIconFrame,
-		Title,
-	})
-
-	local Description = New("TextLabel", {
-		Text = "Choose an action below to manage your Flycer services and hardware identifier.",
-		BackgroundTransparency = 1,
-		Size = UDim2.new(1, 0, 0, 0),
-		AutomaticSize = "Y",
-		FontFace = Font.new(Creator.Font, Enum.FontWeight.Medium),
-		ThemeTag = { TextColor3 = "Text" },
-		TextTransparency = 0.35,
-		TextSize = 16,
-		TextWrapped = true,
-		TextXAlignment = "Left",
-	})
-
-	local Buttons = New("Frame", {
-		BackgroundTransparency = 1,
-		Size = UDim2.new(1, 0, 0, 42),
-	}, {
-		New("UIListLayout", {
-			FillDirection = "Horizontal",
-			HorizontalAlignment = "Center",
-			VerticalAlignment = "Center",
-			Padding = UDim.new(0, 8),
-		}),
-	})
-
-	local CloseButton = CreateButton("Close", "x", function()
-		CloseFlycerDialog()
-	end, "Tertiary", Buttons)
-
-	local CopyButton = CreateButton("Copy HWID", "copy", function()
-		local copied, copyError = CopyToClipboard(Identifier)
-		if copied then
-			Notify(Config, "Flycer", tostring(IdentifierType or "Device") .. " identifier copied to clipboard.", "copy")
-		else
-			Notify(Config, "Flycer", IdentifierError or copyError or "Clipboard or identifier is not available in this executor.", "triangle-alert")
-		end
-	end, "Primary", Buttons)
-
-	local Discord = Config.KeySystem.Discord or Config.KeySystem.DiscordURL
-	local DiscordButton
-	if Discord and Discord ~= "" then
-		DiscordButton = CreateButton("Discord", "message-circle", function()
-			local copied, copyError = CopyToClipboard(Discord)
-			if copied then
-				Notify(Config, "Flycer", "Discord link copied to clipboard.", "message-circle")
-			else
-				Notify(Config, "Flycer", copyError or "Unable to copy Discord link.", "triangle-alert")
-			end
-		end, "Secondary", Buttons)
-	end
-
-	CloseButton.Size = UDim2.new(0, 105, 0, 42)
-	CopyButton.Size = UDim2.new(0, 145, 0, 42)
-	if DiscordButton then
-		DiscordButton.Size = UDim2.new(0, 125, 0, 42)
-	end
-
-	New("Frame", {
-		BackgroundTransparency = 1,
-		Size = UDim2.new(1, 0, 0, 0),
-		AutomaticSize = "Y",
-		Parent = Dialog.UIElements.Main,
-	}, {
-		New("UIListLayout", {
-			FillDirection = "Vertical",
-			Padding = UDim.new(0, 14),
-		}),
-		DialogTitleContainer,
-		Description,
-		Buttons,
-		New("UIPadding", {
-			PaddingTop = UDim.new(0, 16),
-			PaddingLeft = UDim.new(0, 16),
-			PaddingRight = UDim.new(0, 16),
-			PaddingBottom = UDim.new(0, 16),
-		}),
-	})
-
-	Dialog:Open()
-end
-
--- ============================================================
--- MAIN: KeySystem.new
--- ============================================================
 function KeySystem.new(Config, Filename, func, keyValidator)
 	local KeyDialogInit = require("./window/Dialog")
-	local KeyDialog =
-		KeyDialogInit.Create(true, "Popup", Config.Window, Config.FlycerUI, Config.FlycerUI.ScreenGui.KeySystem)
+	local KeyDialog = KeyDialogInit.Create(true, "Popup", Config.Window, Config.FlycerUI, Config.FlycerUI.ScreenGui.KeySystem)
 
 	local Services = {}
+
 	local EnteredKey
-	local IsSubmitting = false -- [NEW] Debounce state
 
 	local ThumbnailSize = (Config.KeySystem.Thumbnail and Config.KeySystem.Thumbnail.Width) or 200
 
@@ -394,7 +28,9 @@ function KeySystem.new(Config, Filename, func, keyValidator)
 	local IconFrame
 
 	if Config.Icon then
-		IconFrame = CreateServiceIcon(Config.Icon, UDim2.fromOffset(24, 24), Config.IconThemed)
+		IconFrame =
+			Creator.Image(Config.Icon, Config.Title .. ":" .. Config.Icon, 0, "Temp", "KeySystem", Config.IconThemed)
+		IconFrame.Size = UDim2.new(0, 24, 0, 24)
 		IconFrame.LayoutOrder = -1
 	end
 
@@ -415,7 +51,7 @@ function KeySystem.new(Config, Filename, func, keyValidator)
 		Text = "Key System",
 		AnchorPoint = Vector2.new(1, 0.5),
 		Position = UDim2.new(1, 0, 0.5, 0),
-		TextTransparency = 1,
+		TextTransparency = 1, -- .4 -- hidden
 		FontFace = Font.new(Creator.Font, Enum.FontWeight.Medium),
 		ThemeTag = {
 			TextColor3 = "Text",
@@ -441,6 +77,11 @@ function KeySystem.new(Config, Filename, func, keyValidator)
 		Size = UDim2.new(1, 0, 0, 0),
 		BackgroundTransparency = 1,
 	}, {
+		-- New("UIListLayout", {
+		--     Padding = UDim.new(0,9),
+		--     FillDirection = "Horizontal",
+		--     VerticalAlignment = "Bottom"
+		-- }),
 		IconAndTitleContainer,
 		KeySystemTitle,
 	})
@@ -517,12 +158,14 @@ function KeySystem.new(Config, Filename, func, keyValidator)
 	end
 
 	local MainFrame = New("Frame", {
+		--AutomaticSize = "XY",
 		Size = UDim2.new(1, ThumbnailFrame and -ThumbnailSize or 0, 1, 0),
 		Position = UDim2.new(0, ThumbnailFrame and ThumbnailSize or 0, 0, 0),
 		BackgroundTransparency = 1,
 		Parent = KeyDialog.UIElements.Main,
 	}, {
 		New("Frame", {
+			--AutomaticSize = "XY",
 			Size = UDim2.new(1, 0, 1, 0),
 			BackgroundTransparency = 1,
 		}, {
@@ -543,8 +186,12 @@ function KeySystem.new(Config, Filename, func, keyValidator)
 		}),
 	})
 
+	-- for _, values in next, KeySystemButtons do
+	--     CreateButton(values.Title, values.Icon, values.Callback, values.Variant)
+	-- end
+
 	local ExitButton = CreateButton("Exit", "log-out", function()
-		SafeCloseDialog(KeyDialog)
+		KeyDialog:Close()()
 	end, "Tertiary", ButtonsContainer.Frame)
 
 	if ThumbnailFrame then
@@ -554,18 +201,21 @@ function KeySystem.new(Config, Filename, func, keyValidator)
 		ExitButton.AnchorPoint = Vector2.new(0, 1)
 	end
 
-	if Config.KeySystem.URL and not Config.KeySystem.KeyValidator then
+	if Config.KeySystem.URL then
 		CreateButton("Get key", "key", function()
-			local copied, copyError = CopyToClipboard(Config.KeySystem.URL)
-			if copied then
-				Notify(Config, "Key System", "Key link copied to clipboard.", "key")
-			else
-				Notify(Config, "Key System", copyError or "Unable to copy key link.", "triangle-alert")
-			end
+			setclipboard(Config.KeySystem.URL)
 		end, "Secondary", ButtonsContainer.Frame)
 	end
 
-	if Config.KeySystem.API or Config.KeySystem.KeyValidator or type(Config.KeySystem.Flycer) == "table" then
+	if Config.KeySystem.API then
+		-- local Icons = {
+		--     platoboost = "rbxassetid://75920162824531",
+		--     pandadevelopment = "panda",
+		-- }
+		-- local Names = {
+		--     platoboost = "Platoboost",
+		--     pandadevelopment = "Panda Development",
+		-- }
 		local Width = 240
 		local Opened = false
 		local ButtonFrame = CreateButton("Get key", "key", nil, "Secondary", ButtonsContainer.Frame)
@@ -592,6 +242,7 @@ function KeySystem.new(Config, Filename, func, keyValidator)
 		})
 
 		local ChevronDown = Creator.Image("chevron-down", "chevron-down", 0, "Temp", "KeySystem", true)
+
 		ChevronDown.Size = UDim2.new(1, 0, 1, 0)
 
 		local IconContainer = New("Frame", {
@@ -653,178 +304,99 @@ function KeySystem.new(Config, Filename, func, keyValidator)
 			}),
 		})
 
-		local function AddFlycerService()
-			local services = Config.FlycerUI and Config.FlycerUI.Services
-			local serviceDef = services and services.flycer
-			local serviceIcon = serviceDef and serviceDef.Icon or "key"
-			local serviceName = serviceDef and serviceDef.Name or "Flycer"
-
-			local FlycerIconFrame = CreateServiceIcon(serviceIcon, UDim2.fromOffset(24, 24), true)
-
-			local APIFrame = Creator.NewRoundFrame(10, "Squircle", {
-				Size = UDim2.new(1, 0, 0, 0),
-				ThemeTag = { ImageColor3 = "Text" },
-				ImageTransparency = 1,
-				Parent = DropdownFrame,
-				AutomaticSize = "Y",
-			}, {
-				New("UIListLayout", {
-					FillDirection = "Horizontal",
-					Padding = UDim.new(0, 10),
-					VerticalAlignment = "Center",
-				}),
-				FlycerIconFrame,
-				New("UIPadding", {
-					PaddingTop = UDim.new(0, 10),
-					PaddingLeft = UDim.new(0, 10),
-					PaddingRight = UDim.new(0, 10),
-					PaddingBottom = UDim.new(0, 10),
-				}),
-				New("TextLabel", {
-					Text = serviceName,
-					BackgroundTransparency = 1,
-					FontFace = Font.new(Creator.Font, Enum.FontWeight.Medium),
-					ThemeTag = { TextColor3 = "Text" },
-					TextSize = 18,
-					Size = UDim2.new(1, -34, 0, 0),
-					AutomaticSize = "Y",
-					TextWrapped = true,
-					TextXAlignment = "Left",
-				}),
-			}, true)
-
-			Creator.AddSignal(APIFrame.MouseEnter, function()
-				Tween(APIFrame, 0.08, { ImageTransparency = 0.95 }):Play()
-			end)
-			Creator.AddSignal(APIFrame.InputEnded, function()
-				Tween(APIFrame, 0.08, { ImageTransparency = 1 }):Play()
-			end)
-			Creator.AddSignal(APIFrame.MouseButton1Click, function()
-				local ok, err = pcall(function()
-					local Identifier, IdentifierType, IdentifierError = GetFlycerIdentifier(Config)
-					OpenFlycerServiceDialog(
-						Config,
-						Identifier,
-						IdentifierType,
-						KeyDialog,
-						DropdownContainer,
-						ChevronDown,
-						IdentifierError
-					)
-				end)
-
-				if not ok then
-					Notify(Config, "Flycer", "Unable to open Flycer dialog: " .. tostring(err), "triangle-alert")
+		for _, i in next, Config.KeySystem.API do
+			local serviceDef = Config.FlycerUI.Services[i.Type]
+			if serviceDef then
+				local args = {}
+				for _, argName in next, serviceDef.Args do
+					table.insert(args, i[argName])
 				end
-			end)
-		end
 
-		if Config.KeySystem.KeyValidator or type(Config.KeySystem.Flycer) == "table" then
-			AddFlycerService()
-		end
+				local serviceInstance = serviceDef.New(table.unpack(args))
+				serviceInstance.Type = i.Type
+				table.insert(Services, serviceInstance)
 
-		for _, i in next, (Config.KeySystem.API or {}) do
-			if i.Type ~= "flycer" then
-				local serviceDef = Config.FlycerUI.Services[i.Type]
-				if serviceDef then
-					local args = {}
-					for _, argName in next, serviceDef.Args do
-						table.insert(args, i[argName])
-					end
+				local IconFrame = Creator.Image(
+					i.Icon or serviceDef.Icon or Icons[i.Type] or "user",
+					i.Icon or serviceDef.Icon or Icons[i.Type] or "user",
+					0,
+					"Temp",
+					"KeySystem",
+					true
+				)
+				IconFrame.Size = UDim2.new(0, 24, 0, 24)
 
-					local serviceOk, serviceInstance = pcall(function()
-						return serviceDef.New(table.unpack(args))
-					end)
-
-					if not serviceOk or type(serviceInstance) ~= "table" then
-						Notify(Config, "Key System", "Unable to initialize service: " .. tostring(i.Type), "triangle-alert")
-						continue
-					end
-
-					serviceInstance.Type = i.Type
-					table.insert(Services, serviceInstance)
-
-					local serviceIcon = i.Icon or serviceDef.Icon or "user"
-					local ServiceIconFrame = CreateServiceIcon(serviceIcon, UDim2.fromOffset(24, 24), true)
-
-					local APIFrame = Creator.NewRoundFrame(10, "Squircle", {
-						Size = UDim2.new(1, 0, 0, 0),
-						ThemeTag = { ImageColor3 = "Text" },
-						ImageTransparency = 1,
-						Parent = DropdownFrame,
+				local APIFrame = Creator.NewRoundFrame(10, "Squircle", {
+					Size = UDim2.new(1, 0, 0, 0),
+					ThemeTag = { ImageColor3 = "Text" },
+					ImageTransparency = 1,
+					Parent = DropdownFrame,
+					AutomaticSize = "Y",
+				}, {
+					New("UIListLayout", {
+						FillDirection = "Horizontal",
+						Padding = UDim.new(0, 10),
+						VerticalAlignment = "Center",
+					}),
+					IconFrame,
+					New("UIPadding", {
+						PaddingTop = UDim.new(0, 10),
+						PaddingLeft = UDim.new(0, 10),
+						PaddingRight = UDim.new(0, 10),
+						PaddingBottom = UDim.new(0, 10),
+					}),
+					New("Frame", {
+						BackgroundTransparency = 1,
+						Size = UDim2.new(1, -24 - 10, 0, 0),
 						AutomaticSize = "Y",
 					}, {
 						New("UIListLayout", {
-							FillDirection = "Horizontal",
-							Padding = UDim.new(0, 10),
-							VerticalAlignment = "Center",
+							FillDirection = "Vertical",
+							Padding = UDim.new(0, 5),
+							HorizontalAlignment = "Center",
 						}),
-						ServiceIconFrame,
-						New("UIPadding", {
-							PaddingTop = UDim.new(0, 10),
-							PaddingLeft = UDim.new(0, 10),
-							PaddingRight = UDim.new(0, 10),
-							PaddingBottom = UDim.new(0, 10),
-						}),
-						New("Frame", {
+						New("TextLabel", {
+							Text = i.Title or serviceDef.Name,
 							BackgroundTransparency = 1,
-							Size = UDim2.new(1, -24 - 10, 0, 0),
+							FontFace = Font.new(Creator.Font, Enum.FontWeight.Medium),
+							ThemeTag = { TextColor3 = "Text" },
+							TextTransparency = 0.05,
+							TextSize = 18,
+							Size = UDim2.new(1, 0, 0, 0),
 							AutomaticSize = "Y",
-						}, {
-							New("UIListLayout", {
-								FillDirection = "Vertical",
-								Padding = UDim.new(0, 5),
-								HorizontalAlignment = "Center",
-							}),
-							New("TextLabel", {
-								Text = i.Title or serviceDef.Name,
-								BackgroundTransparency = 1,
-								FontFace = Font.new(Creator.Font, Enum.FontWeight.Medium),
-								ThemeTag = { TextColor3 = "Text" },
-								TextTransparency = 0.05,
-								TextSize = 18,
-								Size = UDim2.new(1, 0, 0, 0),
-								AutomaticSize = "Y",
-								TextWrapped = true,
-								TextXAlignment = "Left",
-							}),
-							New("TextLabel", {
-								Text = i.Desc or "",
-								BackgroundTransparency = 1,
-								FontFace = Font.new(Creator.Font, Enum.FontWeight.Regular),
-								ThemeTag = { TextColor3 = "Text" },
-								TextTransparency = 0.2,
-								TextSize = 16,
-								Size = UDim2.new(1, 0, 0, 0),
-								AutomaticSize = "Y",
-								TextWrapped = true,
-								Visible = i.Desc and true or false,
-								TextXAlignment = "Left",
-							}),
+							TextWrapped = true,
+							TextXAlignment = "Left",
 						}),
-					}, true)
+						New("TextLabel", {
+							Text = i.Desc or "",
+							BackgroundTransparency = 1,
+							FontFace = Font.new(Creator.Font, Enum.FontWeight.Regular),
+							ThemeTag = { TextColor3 = "Text" },
+							TextTransparency = 0.2,
+							TextSize = 16,
+							Size = UDim2.new(1, 0, 0, 0),
+							AutomaticSize = "Y",
+							TextWrapped = true,
+							Visible = i.Desc and true or false,
+							TextXAlignment = "Left",
+						}),
+					}),
+				}, true)
 
-					Creator.AddSignal(APIFrame.MouseEnter, function()
-						Tween(APIFrame, 0.08, { ImageTransparency = 0.95 }):Play()
-					end)
-					Creator.AddSignal(APIFrame.InputEnded, function()
-						Tween(APIFrame, 0.08, { ImageTransparency = 1 }):Play()
-					end)
-					Creator.AddSignal(APIFrame.MouseButton1Click, function()
-						local ok, copied, message = pcall(function()
-							if type(serviceInstance.Copy) ~= "function" then
-								return false, "Copy is not supported by this service."
-							end
-							return serviceInstance.Copy()
-						end)
-
-						if ok and copied then
-							Notify(Config, "Key System", "Key link copied to clipboard.", "key")
-						else
-							Notify(Config, "Key System", message or "Unable to copy key link.", "triangle-alert")
-						end
-					end)
-				end
+				Creator.AddSignal(APIFrame.MouseEnter, function()
+					Tween(APIFrame, 0.08, { ImageTransparency = 0.95 }):Play()
+				end)
+				Creator.AddSignal(APIFrame.InputEnded, function()
+					Tween(APIFrame, 0.08, { ImageTransparency = 1 }):Play()
+				end)
+				Creator.AddSignal(APIFrame.MouseButton1Click, function()
+					serviceInstance.Copy()
+					Config.FlycerUI:Notify({
+						Title = "Key System",
+						Content = "Key link copied to clipboard.",
+						Image = "key",
+					})
+				end)
 			end
 		end
 
@@ -853,158 +425,81 @@ function KeySystem.new(Config, Filename, func, keyValidator)
 	end
 
 	local function handleSuccess(key)
-		SafeCloseDialog(KeyDialog)
-
-		if Config.KeySystem.SaveKey then
-			local folder = Config.Folder or "Temp"
-			local path = folder .. "/" .. tostring(Filename) .. ".key"
-
-			local writeOk, writeErr = pcall(function()
-				if type(writefile) ~= "function" then
-					error("writefile is not available in this executor.")
-				end
-
-				if type(makefolder) == "function" and type(isfolder) == "function" then
-					if not isfolder(folder) then
-						makefolder(folder)
-					end
-				end
-
-				writefile(path, tostring(key))
-			end)
-
-			if not writeOk then
-				Notify(Config, "Key System", "Key verified but unable to save: " .. tostring(writeErr), "triangle-alert")
-			end
-		end
-
-		task.delay(0.4, function()
-			if type(func) == "function" then
-				func(true)
-			end
-		end)
-
-		return true
+		KeyDialog:Close()()
+		writefile((Config.Folder or "Temp") .. "/" .. Filename .. ".key", tostring(key))
+		task.wait(0.4)
+		func(true)
 	end
 
-	-- ============================================================
-	-- [NEW] SUBMIT BUTTON dengan verifikasi feedback
-	-- ============================================================
 	local SubmitButton = CreateButton("Submit", "arrow-right", function()
-		if IsSubmitting then return end -- Debounce
+		local key = tostring(EnteredKey or "empty")
+		local folder = Config.Folder or Config.Title
 
-		task.spawn(function()
-			IsSubmitting = true
+		if Config.KeySystem.KeyValidator then
+			local isValid = Config.KeySystem.KeyValidator(key)
 
-			local key = EnteredKey
-			if not key or tostring(key):gsub("%s+", "") == "" then
-				Notify(Config, "Key System", "Please enter a license key.", "triangle-alert")
-				IsSubmitting = false
-				return
-			end
-			key = tostring(key):gsub("^%s+", ""):gsub("%s+$", "")
-
-			-- [NEW] Notify: sedang verifikasi
-			Notify(Config, "Key System", "Verifying license with database...", "loader")
-
-			-- ====================================================
-			-- PATH 1: FLYCER SERVICE
-			-- ====================================================
-			if type(Config.KeySystem.Flycer) == "table" then
-				local serviceInstance, serviceError = CreateFlycerService(Config)
-
-				if not serviceInstance then
-					Notify(Config, "Key System", serviceError or "Flycer service unavailable.", "triangle-alert")
-					IsSubmitting = false
-					return
-				end
-
-				if type(serviceInstance.Verify) ~= "function" then
-					Notify(Config, "Key System", "Flycer service does not provide Verify().", "triangle-alert")
-					IsSubmitting = false
-					return
-				end
-
-				local verifyValid, verifyMessage, _ = serviceInstance.Verify(key)
-
-				if verifyValid then
+			if isValid then
+				if Config.KeySystem.SaveKey then
 					handleSuccess(key)
 				else
-					Notify(Config, "Key System", verifyMessage or "Invalid key.", "triangle-alert")
+					KeyDialog:Close()()
+					task.wait(0.4)
+					func(true)
 				end
-
-				IsSubmitting = false
-				return
+			else
+				Config.FlycerUI:Notify({
+					Title = "Key System. Error",
+					Content = "Invalid key.",
+					Icon = "triangle-alert",
+				})
 			end
+		elseif not Config.KeySystem.API then
+			local isKey = type(Config.KeySystem.Key) == "table" and table.find(Config.KeySystem.Key, key)
+				or Config.KeySystem.Key == key
 
-			if Config.KeySystem.KeyValidator then
-				local validatorOk, isValid, validationMessage = pcall(function()
-					return Config.KeySystem.KeyValidator(key)
-				end)
-
-				if not validatorOk then
-					Notify(Config, "Key System", "Key validator error: " .. tostring(isValid), "triangle-alert")
-					IsSubmitting = false
-					return
-				end
-
-				if isValid then
+			if isKey then
+				if Config.KeySystem.SaveKey then
 					handleSuccess(key)
 				else
-					Notify(Config, "Key System", validationMessage or "Invalid key.", "triangle-alert")
+					KeyDialog:Close()()
+					task.wait(0.4)
+					func(true)
 				end
-				IsSubmitting = false
-				return
 			end
-
-			if not Config.KeySystem.API then
-				local isKey = false
-				if type(Config.KeySystem.Key) == "table" then
-					isKey = table.find(Config.KeySystem.Key, key) ~= nil
-				else
-					isKey = Config.KeySystem.Key == key
-				end
-
-				if isKey then
-					handleSuccess(key)
-				else
-					Notify(Config, "Key System", "Invalid key.", "triangle-alert")
-				end
-				IsSubmitting = false
-				return
-			end
-
-			if #Services == 0 then
-				Notify(Config, "Key System", "No key validation service is configured.", "triangle-alert")
-				IsSubmitting = false
-				return
-			end
-
-			local isSuccess, result = false, nil
+		else
+			local isSuccess, result
 			for _, service in next, Services do
-				if type(service.Verify) == "function" then
-					local success, res = service.Verify(key)
-					if success then
-						isSuccess = true
-						result = res
-						break
-					end
-					result = res or "Verification failed."
+				local success, res = service.Verify(key)
+				if success then
+					isSuccess, result = true, res
+					break
 				end
+				result = res
 			end
 
 			if isSuccess then
 				handleSuccess(key)
 			else
-				Notify(Config, "Key System", result or "Invalid key.", "triangle-alert")
+				Config.FlycerUI:Notify({
+					Title = "Key System. Error",
+					Content = result,
+					Icon = "triangle-alert",
+				})
 			end
-
-			IsSubmitting = false
-		end)
+		end
 	end, "Primary", ButtonsContainer)
 
 	SubmitButton.AnchorPoint = Vector2.new(1, 0.5)
 	SubmitButton.Position = UDim2.new(1, 0, 0.5, 0)
+
+	-- TitleContainer:GetPropertyChangedSignal("AbsoluteSize"):Connect(function()
+	--     KeyDialog.UIElements.Main.Size = UDim2.new(
+	--         0,
+	--         TitleContainer.AbsoluteSize.X +24+24+24+24+9,
+	--         0,
+	--         0
+	--     )
+	-- end)
 
 	KeyDialog:Open()
 end
