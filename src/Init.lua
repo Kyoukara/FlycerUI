@@ -1,4 +1,4 @@
-local FlycerUI = {
+local WindUI = {
 	Window = nil,
 	Theme = nil,
 	Creator = require("./modules/Creator"),
@@ -30,7 +30,7 @@ local cloneref = (cloneref or clonereference or function(instance)
 	return instance
 end)
 
-FlycerUI.cloneref = cloneref
+WindUI.cloneref = cloneref
 
 local HttpService = cloneref(game:GetService("HttpService"))
 local Players = cloneref(game:GetService("Players"))
@@ -38,11 +38,11 @@ local CoreGui = cloneref(game:GetService("CoreGui"))
 local RunService = cloneref(game:GetService("RunService"))
 local UserInputService = cloneref(game:GetService("UserInputService"))
 
-function FlycerUI.GenerateGUID()
+function WindUI.GenerateGUID()
 	return HttpService:GenerateGUID(false)
 end
 
-local CurInput = FlycerUI.GenerateGUID()
+local CurInput = WindUI.GenerateGUID()
 
 UserInputService.InputBegan:Connect(function(Input, GameProcessed)
 	--[[if GameProcessed then
@@ -54,23 +54,23 @@ UserInputService.InputBegan:Connect(function(Input, GameProcessed)
 			Input.UserInputType == Enum.UserInputType.MouseButton1
 			or Input.UserInputType == Enum.UserInputType.Touch
 		then
-			if FlycerUI.CurrentInput and FlycerUI.CurrentInput ~= CurInput then
+			if WindUI.CurrentInput and WindUI.CurrentInput ~= CurInput then
 				return
 			end
 
-			FlycerUI.CurrentInput = CurInput
+			WindUI.CurrentInput = CurInput
 			--print(CurInput)
-			--FlycerUI.InputStartedOnUI = false
+			--WindUI.InputStartedOnUI = false
 		end
 	end)
 end)
 UserInputService.InputEnded:Connect(function(Input, GameProcessed)
 	if Input.UserInputType == Enum.UserInputType.MouseButton1 or Input.UserInputType == Enum.UserInputType.Touch then
-		if FlycerUI.CurrentInput and FlycerUI.CurrentInput ~= CurInput then
+		if WindUI.CurrentInput and WindUI.CurrentInput ~= CurInput then
 			return
 		end
 
-		FlycerUI.CurrentInput = nil
+		WindUI.CurrentInput = nil
 	end
 end)
 
@@ -78,17 +78,17 @@ local LocalPlayer = Players.LocalPlayer or nil
 
 local Package = HttpService:JSONDecode(require("../build/package"))
 if Package then
-	FlycerUI.Version = Package.version
+	WindUI.Version = Package.version
 end
 
 local KeySystem = require("./components/KeySystem")
 
-local Creator = FlycerUI.Creator
+local Creator = WindUI.Creator
 
 local New = Creator.New
 
 --local Tween = Creator.Tween
---local ServicesModule = FlycerUI.Services
+--local ServicesModule = WindUI.Services
 
 local Acrylic = require("./utils/Acrylic/Init")
 
@@ -97,13 +97,13 @@ local ProtectGui = protectgui or (syn and syn.protect_gui) or function() end
 local GUIParent = gethui and gethui() or (CoreGui or LocalPlayer:WaitForChild("PlayerGui"))
 
 local UIScaleObj = New("UIScale", {
-	Scale = FlycerUI.UIScale,
+	Scale = WindUI.UIScale,
 })
 
-FlycerUI.UIScaleObj = UIScaleObj
+WindUI.UIScaleObj = UIScaleObj
 
-FlycerUI.ScreenGui = New("ScreenGui", {
-	Name = "FlycerUI",
+WindUI.ScreenGui = New("ScreenGui", {
+	Name = "WindUI",
 	Parent = GUIParent,
 	IgnoreGuiInset = true,
 	ScreenInsets = "None",
@@ -130,111 +130,111 @@ FlycerUI.ScreenGui = New("ScreenGui", {
 	}),
 })
 
-FlycerUI.NotificationGui = New("ScreenGui", {
-	Name = "FlycerUI/Notifications",
+WindUI.NotificationGui = New("ScreenGui", {
+	Name = "WindUI/Notifications",
 	Parent = GUIParent,
 	IgnoreGuiInset = true,
 })
-FlycerUI.DropdownGui = New("ScreenGui", {
-	Name = "FlycerUI/Dropdowns",
+WindUI.DropdownGui = New("ScreenGui", {
+	Name = "WindUI/Dropdowns",
 	Parent = GUIParent,
 	IgnoreGuiInset = true,
 })
-FlycerUI.TooltipGui = New("ScreenGui", {
-	Name = "FlycerUI/Tooltips",
+WindUI.TooltipGui = New("ScreenGui", {
+	Name = "WindUI/Tooltips",
 	Parent = GUIParent,
 	IgnoreGuiInset = true,
 })
-ProtectGui(FlycerUI.ScreenGui)
-ProtectGui(FlycerUI.NotificationGui)
-ProtectGui(FlycerUI.DropdownGui)
-ProtectGui(FlycerUI.TooltipGui)
+ProtectGui(WindUI.ScreenGui)
+ProtectGui(WindUI.NotificationGui)
+ProtectGui(WindUI.DropdownGui)
+ProtectGui(WindUI.TooltipGui)
 
-Creator.Init(FlycerUI)
+Creator.Init(WindUI)
 
-function FlycerUI:SetParent(parent)
-	if FlycerUI.ScreenGui then
-		FlycerUI.ScreenGui.Parent = parent
+function WindUI:SetParent(parent)
+	if WindUI.ScreenGui then
+		WindUI.ScreenGui.Parent = parent
 	end
-	if FlycerUI.NotificationGui then
-		FlycerUI.NotificationGui.Parent = parent
+	if WindUI.NotificationGui then
+		WindUI.NotificationGui.Parent = parent
 	end
-	if FlycerUI.DropdownGui then
-		FlycerUI.DropdownGui.Parent = parent
+	if WindUI.DropdownGui then
+		WindUI.DropdownGui.Parent = parent
 	end
-	if FlycerUI.TooltipGui then
-		FlycerUI.TooltipGui.Parent = parent
+	if WindUI.TooltipGui then
+		WindUI.TooltipGui.Parent = parent
 	end
 end
-math.clamp(FlycerUI.TransparencyValue, 0, 1)
+math.clamp(WindUI.TransparencyValue, 0, 1)
 
-local Holder = FlycerUI.NotificationModule.Init(FlycerUI.NotificationGui)
+local Holder = WindUI.NotificationModule.Init(WindUI.NotificationGui)
 
-function FlycerUI:Notify(Config)
+function WindUI:Notify(Config)
 	Config.Holder = Holder.Frame
-	Config.Window = FlycerUI.Window
-	--Config.FlycerUI = FlycerUI
-	return FlycerUI.NotificationModule.New(Config)
+	Config.Window = WindUI.Window
+	--Config.WindUI = WindUI
+	return WindUI.NotificationModule.New(Config)
 end
 
-function FlycerUI:SetNotificationLower(Val)
+function WindUI:SetNotificationLower(Val)
 	Holder.SetLower(Val)
 end
 
-function FlycerUI:SetFont(FontId)
+function WindUI:SetFont(FontId)
 	Creator.UpdateFont(FontId)
 end
 
-function FlycerUI:OnThemeChange(func)
-	FlycerUI.OnThemeChangeFunction = func
+function WindUI:OnThemeChange(func)
+	WindUI.OnThemeChangeFunction = func
 end
 
-function FlycerUI:AddTheme(LTheme)
-	FlycerUI.Themes[LTheme.Name] = LTheme
+function WindUI:AddTheme(LTheme)
+	WindUI.Themes[LTheme.Name] = LTheme
 	return LTheme
 end
 
-function FlycerUI:SetTheme(Value)
-	if FlycerUI.Themes[Value] then
-		FlycerUI.Theme = FlycerUI.Themes[Value]
-		Creator.SetTheme(FlycerUI.Themes[Value])
+function WindUI:SetTheme(Value)
+	if WindUI.Themes[Value] then
+		WindUI.Theme = WindUI.Themes[Value]
+		Creator.SetTheme(WindUI.Themes[Value])
 
-		if FlycerUI.OnThemeChangeFunction then
-			FlycerUI.OnThemeChangeFunction(Value)
+		if WindUI.OnThemeChangeFunction then
+			WindUI.OnThemeChangeFunction(Value)
 		end
 
-		return FlycerUI.Themes[Value]
+		return WindUI.Themes[Value]
 	end
 	return nil
 end
 
-function FlycerUI:GetThemes()
-	return FlycerUI.Themes
+function WindUI:GetThemes()
+	return WindUI.Themes
 end
-function FlycerUI:GetCurrentTheme()
-	return FlycerUI.Theme.Name
+function WindUI:GetCurrentTheme()
+	return WindUI.Theme.Name
 end
-function FlycerUI:GetTransparency()
-	return FlycerUI.Transparent or false
+function WindUI:GetTransparency()
+	return WindUI.Transparent or false
 end
-function FlycerUI:GetWindowSize()
-	return FlycerUI.Window.UIElements.Main.Size
+function WindUI:GetWindowSize()
+	return WindUI.Window.UIElements.Main.Size
 end
-function FlycerUI:Localization(LocalizationConfig)
-	return FlycerUI.LocalizationModule:New(LocalizationConfig, Creator)
+function WindUI:Localization(LocalizationConfig)
+	return WindUI.LocalizationModule:New(LocalizationConfig, Creator)
 end
 
-function FlycerUI:SetLanguage(Value)
+function WindUI:SetLanguage(Value)
 	if Creator.Localization then
 		return Creator.SetLanguage(Value)
 	end
 	return false
 end
 
-function FlycerUI:ToggleAcrylic(Value)
-	if FlycerUI.Window and FlycerUI.Window.AcrylicPaint and FlycerUI.Window.AcrylicPaint.Model then
-		FlycerUI.Window.Acrylic = Value
-		FlycerUI.Window.AcrylicPaint.Model.Transparency = Value and 0.98 or 1
+function WindUI:ToggleAcrylic(Value)
+	if WindUI.Window and WindUI.Window.AcrylicPaint and WindUI.Window.AcrylicPaint.Model then
+		WindUI.Window.Acrylic = Value
+		WindUI.Window.AcrylicPaint.Model.Transparency = Value and 0.98 or 1
 		if Value then
 			Acrylic.Enable()
 		else
@@ -243,7 +243,7 @@ function FlycerUI:ToggleAcrylic(Value)
 	end
 end
 
-function FlycerUI:Gradient(stops, props)
+function WindUI:Gradient(stops, props)
 	local colorSequence = {}
 	local transparencySequence = {}
 
@@ -290,24 +290,24 @@ function FlycerUI:Gradient(stops, props)
 	return gradientData
 end
 
-function FlycerUI:Popup(PopupConfig)
-	PopupConfig.FlycerUI = FlycerUI
-	return require("./components/popup/Init").new(PopupConfig, FlycerUI.ScreenGui.Popups)
+function WindUI:Popup(PopupConfig)
+	PopupConfig.WindUI = WindUI
+	return require("./components/popup/Init").new(PopupConfig, WindUI.ScreenGui.Popups)
 end
 
-FlycerUI.Themes = require("./themes/Init")(FlycerUI, Creator)
+WindUI.Themes = require("./themes/Init")(WindUI, Creator)
 
-Creator.Themes = FlycerUI.Themes
+Creator.Themes = WindUI.Themes
 
-FlycerUI:SetTheme("Dark")
-FlycerUI:SetLanguage(Creator.Language)
+WindUI:SetTheme("Dark")
+WindUI:SetLanguage(Creator.Language)
 
-function FlycerUI:CreateWindow(Config)
+function WindUI:CreateWindow(Config)
 	local CreateWindow = require("./components/window/Init")
 
 	if not RunService:IsStudio() and writefile then
-		if not isfolder("FlycerUI") then
-			makefolder("FlycerUI")
+		if not isfolder("WindUI") then
+			makefolder("WindUI")
 		end
 		if Config.Folder then
 			makefolder(Config.Folder)
@@ -316,40 +316,27 @@ function FlycerUI:CreateWindow(Config)
 		end
 	end
 
-	Config.FlycerUI = FlycerUI
-	Config.Window = FlycerUI.Window
-	Config.Parent = FlycerUI.ScreenGui.Window
+	Config.WindUI = WindUI
+	Config.Window = WindUI.Window
+	Config.Parent = WindUI.ScreenGui.Window
 
-	if FlycerUI.Window then
+	if WindUI.Window then
 		warn("You cannot create more than one window")
 		return
 	end
 
 	local CanLoadWindow = true
 
-	local Theme = FlycerUI.Themes[Config.Theme or "Dark"]
+	local Theme = WindUI.Themes[Config.Theme or "Dark"]
 
-	--FlycerUI.Theme = Theme
+	--WindUI.Theme = Theme
 	Creator.SetTheme(Theme)
 
-	local Filename
-
-	-- Flycer uses the selected lock identifier for its local key cache.
-	-- Username -> Roblox UserId.
-	-- Device -> executor HWID, then Roblox client ID.
-	if Config.KeySystem and (Config.KeySystem.KeyValidator or type(Config.KeySystem.Flycer) == "table") then
-		local identifier = KeySystem.GetFlycerIdentifier(Config)
-		Filename = identifier or "flycer_identifier_unavailable"
-	else
-		local hwid = gethwid or function()
-			return Players.LocalPlayer.UserId
-		end
-
-		Filename = tostring(hwid())
+	local hwid = gethwid or function()
+		return Players.LocalPlayer.UserId
 	end
 
-	-- Keep the cache filename safe for executors/filesystems.
-	Filename = tostring(Filename):gsub('[^%w%._%-]', '_')
+	local Filename = hwid()
 
 	if Config.KeySystem then
 		CanLoadWindow = false
@@ -362,41 +349,7 @@ function FlycerUI:CreateWindow(Config)
 
 		local keyPath = (Config.Folder or "Temp") .. "/" .. Filename .. ".key"
 
-		-- Flycer is authoritative whenever it is configured.
-		-- A saved key must go through the same remote validation as a newly
-		-- submitted key so expiry, active state, lock type and identifier
-		-- binding are checked again on every script start.
-		if type(Config.KeySystem.Flycer) == "table" then
-			if not Config.KeySystem.Flycer.Endpoint then
-				loadKeysystem()
-			elseif Config.KeySystem.SaveKey and isfile(keyPath) then
-				local savedKey = readfile(keyPath)
-				local flycerConfig = Config.KeySystem.Flycer
-				local serviceData = FlycerUI.Services.flycer
-				local isValid = false
-
-				if serviceData then
-					local service = serviceData.New(
-						flycerConfig.Endpoint,
-						flycerConfig.Product or Config.Title,
-						flycerConfig.LockType or Config.KeySystem.LockType or "Device",
-						flycerConfig.Client or "FlycerUI",
-						flycerConfig.Version or "1.0.0"
-					)
-					isValid = service.Verify(savedKey)
-				end
-
-				if isValid then
-					CanLoadWindow = true
-				else
-					-- Invalid/expired/rebound key: remove the stale local cache.
-					pcall(delfile, keyPath)
-					loadKeysystem()
-				end
-			else
-				loadKeysystem()
-			end
-		elseif Config.KeySystem.KeyValidator then
+		if Config.KeySystem.KeyValidator then
 			if Config.KeySystem.SaveKey and isfile(keyPath) then
 				local savedKey = readfile(keyPath)
 				local isValid = Config.KeySystem.KeyValidator(savedKey)
@@ -429,7 +382,7 @@ function FlycerUI:CreateWindow(Config)
 				local isSuccess = false
 
 				for _, i in next, Config.KeySystem.API do
-					local serviceData = FlycerUI.Services[i.Type]
+					local serviceData = WindUI.Services[i.Type]
 					if serviceData then
 						local args = {}
 						for _, argName in next, serviceData.Args do
@@ -461,19 +414,19 @@ function FlycerUI:CreateWindow(Config)
 
 	local Window = CreateWindow(Config)
 
-	FlycerUI.Transparent = Config.Transparent
-	FlycerUI.Window = Window
+	WindUI.Transparent = Config.Transparent
+	WindUI.Window = Window
 
 	if Config.Acrylic then
 		Acrylic.init()
 	end
 
 	-- function Window:ToggleTransparency(Value)
-	--     FlycerUI.Transparent = Value
-	--     FlycerUI.Window.Transparent = Value
+	--     WindUI.Transparent = Value
+	--     WindUI.Window.Transparent = Value
 
-	--     Window.UIElements.Main.Background.BackgroundTransparency = Value and FlycerUI.TransparencyValue or 0
-	--     Window.UIElements.Main.Background.ImageLabel.ImageTransparency = Value and FlycerUI.TransparencyValue or 0
+	--     Window.UIElements.Main.Background.BackgroundTransparency = Value and WindUI.TransparencyValue or 0
+	--     Window.UIElements.Main.Background.ImageLabel.ImageTransparency = Value and WindUI.TransparencyValue or 0
 	--     Window.UIElements.Main.Gradient.UIGradient.Transparency = NumberSequence.new{
 	--         NumberSequenceKeypoint.new(0, 1),
 	--         NumberSequenceKeypoint.new(1, Value and 0.85 or 0.7),
@@ -483,4 +436,4 @@ function FlycerUI:CreateWindow(Config)
 	return Window
 end
 
-return FlycerUI
+return WindUI
