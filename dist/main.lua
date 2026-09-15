@@ -1,6 +1,6 @@
 --[[
     
-    v1.6.67  |  2026-09-14  |  A Roblox UI Library based on WindUI with integrated Flycer license validation.
+    v1.6.67  |  2026-09-15  |  A Roblox UI Library based on WindUI with integrated Flycer license validation.
     
     To view the source code, see the `src/` folder on the official GitHub repository.
     
@@ -16054,7 +16054,7 @@ Scale=aa.UIScale,
 aa.UIScaleObj=ax
 
 aa.ScreenGui=at("ScreenGui",{
-Name="FlycerUI",
+Name="WindUI",
 Parent=aw,
 IgnoreGuiInset=true,
 ScreenInsets="None",
@@ -16082,17 +16082,17 @@ Name="ToolTips",
 })
 
 aa.NotificationGui=at("ScreenGui",{
-Name="FlycerUI/Notifications",
+Name="WindUI/Notifications",
 Parent=aw,
 IgnoreGuiInset=true,
 })
 aa.DropdownGui=at("ScreenGui",{
-Name="FlycerUI/Dropdowns",
+Name="WindUI/Dropdowns",
 Parent=aw,
 IgnoreGuiInset=true,
 })
 aa.TooltipGui=at("ScreenGui",{
-Name="FlycerUI/Tooltips",
+Name="WindUI/Tooltips",
 Parent=aw,
 IgnoreGuiInset=true,
 })
@@ -16242,7 +16242,7 @@ return f
 end
 
 function aa.Popup(az,aA)
-aA.FlycerUI=aa
+aA.WindUI=aa
 return a.load'v'.new(aA,aa.ScreenGui.Popups)
 end
 
@@ -16257,8 +16257,8 @@ function aa.CreateWindow(az,aA)
 local aB=a.load'af'
 
 if not am:IsStudio()and writefile then
-if not isfolder"FlycerUI"then
-makefolder"FlycerUI"
+if not isfolder"WindUI"then
+makefolder"WindUI"
 end
 if aA.Folder then
 makefolder(aA.Folder)
@@ -16267,7 +16267,7 @@ makefolder(aA.Title)
 end
 end
 
-aA.FlycerUI=aa
+aA.WindUI=aa
 aA.Window=aa.Window
 aA.Parent=aa.ScreenGui.Window
 
@@ -16283,76 +16283,29 @@ local d=aa.Themes[aA.Theme or"Dark"]
 
 as.SetTheme(d)
 
-local f
-
-
-
-
-if aA.KeySystem and(aA.KeySystem.KeyValidator or type(aA.KeySystem.Flycer)=="table")then
-local g=ar.GetFlycerIdentifier(aA)
-f=g or"flycer_identifier_unavailable"
-else
-local g=gethwid or function()
+local f=gethwid or function()
 return ak.LocalPlayer.UserId
 end
 
-f=tostring(g())
-end
-
-
-f=tostring(f):gsub('[^%w%._%-]','_')
+local g=f()
 
 if aA.KeySystem then
 b=false
 
 local function loadKeysystem()
-ar.new(aA,f,function(g)
-b=g
+ar.new(aA,g,function(h)
+b=h
 end)
 end
 
-local g=(aA.Folder or"Temp").."/"..f..".key"
+local h=(aA.Folder or"Temp").."/"..g..".key"
 
-
-
-
-
-if type(aA.KeySystem.Flycer)=="table"then
-if not aA.KeySystem.Flycer.Endpoint then
-loadKeysystem()
-elseif aA.KeySystem.SaveKey and isfile(g)then
-local h=readfile(g)
-local i=aA.KeySystem.Flycer
-local l=aa.Services.flycer
-local m=false
+if aA.KeySystem.KeyValidator then
+if aA.KeySystem.SaveKey and isfile(h)then
+local i=readfile(h)
+local l=aA.KeySystem.KeyValidator(i)
 
 if l then
-local p=l.New(
-i.Endpoint,
-i.Product or aA.Title,
-i.LockType or aA.KeySystem.LockType or"Device",
-i.Client or"FlycerUI",
-i.Version or"1.0.0"
-)
-m=p.Verify(h)
-end
-
-if m then
-b=true
-else
-
-pcall(delfile,g)
-loadKeysystem()
-end
-else
-loadKeysystem()
-end
-elseif aA.KeySystem.KeyValidator then
-if aA.KeySystem.SaveKey and isfile(g)then
-local h=readfile(g)
-local i=aA.KeySystem.KeyValidator(h)
-
-if i then
 b=true
 else
 loadKeysystem()
@@ -16361,12 +16314,12 @@ else
 loadKeysystem()
 end
 elseif not aA.KeySystem.API then
-if aA.KeySystem.SaveKey and isfile(g)then
-local h=readfile(g)
-local i=(type(aA.KeySystem.Key)=="table")and table.find(aA.KeySystem.Key,h)
-or tostring(aA.KeySystem.Key)==tostring(h)
+if aA.KeySystem.SaveKey and isfile(h)then
+local i=readfile(h)
+local l=(type(aA.KeySystem.Key)=="table")and table.find(aA.KeySystem.Key,i)
+or tostring(aA.KeySystem.Key)==tostring(i)
 
-if i then
+if l then
 b=true
 else
 loadKeysystem()
@@ -16375,29 +16328,29 @@ else
 loadKeysystem()
 end
 else
-if isfile(g)then
-local h=readfile(g)
-local i=false
+if isfile(h)then
+local i=readfile(h)
+local l=false
 
-for l,m in next,aA.KeySystem.API do
-local p=aa.Services[m.Type]
-if p then
-local r={}
-for u,v in next,p.Args do
-table.insert(r,m[v])
+for m,p in next,aA.KeySystem.API do
+local r=aa.Services[p.Type]
+if r then
+local u={}
+for v,x in next,r.Args do
+table.insert(u,p[x])
 end
 
-local u=p.New(table.unpack(r))
-local v=u.Verify(h)
-if v then
-i=true
+local v=r.New(table.unpack(u))
+local x=v.Verify(i)
+if x then
+l=true
 break
 end
 end
 end
 
-b=i
-if not i then
+b=l
+if not l then
 loadKeysystem()
 end
 else
@@ -16410,10 +16363,10 @@ task.wait()
 until b
 end
 
-local g=aB(aA)
+local h=aB(aA)
 
 aa.Transparent=aA.Transparent
-aa.Window=g
+aa.Window=h
 
 if aA.Acrylic then
 au.init()
@@ -16431,7 +16384,7 @@ end
 
 
 
-return g
+return h
 end
 
 return aa
